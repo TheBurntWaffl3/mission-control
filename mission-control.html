@@ -202,6 +202,10 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .pc .pt{display:block;padding:0;font-size:1.02rem;font-weight:700;line-height:1.35}
 .pm{font:700 .75rem/1.5 var(--mono);letter-spacing:.1em;color:var(--ink)}
 .pc .dacts{margin-top:4px}
+/* where a proposal lands: dashed cyan edge like its calendar block; also the proposal rows in Upcoming */
+.pm .pl,.dm .pl{display:inline-block;padding:3px 6px;margin-right:6px;border:1.5px dashed var(--cyan);color:var(--ink);letter-spacing:.1em;white-space:nowrap}
+.upc.prop .ut{color:var(--ink);font-weight:700}
+.upc.prop .dt b{display:block;margin-top:4px;font:700 .75rem/1 var(--mono);letter-spacing:.08em;color:var(--cyan);text-align:right}
 .capf .acts .fill{order:2}
 .upc .ut{display:block;padding:0;grid-template-columns:none;line-height:1.4}
 input[type=date],input[type=number]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--rule);padding:8px;min-height:40px;border-radius:0;max-width:11em}
@@ -667,6 +671,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .wcalp .wc-b.sm{justify-content:center;padding-top:1px;padding-bottom:1px}
 .wcalp .wc-bt{display:block;font:700 .75rem/1.25 var(--mono);color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wcalp .wc-bt em{font-style:normal;color:var(--amber)}
+.wcalp .wc-bt i,.wcalp .wc-bx i{font:700 .75rem var(--mono);font-style:normal;color:var(--cyan)}
 .wcalp .wc-bx{font-size:.8rem;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;overflow-wrap:normal;word-break:normal}
 .wcalp .wc-bx.one{display:block;white-space:nowrap;text-overflow:ellipsis}
 .wcalp .wc-b.sm .wc-bx b,.wcalp .wc-b.nr .wc-bx b{font:700 .75rem var(--mono);color:var(--dim);margin-right:2px}
@@ -689,6 +694,43 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .wcalp .wc-nl{position:absolute;left:0;right:0;z-index:3;border-top:2px solid var(--magenta);pointer-events:none}
 .wcalp .wc-nl::before{content:"";position:absolute;left:-5px;top:-6px;width:10px;height:10px;border-radius:50%;background:var(--magenta)}
 .wcalp .wc-nl span{position:absolute;right:calc(100% + 7px);top:-10px;padding:3px 4px;background:var(--magenta);color:var(--bg);font:700 .75rem/1 var(--mono);font-variant-numeric:tabular-nums}
+
+/* proposal detail (.dsheet): week strip of 7 day chips + the day around the proposed slot */
+.wc-pp{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)}
+.wc-ph{display:flex;align-items:center;gap:6px;min-height:40px}
+.wc-ph .lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc-ps{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:8px}
+.wc-pc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:56px;padding:6px 2px;border:1px solid color-mix(in srgb,var(--cyan) 45%,transparent);background:transparent;color:var(--dim);font:700 .75rem/1 var(--mono);letter-spacing:.04em;font-variant-numeric:tabular-nums;cursor:pointer}
+.wc-pc b{color:var(--ink)}
+.wc-pc span{font-size:1rem;color:var(--ink)}
+.wc-pc i{font-style:normal;color:var(--dim)}
+.wc-pc.full i{color:var(--amber)}
+.wc-pc.td b{color:var(--magenta)}
+.wc-pc:hover{border-color:var(--cyan)}
+.wc-pc.cur{border:1.5px dashed var(--cyan);background:color-mix(in srgb,var(--cyan) 10%,var(--panel))}
+.wc-pc.vw{border-color:var(--amber)}
+.wc-pc:disabled{opacity:.4;cursor:default;border-color:var(--rule)}
+.wc-pn{margin-top:8px;padding:8px 10px;border:1px solid var(--amber);color:var(--amber);font:700 .75rem/1.4 var(--mono);letter-spacing:.06em}
+.wc-pd{margin-top:10px;display:flex;flex-direction:column;gap:3px}
+.wc-pdh{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;padding:4px 0 6px;font:700 .75rem/1.2 var(--mono);letter-spacing:.12em;color:var(--dim)}
+.wc-pdh b{color:var(--ink);letter-spacing:.16em}
+.wc-pr{display:grid;grid-template-columns:50px minmax(0,1fr);gap:10px;align-items:start;padding:6px 8px;border:1px solid color-mix(in srgb,var(--dim) 30%,transparent);background:color-mix(in srgb,var(--dim) 12%,var(--panel));font-size:.9rem;line-height:1.3}
+.wc-pt{display:flex;flex-direction:column;gap:1px;font:700 .75rem/1.3 var(--mono);font-variant-numeric:tabular-nums;color:var(--dim);white-space:nowrap}
+.wc-pt i{font-style:normal;font-weight:400;color:var(--faint)}
+.wc-px{min-width:0;overflow-wrap:anywhere;color:var(--dim)}
+.wc-px em{display:inline-block;margin-left:6px;font:700 .75rem/1 var(--mono);font-style:normal;letter-spacing:.08em;color:var(--cyan);vertical-align:1px}
+.wc-px em.d{color:var(--faint)}
+.wc-pr.free{background:transparent;border-style:dotted}
+.wc-pr.task{background:var(--panel);border-color:color-mix(in srgb,var(--ink) 55%,transparent);box-shadow:inset 3px 0 0 var(--ink)}
+.wc-pr.task .wc-px{color:var(--ink);font-weight:700}
+.wc-pr.task .wc-pt{color:var(--ink)}
+.wc-pr.done{box-shadow:inset 3px 0 0 var(--green)}
+.wc-pr.done .wc-px{color:var(--dim);text-decoration:line-through;font-weight:400}
+.wc-pr.prop{background:transparent;border:1.5px dashed color-mix(in srgb,var(--cyan) 55%,transparent)}
+.wc-pr.prop .wc-px{color:var(--ink);font-weight:700}
+.wc-pr.me{border-color:var(--cyan);background:color-mix(in srgb,var(--cyan) 10%,var(--panel))}
+.wc-pr.none{grid-template-columns:minmax(0,1fr);background:transparent;border-style:dashed;border-color:var(--rule);color:var(--dim);font-size:.88rem}
+@media (max-width:999px){.wc-pc{min-height:60px}.wc-ph .btn.sm{min-height:40px}}
 
 /* event sheet */
 .wc-scrim{position:fixed;inset:0;z-index:45;background:color-mix(in srgb,var(--bg) 72%,transparent)}
@@ -1081,10 +1123,10 @@ function rObj(){
 }
 /* hard deadlines read bright, soft ones dim; amber = hard and within 2 days */
 function rUpc(){
-  var t0=ops().day,list=S.dates.filter(function(d){return pd(d.d)>=t0;}).concat(S.planned.filter(function(p){return pd(p.date)>=t0;}).map(function(p){return {d:p.date,t:p.t,task:p};})).sort(function(a,b){return (pd(a.d)-pd(b.d))||((a.task?mins(a.task.s)||0:-1)-(b.task?mins(b.task.s)||0:-1));}).slice(0,9);
+  var t0=ops().day,list=S.dates.filter(function(d){return pd(d.d)>=t0;}).concat(S.planned.filter(function(p){return pd(p.date)>=t0;}).map(function(p){return {d:p.date,t:p.t,task:p};})).concat(S.proposals.filter(function(p){return pd(p.date)>=t0;}).map(function(p){return {d:p.date,t:p.t,task:p,prop:true};})).sort(function(a,b){return (pd(a.d)-pd(b.d))||((a.task?mins(a.task.s)||0:-1)-(b.task?mins(b.task.s)||0:-1));}).slice(0,9);
   if(!list.length)return '';
   return '<section class="p upcp" data-tab="week">'+phd('Upcoming','upcoming',wc_toggle('u'))+'<ul class="rows">'+list.map(function(d){var n=daysBetween(t0,pd(d.d)),dd='<span class="dd">'+(n===0?'TODAY':'T−'+n+'D')+'</span>';
-    if(d.task)return '<li class="upc task">'+dd+'<button type="button" class="rt ut" data-act="open" data-k="planned" data-id="'+esc(d.task.id)+'">'+esc(d.t)+'</button><span class="dt">'+(d.task.s?esc(d.task.s):'')+'</span></li>';
+    if(d.task)return '<li class="upc '+(d.prop?'prop':'task')+'">'+dd+'<button type="button" class="rt ut" data-act="open" data-k="'+(d.prop?'proposal':'planned')+'" data-id="'+esc(d.task.id)+'">'+esc(d.t)+'</button><span class="dt">'+(d.task.s?esc(d.task.s):'')+(d.prop?'<b>PROPOSED</b>':'')+'</span></li>';
     return '<li class="upc '+(d.hard?'hard'+(n<=2?' near':''):'soft')+'">'+dd+'<span class="ut">'+esc(d.t)+'</span></li>';}).join('')+'</ul></section>';
 }
 
@@ -1110,8 +1152,8 @@ function rProps(){
   if(!S.proposals.length&&!ui.proposing)return '';
   var h='<section class="p prop" data-tab="today">'+phd('Proposed','proposed',ui.proposing?'<span>FINDING A SLOT…</span>':'');
   h+=S.proposals.map(function(p){
-    var when=dayLbl(p.date)+(p.s?' · '+esc(p.s)+(p.e?'–'+esc(p.e):''):' · ANYTIME');
-    var x='<div class="pc"><button type="button" class="rt pt" data-act="open" data-k="proposal" data-id="'+esc(p.id)+'">'+esc(p.t)+'</button><div class="pm">~'+(p.m||itemMin(p))+' MIN · '+when+(p.g?' · '+esc(call(p.g)):'')+'</div>';
+    var when=dayLbl(p.date).replace(/^[A-Z]+, /,'');
+    var x='<div class="pc"><button type="button" class="rt pt" data-act="open" data-k="proposal" data-id="'+esc(p.id)+'">'+esc(p.t)+'</button><div class="pm"><span class="pl">'+esc(wc_pLands(p))+'</span>~'+(p.m||itemMin(p))+' MIN · '+when+(p.g?' · '+esc(call(p.g)):'')+'</div>';
     if(ui.editProp===p.id)x+='<form class="dtime pe" data-id="'+esc(p.id)+'"><label>DAY<input type="date" id="pe-d" value="'+esc(p.date)+'" min="'+ops().date+'"></label><label>START<input type="time" id="pe-s" value="'+esc(p.s)+'"></label><label>MIN<input type="number" id="pe-m" min="5" max="480" step="5" value="'+(p.m||itemMin(p))+'"></label><button type="submit" class="btn sm fill">SAVE & ACCEPT</button><button type="button" class="btn sm ghost" data-act="pchgx">CANCEL</button></form>';
     else x+='<div class="dacts"><button type="button" class="btn sm fill" data-act="pacc" data-id="'+esc(p.id)+'">ACCEPT</button><button type="button" class="btn sm" data-act="pchg" data-id="'+esc(p.id)+'">CHANGE</button><button type="button" class="btn sm ghost" data-act="pdec" data-id="'+esc(p.id)+'">'+(p.task?'LATER':'DECLINE')+'</button></div>';
     return x+'</div>';}).join('');
@@ -1390,9 +1432,9 @@ function rShutdown(){
 var INFO={
  now:{title:'Now',text:'What to work on this minute. A class or meeting from your calendar shows here while it is on, with what comes next under it. Tap the title for details, to move it or to drop it.\nDUE TODAY lists untimed items due today. The {amber:amber} bar counts past hours you haven’t logged.\nFOCUS 25 and FOCUS 50 start a timer that chimes when it ends.'},
  plan:{title:'Flight plan',text:'Your day by the hour: calendar events in grey, your items in white, dashed = scheduled for today. The hour you are in, or what is happening now, is {magenta:magenta}.\n＋ ADD on an open hour opens your task list; pick one and it lands in that hour. Tick an item when it is done.\nEARLIER folds the hours already gone. BREATHE runs one guided minute of box breathing.'},
- proposed:{title:'Proposed',text:'Slots Claude picked for tasks you added. ACCEPT puts it on that day, CHANGE lets you set the day, start and minutes, LATER keeps the task in Tasks with no time. DECLINE (on one-offs) drops it.\nTap the title to see why that slot.'},
+ proposed:{title:'Proposed',text:'Slots Claude picked for tasks you added. ACCEPT puts it on that day, CHANGE lets you set the day, start and minutes, LATER keeps the task in Tasks with no time. DECLINE (on one-offs) drops it.\nTap the title to see why that slot, and the week strip under it: one chip per day with its load (items of 3). Tap a day to move the proposal there, same start if it is free, else the nearest free slot; the list under the strip shows what sits around it.'},
  objectives:{title:'Objectives',text:'This week’s outcomes, set in the Sunday plan. Tick one when it’s done; tap it for details.'},
- upcoming:{title:'Upcoming',text:'Deadlines and scheduled tasks, soonest first. T−3D = in 3 days.\nBright = hard deadline, dim = soft. {amber:Amber} = hard deadline within 2 days.\nTap a scheduled task to move it, drop it or do it today.'},
+ upcoming:{title:'Upcoming',text:'Deadlines, scheduled tasks and proposals waiting for your OK, soonest first. T−3D = in 3 days.\nBright = hard deadline, dim = soft. {amber:Amber} = hard deadline within 2 days. PROPOSED in {cyan:cyan} = a slot Claude suggested; tap it to accept or move it.\nTap a scheduled task to move it, drop it or do it today.'},
  track:{title:'Senior year',text:function(){return 'Aug 31 to commencement, May 24. The {magenta:magenta} marker is today; grey bands are Thanksgiving, finals and spring break.\n'+trackLine()+'\nThe big clock counts days:hours:minutes:seconds to the Spotter launch, Nov 22.';}},
  status:{title:'Status board',text:'One light per goal: {green:GO} on track, {amber:HOLD} needs attention, {red:NO-GO} off track. Tap a goal to change its light or see its next step.\nHabits: tap a day when you hit it. {amber:DON’T MISS TWICE} = you missed last night. {amber:NO SLACK} = every day left counts. {red:BEHIND} = the weekly target is out of reach.\nColors everywhere: {magenta:magenta} now, {green:green} done or good, {amber:amber} caution, {red:red} warning, {cyan:cyan} tappable.'},
  stats:{title:'Stats',text:'LOAD: hours committed per day for the next 7 days. The white tick is your focus capacity; OVER = past it.\nBALANCE: the last 7 days, work (career, launch, academics) vs life (gym, phone, family).\nFOLLOW-THROUGH: share of planned items done over the last 14 days, from your shutdowns. Energy appears after 3 ratings. BUMPED = moved to tomorrow in the last 7 days.\nQUEUE: what’s waiting in the inbox, proposals, planned and bumped.'},
@@ -1449,7 +1491,7 @@ function rDetail(){
     if(g.next)h+='<p class="dd"><b>NEXT</b> '+esc(g.next)+'</p>';
     h+='<div class="lbl" style="margin-top:14px">STATUS</div><div class="seg" role="group" aria-label="Status">'+['go','hold','nogo'].map(function(v){return '<button type="button" id="st-'+v+'" class="'+v+(g.st===v?' on':'')+'" data-act="setst" data-v="'+v+'" aria-pressed="'+(g.st===v)+'">'+LBL[v]+'</button>';}).join('')+'</div>';
     return h+'</div>';}
-  if(D.k==='proposal'){h+='<h3 id="d-title">'+esc(it.t)+'</h3><div class="dm">PROPOSED · ~'+(it.m||itemMin(it))+' MIN · '+dayLbl(it.date)+(it.s?' '+esc(it.s):'')+(it.g?' · '+esc(call(it.g)):'')+'</div>'+(it.d?'<p class="dd">'+esc(it.d)+'</p>':'')+(it.why?'<p class="dd"><b>WHY THIS SLOT</b> '+esc(it.why)+'</p>':'')+'<div class="dacts"><button type="button" class="btn fill" data-act="pacc" data-id="'+esc(it.id)+'">ACCEPT</button><button type="button" class="btn" data-act="pchg" data-id="'+esc(it.id)+'">CHANGE</button><button type="button" class="btn ghost" data-act="pdec" data-id="'+esc(it.id)+'">'+(it.task?'LATER':'DECLINE')+'</button></div></div>';return h;}
+  if(D.k==='proposal'){h+='<h3 id="d-title">'+esc(it.t)+'</h3><div class="dm"><span class="pl">'+esc(wc_pLands(it))+'</span>PROPOSED · ~'+(it.m||itemMin(it))+' MIN · '+dayLbl(it.date).replace(/^[A-Z]+, /,'')+(it.g?' · '+esc(call(it.g)):'')+'</div>'+(it.d?'<p class="dd">'+esc(it.d)+'</p>':'')+(it.why?'<p class="dd"><b>WHY THIS SLOT</b> '+esc(it.why)+'</p>':'')+wc_pPanel(it)+'<div class="dacts"><button type="button" class="btn fill" data-act="pacc" data-id="'+esc(it.id)+'">ACCEPT</button><button type="button" class="btn" data-act="pchg" data-id="'+esc(it.id)+'">CHANGE</button><button type="button" class="btn ghost" data-act="pdec" data-id="'+esc(it.id)+'">'+(it.task?'LATER':'DECLINE')+'</button></div></div>';return h;}
   if(D.k==='planned'){h+='<h3 id="d-title">'+esc(it.t)+'</h3><div class="dm">SCHEDULED · '+dayLbl(it.date)+(it.s?' · '+esc(it.s)+'–'+m2h(itemEnd(it)):' · ANYTIME')+(it.g?' · '+esc(call(it.g)):'')+'</div>'+(it.d?'<p class="dd">'+esc(it.d)+'</p>':'');
     if(ui.confirm)return h+'<div class="confirm"><div>Drop this for good?</div><div class="dacts"><button type="button" class="btn" data-act="dropno">KEEP IT</button><button type="button" class="btn warn" data-act="pdrop">DROP IT</button></div></div></div>';
     return h+'<div class="dacts"><button type="button" class="btn fill" data-act="pdo">DO TODAY</button><button type="button" class="btn ghost" data-act="pdrop">DROP</button></div><form id="pmove-f" class="dtime"><label>DAY<input type="date" id="pm-d" value="'+esc(it.date)+'" min="'+ops().date+'"></label><label>START<input type="time" id="pm-s" value="'+esc(it.s)+'"></label><button type="submit" class="btn sm">MOVE</button></form></div>';}
@@ -2054,7 +2096,7 @@ function tk_submit(f,e){
    sits at the bottom of the evening before. ES5 only. */
 var WC_SRV='Google Calendar',WC_TOOL='list_events',WC_PX=0.8,WC_N=7,WC_MINH=20;
 var WC_INFO={weekcal:'Your next 7 days in one place: Google Calendar events in grey, scheduled tasks in white, proposals waiting for your OK with a dashed cyan edge, deadlines on top. CLASH means a task overlaps a busy event. SYNCED is the morning snapshot; LIVE means the page just read Google Calendar itself. Tap it to refresh.'};
-var WC={live:null,st:'idle',code:'',mcp:null,unsub:null,key:'',started:false,gen:0,fell:false,ev:null,opener:null};
+var WC={live:null,st:'idle',code:'',mcp:null,unsub:null,key:'',started:false,gen:0,fell:false,ev:null,opener:null,pid:'',pw:0,pn:'',pday:''};
 var WC_STOP={with:1,from:1,into:1,your:1,this:1,that:1,have:1,will:1,what:1,when:1,then:1,them:1,they:1,about:1,after:1,before:1};
 
 /* ---- view mode ---- */
@@ -2250,7 +2292,7 @@ function wc_grid(days,o){
     wc_lanes(D.T).forEach(function(x){
       var s=Math.max(x.s,H0*60),e=Math.min(x.e,H1*60),top=Math.round((s-H0*60)*WC_PX),ht=Math.max(WC_MINH,Math.round((e-s)*WC_PX)-2);
       /* sm: too short for two lines -> one line; nr: 3+ lanes -> no time line, title wraps by word */
-      ht=Math.max(12,Math.min(ht,HT-top));var one=ht<34,sm=one||x.N>=3,tm=m2h(x.s)+'–'+m2h(x.e),cl=x.clash?' <em>CLASH</em>':'';
+      ht=Math.max(12,Math.min(ht,HT-top));var one=ht<34,sm=one||x.N>=3,tm=m2h(x.s)+'–'+m2h(x.e),cl=(x.clash?' <em>CLASH</em>':'')+(x.k==='proposal'?' <i>PROPOSED</i>':'');
       h+='<button type="button" class="wc-b '+wc_kc(x)+(one?' sm':sm?' nr':'')+(x.clash?' cl':'')+'" '+wc_attr(x)+' id="'+wc_eid('wcg',x,D)+'" style="top:'+top+'px;height:'+ht+'px;left:calc('+x.L+' * 100% / '+x.N+' + 2px);width:calc(100% / '+x.N+' - 4px)" title="'+esc(x.t)+' · '+tm+'" aria-label="'+esc(x.t)+', '+tm+', '+wc_kind(x)+(x.clash?', clashes with an event':'')+'">'+
         (one?'<span class="wc-bx one"><b>'+m2h(x.s)+'</b>'+cl+' '+esc(x.t)+'</span>':sm?'<span class="wc-bx" style="-webkit-line-clamp:'+Math.max(1,Math.floor((ht-8)/16))+'">'+(x.clash?'<em>CLASH</em> ':'')+esc(x.t)+'</span>':'<span class="wc-bt">'+tm+cl+'</span><span class="wc-bx" style="-webkit-line-clamp:'+Math.max(1,Math.floor((ht-22)/16))+'">'+esc(x.t)+'</span>')+'</button>';});
     if(D.k===0&&n>=H0*60&&n<=H1*60)h+='<div class="wc-nl" style="top:'+Math.round((n-H0*60)*WC_PX)+'px"><span>'+m2h(n)+'</span></div>';
@@ -2287,6 +2329,8 @@ function wc_click(a,el,e){
   if(a==='wc-ev'){WC.ev={id:el.dataset.id};WC.opener=el.id||null;render();var c=document.getElementById('wc-evx');if(c)c.focus();return true;}
   if(a==='wc-evx'){wc_close();return true;}
   if(a==='wc-sync'){wc_tap();return true;}
+  if(a==='wc-pday'){if(parseErr){queueSave();return true;}var p=findItem('proposal',el.dataset.id),ds=wc_day(el.dataset.v);if(p&&ds)wc_pMove(p,ds);return true;}
+  if(a==='wc-pw'){WC.pw=el.dataset.v==='1'?1:0;WC.pn='';WC.pday='';render();var w=document.getElementById('wc-pw');if(w)w.focus();return true;}
   return false;
 }
 /* call first in the document keydown handler */
@@ -2355,6 +2399,62 @@ function wc_tap(){
     wc_call(true,function(ok){toast(ok?'Calendar is live':wc_why());render();});}
   if(WC.mcp)run();else wc_mcp().then(function(m){if(m)WC.mcp=m;else{WC.st='off';WC.code='none';}run();});
 }
+
+/* ---- proposal placement: week strip + day view inside the proposal detail (rDetail -> wc_pPanel) ----
+   A proposal can be moved to any day of its week (or the next) with one tap: same start if free, else the
+   nearest free slot that day; the overlap rules are the scheduler's (no overlap with busy events, planned,
+   today items or other proposals; 3 items a day; 08:00-22:30). State lives in WC.p* and is per proposal. */
+var WC_P0=8*60,WC_P1=22*60+30;
+function wc_pLen(p){return p.m>0?p.m:itemMin(p);}
+function wc_pDow(ds){return pd(ds).toLocaleDateString('en-US',{weekday:'short'}).toUpperCase();}
+function wc_pLands(p){return wc_pDow(p.date)+(p.s?' '+p.s:' · ANY');}
+/* busy minutes on ds, leaving out the proposal itself */
+function wc_pBusy(ds,p){var b=[];
+  if(ds===S.today.date)S.today.items.forEach(function(it){var s=tS(it);if(s!==null)b.push([s,itemEnd(it)]);});
+  S.planned.concat(S.proposals).forEach(function(q){if(q===p||q.date!==ds)return;var s=mins(q.s);if(s!==null)b.push([s,s+(q.m||itemMin(q))]);});
+  return b.concat(wc_busy(ds));}
+function wc_pCount(ds,p){return countOn(ds)-(p.date===ds?1:0);}
+function wc_pFits(p,ds,st,m){var o=ops();if(st<WC_P0||st+m>WC_P1)return false;if(ds===o.date&&st<o.min+10)return false;
+  return !wc_pBusy(ds,p).some(function(b){return st<b[1]&&st+m>b[0];});}
+/* where p would land on ds: {s:minutes, same:true when the start is unchanged} or {err:'one line'} */
+function wc_pSlot(p,ds){var o=ops(),m=wc_pLen(p);
+  if(ds<o.date)return {err:wc_pDow(ds)+' is gone.'};
+  if(ds===o.date&&!fresh())return {err:'Today’s plan isn’t loaded yet.'};
+  if(wc_pCount(ds,p)>=3)return {err:wc_pDow(ds)+' already has 3 items.'};
+  var wk=pd(ds).getDay()===0||pd(ds).getDay()===6,want=mins(p.s);if(want===null)want=wk?11*60:16*60;
+  if(wc_pFits(p,ds,want,m))return {s:want,same:true};
+  for(var d=15;d<=14*60;d+=15){if(wc_pFits(p,ds,want+d,m))return {s:want+d};if(wc_pFits(p,ds,want-d,m))return {s:want-d};}
+  return {err:'No free '+m+' min on '+wc_pDow(ds)+'.'};}
+function wc_pMove(p,ds){WC.pid=p.id;if(ds===p.date){WC.pn='';WC.pday='';render();wc_pFocus(ds);return;}var r=wc_pSlot(p,ds),D=ui.detail;
+  if(r.err){WC.pn=r.err;WC.pday=ds;render();wc_pFocus(ds);return;}
+  var m=wc_pLen(p),from=wc_pLands(p),s=m2h(r.s);
+  act('Moved to '+wc_pDow(ds)+' '+s+(r.same?'':' · nearest free slot'),function(){p.date=ds;p.s=s;p.e=m2h(Math.min(1439,r.s+m));p.m=m;p.why='You moved it here from '+from+'.';});
+  WC.pn='';WC.pday='';WC.pw=0;ui.detail=D;render();wc_pFocus(ds);}
+function wc_pFocus(ds){var el=document.getElementById('wc-pc-'+ds);if(el&&el.offsetParent)el.focus();}
+/* Monday of the week shown in the strip: the proposal's week, or the next one */
+function wc_pMon(p){var m=monday(pd(p.date));return iso(new Date(m.getFullYear(),m.getMonth(),m.getDate()+7*(WC.pw?1:0)));}
+function wc_pStrip(p){var o=ops(),m0=wc_pMon(p),h='';
+  var lbl=pd(m0).toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase()+' – '+pd(wc_addD(m0,6)).toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
+  h+='<div class="wc-ph"><span class="lbl">'+lbl+'</span>'+infoBtn('proposed','d')+'<button type="button" class="btn sm ghost" id="wc-pw" data-act="wc-pw" data-v="'+(WC.pw?0:1)+'">'+(WC.pw?'← THIS WEEK':'NEXT WEEK →')+'</button></div>';
+  h+='<div class="wc-ps" role="group" aria-label="Move to a day">';
+  for(var k=0;k<7;k++){var ds=wc_addD(m0,k),n=countOn(ds),cur=ds===p.date,past=ds<o.date,full=n>=3&&!cur;
+    h+='<button type="button" class="wc-pc'+(cur?' cur':'')+(ds===WC.pday&&!cur?' vw':'')+(ds===o.date?' td':'')+(full?' full':'')+'" id="wc-pc-'+ds+'" data-act="wc-pday" data-id="'+esc(p.id)+'" data-v="'+ds+'"'+(past?' disabled':'')+(cur?' aria-current="date"':'')+' aria-label="'+wc_pDow(ds)+' '+pd(ds).toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+n+' of 3 items'+(cur?', the proposed day':past?', past':'')+'"><b>'+wc_pDow(ds)+'</b><span>'+pd(ds).getDate()+'</span><i>'+n+'/3</i></button>';}
+  return h+'</div>';}
+/* that day's events, today items, planned and proposals in time order; the proposal itself is highlighted */
+function wc_pDay(p,ds){var o=ops(),rows=[];
+  wc_eventsOn(ds).forEach(function(x){rows.push({k:'ev',t:x.t,s:x.allDay?null:x.sm,e:x.allDay?null:x.em,lbl:'ALL DAY',free:x.free});});
+  if(ds===S.today.date&&fresh())S.today.items.forEach(function(it){var s=tS(it);rows.push({k:'task',t:it.t,s:s,e:s===null?null:itemEnd(it),lbl:it.lbl||'ANY',done:it.done});});
+  S.planned.forEach(function(q){if(q.date!==ds)return;var s=tS(q);rows.push({k:'task',t:q.t,s:s,e:s===null?null:wc_iEnd(q,s),lbl:'ANY'});});
+  S.proposals.forEach(function(q){if(q.date!==ds)return;var s=tS(q);rows.push({k:'prop',t:q.t,s:s,e:s===null?null:wc_iEnd(q,s),lbl:'ANY',me:q===p});});
+  rows.sort(function(a,b){return ((a.s==null?-1:a.s)-(b.s==null?-1:b.s))||((a.k==='ev'?0:1)-(b.k==='ev'?0:1));});
+  var h='<div class="wc-pd"><div class="wc-pdh"><b>'+(ds===o.date?'TODAY':wc_pDow(ds))+'</b><span>'+pd(ds).toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase()+' · '+countOn(ds)+'/3 ITEMS</span></div>';
+  if(!rows.length)return h+'<div class="wc-pr none">Nothing on this day</div></div>';
+  rows.forEach(function(r){h+='<div class="wc-pr '+r.k+(r.me?' me':'')+(r.free?' free':'')+(r.done?' done':'')+'"><span class="wc-pt">'+(r.s==null?esc(r.lbl):m2h(r.s)+'<i>'+m2h(r.e)+'</i>')+'</span><span class="wc-px">'+esc(r.t)+(r.k==='prop'?'<em>PROPOSED</em>':r.free?'<em class="d">FREE</em>':'')+'</span></div>';});
+  return h+'</div>';}
+/* the whole block for rDetail's proposal branch: strip, one-line note, day view */
+function wc_pPanel(p){if(WC.pid!==p.id){WC.pid=p.id;WC.pw=0;WC.pn='';WC.pday='';}
+  var ds=WC.pday&&WC.pn?WC.pday:p.date;
+  return '<div class="wc-pp">'+wc_pStrip(p)+(WC.pn?'<div class="wc-pn" role="status">'+esc(WC.pn)+'</div>':'')+wc_pDay(p,ds)+'</div>';}
 
 /* ---------- TELL CLAUDE (prefix tc_) ----------
    One box for everything Kevin tells Claude in plain words: log hours, add tasks (with a proposed slot
