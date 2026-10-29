@@ -13,7 +13,9 @@ live snapshot. Never commit a page with real state: this repository is public.
 - `strip-state.py IN OUT` – replace the state with `{"v":2}`.
 - `tests/smoke.js` – Playwright boot test at 390px and 1440px with a fixed clock
   (`node tests/smoke.js [page.html]`). Must pass before every publish.
-- `tests/*.js` – one test per feature, same harness.
+- `tests/*.js` – one test per feature, same harness (`tests/events.js` stubs `window.claude.use('mcp')` with a fake
+  Google Calendar server and drives the Tell Claude tools through the page's own `execute` functions, like
+  `tests/tellclaude.js`).
 
 ## Conventions (read before editing)
 
@@ -72,6 +74,40 @@ with a safe default so that an old state still loads.
   `YYYY-MM-DDTHH:MM` Eastern, `k` is `"morning" | "sunday"`, `fail` lists failed step names.
 - `log: {date: 22-char string}` – one code per hour from 06:00 to 03:00. `settings.cats` holds
   Kevin's own categories.
+- Items (today, planned) may also carry `kind: "event"` (a fixed block with a set time, drawn like a calendar
+  event in ink, no checkbox, never LATE), `loc` and `calId` (the Google Calendar event id it stands for).
+  `cleanItems` / `cleanSched` keep all three; `set_today_items` keeps them on a kept id.
+
+## Tell Claude tools (`tc_tools()`)
+
+`log_time`, `add_task`, `update_task`, `add_event`, `add_project`, `propose_task`, `set_today_items`,
+`set_capacity`, `capture`. All but `add_event` change `S` at once inside the turn's undo envelope.
+
+`add_event {t, date, s, e | m, loc?, d?, g?, prep, prep_t?}` is for anything with a set time (a call, a
+meeting, an appointment). It writes nothing: it computes the conflicts (everything overlapping the event
+slot and the prep slot among today's timed items, planned items, pending proposals and calendar events),
+suggests a new slot for each one by the scheduler's rules (first free start after the event, else before it,
+else the next day with room; 08:00–22:30, not past, no overlap, within capacity), stores the request in
+`ui.ev`, and returns `{status: "awaiting_confirmation", slot, prep, conflicts: [{what, suggest}]}` so
+Claude tells Kevin it is waiting on the page. The **Add to calendar?** card (`ev_card`, top of TODAY,
+`#ev-card`) asks for one choice per conflict (Move to the suggestion or a typed time, Drop, Keep both; a
+calendar event offers Move and Keep both) and only **Add to calendar** (`ev_commit`) changes state: the
+choices are applied, the event (`kind: "event"`) and its prep block become today items (or `planned` for a
+later date) in one undo envelope, then the page writes both to Google Calendar through the mcp capability
+and links them by `calId` (a moved calendar event is an `update_event`). If the calendar refuses, the items
+stay on the plan and a toast says why. **Undo restores the plan only; it never deletes a calendar event.**
+An item with a `calId` (or one matching a calendar event by day, start and title, which `normalize()` links)
+hides the calendar copy everywhere (`wc_src` → `ev_dedupe`), so nothing shows twice.
+
+## Google Calendar (mcp capability)
+
+The page declares nothing itself; it is published with
+`capabilities: {artifact: {}, sample: {}, mcp: {servers: [{server: "Google Calendar", tools: ["list_events",
+"create_event", "update_event"]}]}}`. `list_events` feeds the live week calendar (`wc_live`), `create_event`
+and `update_event` are used only by the Add to calendar card. Times are ISO local without an offset
+(`2026-10-29T15:00:00`). The shape of `create_event`'s result is not documented, so the id is read
+defensively (`payload.id`, `payload.eventId`, `payload.event.id`), with a `list_events` lookup by start and
+title as the fallback.
 
 ## Urgency rules (page, Tell Claude and routines all follow these)
 
