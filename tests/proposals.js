@@ -9,9 +9,9 @@ let fails = 0;
 function ok(cond, msg) { if (cond) console.log('  ok   ' + msg); else { fails++; console.log('  FAIL ' + msg); } }
 function state() {
   const s = fixture();
-  // Saturday gets two planned items so that, with q2, it holds 3: a full day to refuse a move.
+  // Saturday gets two planned items so that, with q2 (15 min), it holds 180 min = its weekend capacity: a full day to refuse a move.
   s.planned.push({ id: 'p2', t: 'Gym', d: '', g: 'pt', m: 60, date: '2026-10-31', s: '12:00', e: '13:00' });
-  s.planned.push({ id: 'p3', t: 'Groceries', d: '', g: '', m: 45, date: '2026-10-31', s: '16:00', e: '16:45' });
+  s.planned.push({ id: 'p3', t: 'Groceries', d: '', g: '', m: 105, date: '2026-10-31', s: '16:00', e: '17:45' });
   return s;
 }
 (async () => {
@@ -57,7 +57,9 @@ function state() {
     ok(chips.length === 7 && chips[0] === '2026-10-26' && chips[6] === '2026-11-01', '7 day chips Mon–Sun: ' + chips.join(' '));
     ok(await page.$eval('.dsheet .wc-pc.cur', e => e.dataset.v) === '2026-10-30', 'current day marked');
     const loads = await page.$$eval('.dsheet .wc-pc i', els => els.map(e => e.textContent));
-    ok(loads.join(' ') === '0/3 0/3 0/3 1/3 1/3 3/3 0/3', 'chip loads n/3: ' + loads.join(' '));
+    ok(loads.join(' ') === '0H 0H 0H 0.3H 1H 3H 0H', 'chip loads in hours: ' + loads.join(' '));
+    ok(await page.$eval('#wc-pc-2026-10-31', e => e.classList.contains('full')) && !(await page.$eval('#wc-pc-2026-10-30', e => e.classList.contains('full'))), 'a day at its capacity is marked full, others are not');
+    ok(/OCT 30 · 1H OF 6H/.test(await page.$eval('.dsheet .wc-pdh', e => e.textContent)), 'day view header shows load of capacity: ' + (await page.$eval('.dsheet .wc-pdh', e => e.textContent)));
     const past = await page.$$eval('.dsheet .wc-pc:disabled', els => els.length);
     ok(past === 3, 'past days (Mon–Wed) are disabled: ' + past);
     ok((await page.$eval('.dsheet .wc-pr.me', e => e.textContent)).indexOf('Sizing: first pass') >= 0, 'day view highlights the proposal');
@@ -82,8 +84,8 @@ function state() {
     await page.click('#wc-pc-2026-10-31');
     q = await prop();
     const note = await page.$eval('.dsheet .wc-pn', e => e.textContent).catch(() => '');
-    ok(q.lands === 'SUN 14:00' && /SAT already has 3 items/.test(note), 'full day refused with reason: ' + note);
-    ok(await page.$eval('.dsheet .wc-pdh', e => e.textContent).then(t => /SAT/.test(t)), 'day view shows the refused day so the clash is visible');
+    ok(q.lands === 'SUN 14:00' && /SAT is at 3h of 3h; this needs 60 min more\./.test(note), 'day at capacity refused with the hours: ' + note);
+    ok(await page.$eval('.dsheet .wc-pdh', e => e.textContent).then(t => /SAT/.test(t) && /3H OF 3H/.test(t)), 'day view shows the refused day and its load so the clash is visible');
     await page.screenshot({ path: path.join(shotDir, 'prop-refused-' + vp.width + '.png') });
 
     // Today: 14:00 is in the past, 14:45–16:45 is taken, so the nearest free slot is 16:45

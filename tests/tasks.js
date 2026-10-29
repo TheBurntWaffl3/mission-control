@@ -74,11 +74,16 @@ async function run(vp) {
   ok(await toast() === 'LATER UNDO' && (await dmeta()).some(x => /ON TODAY/.test(x)), 'LATER keeps the today item');
   await click('#d-close');
   ok(deepEq(await tagOf('j2'), null) && await ev(() => /ON TODAY/.test(document.querySelector('#tko-j2').textContent)), 'row shows ON TODAY');
-  await click('#tko-e2'); await click('#tku-now'); await click('#d-close');   // today now has 3 open items
-  await click('#tko-l1'); await click('#tku-now');
-  ok(await toast() === 'NOW · today is full, so it tops Tasks UNDO' && !(await dmeta()).length, 'NOW with 3 open items stays in Tasks: ' + (await toast()));
+  await click('#tko-e2'); await click('#tku-now'); await click('#d-close');   // today now holds 5.3h of its 6h (3 open items: no count cap)
+  await click('#tko-c1'); await click('#tku-now');
+  ok(await toast() === 'NOW · on today’s plan · today at 6.8h of 6h UNDO' && (await dmeta()).some(x => /ON TODAY/.test(x)), 'NOW past capacity still goes on today; the toast shows the overage: ' + (await toast()));
   await click('#d-close');
-  ok(deepEq(await tagOf('l1'), ['NOW', true]), 'row shows the NOW tag');
+  ok(deepEq(await tagOf('c1'), ['NOW', true]), 'row shows the NOW tag');
+  // DO TODAY past capacity: asks once (hours shown), ADD ANYWAY adds it
+  await click('#tko-l1'); await click('#tk-today');
+  ok(await vis('#tk-today-ok') && await vis('#tk-today-sch') && await vis('#tk-today-x') && await ev(() => /TODAY WOULD BE AT 7\.1H OF 6H/.test(document.querySelector('.dsheet .tk-bt').textContent)), 'DO TODAY over capacity asks with the hours: ' + (await ev(() => document.querySelector('.dsheet .tk-bt').textContent)));
+  await click('#tk-today-ok');
+  ok(await toast() === 'Added to today · today at 7.1h of 6h UNDO' && !(await vis('.dsheet')), 'ADD ANYWAY adds it, closes the sheet, toast shows the overage: ' + (await toast()));
 
   // ---- 4. chips in the inline add form ----
   await click('#tka-p_life');

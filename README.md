@@ -46,7 +46,8 @@ with a safe default so that an old state still loads.
   `due` is within 7 days, else `"later"`.
 - `proposals: [{id, t, d, g, m, date, s, e, why, task}]` – slots Claude proposed, awaiting
   Kevin. `planned` has the same shape without `why`: slots Kevin accepted.
-- `today.items: [{id, t, d, s, e, lbl, g, m, done, task}]` – max 3 a day.
+- `today.items: [{id, t, d, s, e, lbl, g, m, done, task}]` – as many as fit the day's capacity in
+  minutes (`settings.capWeekday` / `capWeekend`, default 360 / 180); there is no count cap.
 - `runs: [{at, k, ok, fail}]` – routine run log, newest last, max 14. `at` is
   `YYYY-MM-DDTHH:MM` Eastern, `k` is `"morning" | "sunday"`, `fail` lists failed step names.
 - `log: {date: 22-char string}` – one code per hour from 06:00 to 03:00. `settings.cats` holds
@@ -54,7 +55,7 @@ with a safe default so that an old state still loads.
 
 ## Urgency rules (page, Tell Claude and routines all follow these)
 
-- NOW: goes straight onto today's plan when there is room (max 3), otherwise top of Tasks.
+- NOW: goes straight onto today's plan; over capacity is shown, not refused.
 - THIS WEEK: gets a proposed slot inside the current week (Mon–Sun), placed in free time.
 - LATER: stays in Tasks with no slot.
 - Sort in Tasks: NOW, then due within 2 days, then THIS WEEK, then by due date, then LATER.
