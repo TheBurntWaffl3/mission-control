@@ -60,8 +60,8 @@ async function run(vp) {
   const ch = await page.$eval('#tku-now', b => b.getBoundingClientRect().height);
   ok(ch >= (vp.width < 1000 ? 44 : 40), 'chip hit area ' + Math.round(ch) + 'px');
   await click('#tku-week');
-  ok(/^THIS WEEK · proposed (THU, OCT 29|FRI, OCT 30|SAT, OCT 31|SUN, NOV 1) \d\d:\d\d UNDO$/.test(await toast()), 'THIS WEEK proposes a timed slot inside this week: ' + (await toast()));
-  ok(await vis('.dsheet') && await pressed('#tku-week') === 'true' && await vis('#tk-pacc'), 'sheet stays open, chip pressed, proposed slot shown');
+  ok(/^THIS WEEK · suggested (THU, OCT 29|FRI, OCT 30|SAT, OCT 31|SUN, NOV 1) \d\d:\d\d UNDO$/.test(await toast()), 'THIS WEEK suggests a timed slot inside this week: ' + (await toast()));
+  ok(await vis('.dsheet') && await pressed('#tku-week') === 'true' && await vis('#tk-pacc'), 'sheet stays open, chip pressed, suggested slot shown');
   await click('#tku-later');
   ok(await toast() === 'LATER · proposal removed UNDO' && !(await vis('#tk-pacc')), 'LATER removes the pending proposal');
   await click('#d-close');
@@ -91,9 +91,9 @@ async function run(vp) {
   await click('#tka-week');
   await page.fill('#tk-add-in', 'Order filter media');
   await page.press('#tk-add-in', 'Enter'); await page.waitForTimeout(80);
-  ok(/^Added to Life admin · THIS WEEK · proposed /.test(await toast()), 'added with THIS WEEK and a proposed slot: ' + (await toast()));
-  const nr = await ev(() => { const b = [].filter.call(document.querySelectorAll('.taskp .tk-tb'), x => x.querySelector('.tk-tt').textContent === 'Order filter media')[0]; return b ? [b.querySelector('.tk-ut') && b.querySelector('.tk-ut').textContent, /PROPOSED/.test(b.textContent), b.closest('.tk-g').querySelector('.tk-gt b').textContent] : null; });
-  ok(deepEq(nr, ['THIS WEEK', true, 'Life admin']), 'new row: THIS WEEK tag, PROPOSED, under Life admin');
+  ok(/^Added to Life admin · THIS WEEK · suggested /.test(await toast()), 'added with THIS WEEK and a suggested slot: ' + (await toast()));
+  const nr = await ev(() => { const b = [].filter.call(document.querySelectorAll('.taskp .tk-tb'), x => x.querySelector('.tk-tt').textContent === 'Order filter media')[0]; return b ? [b.querySelector('.tk-ut') && b.querySelector('.tk-ut').textContent, /SUGGESTED/.test(b.textContent), b.closest('.tk-g').querySelector('.tk-gt b').textContent] : null; });
+  ok(deepEq(nr, ['THIS WEEK', true, 'Life admin']), 'new row: THIS WEEK tag, SUGGESTED, under Life admin');
   ok(await pressed('#tka-later') === 'true', 'add form chip resets to LATER');
   await click('#tk-add-x');
 
@@ -147,7 +147,7 @@ async function run(vp) {
     return { group: b.closest('.tk-g').querySelector('.tk-gt b').textContent, tag: b.querySelector('.tk-ut') && b.querySelector('.tk-ut').textContent, due: b.querySelector('.tk-du') && b.querySelector('.tk-du').textContent, pg: b.querySelector('.tk-pg') && b.querySelector('.tk-pg').textContent, subs: subs };
   });
   ok(cv && cv.group === 'Job search' && !(await groups()).includes('App launch'), 'project became a task under Job search; its group is gone');
-  ok(cv && cv.tag === 'THIS WEEK' && cv.due === 'T−5D', 'new task takes the most urgent child urgency and the earliest due: ' + JSON.stringify(cv));
+  ok(cv && cv.tag === 'THIS WEEK' && cv.due === '5d', 'new task takes the most urgent child urgency and the earliest due: ' + JSON.stringify(cv));
   ok(cv && cv.pg === '0/3' && deepEq(cv.subs, ['Prep table (Nov 3)', 'Prep table (Nov 3): Demo phone + mirror screen', 'Prep table (Nov 3): Banner and sign']), 'tasks became subtasks; nested ones flattened with the parent prefix: ' + JSON.stringify(cv && cv.subs));
   ok(await toast() === 'App launch is now a task under Job search UNDO', 'toast: ' + (await toast()));
   await undo();

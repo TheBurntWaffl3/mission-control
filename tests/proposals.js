@@ -36,15 +36,15 @@ function state() {
     ok(await page.$eval('#d-title', e => e.textContent) === 'Sizing: first pass', 'card row opens the proposal detail');
     await page.click('#d-close');
 
-    // Week calendar: proposals drawn as dashed cyan blocks with a PROPOSED marker
+    // Week calendar: suggestions drawn as dashed cyan blocks with a SUGGESTED marker
     if (phone) await page.click('[data-act="tab"][data-v="week"]');
     const tg = (await page.$$('[data-act="wc-mode"][data-v="cal"]'));
     for (const b of tg) { if (await b.isVisible()) { await b.click(); break; } }
     await page.waitForTimeout(300);
     const blocks = phone ? await page.$$('.wcalp .wc-ag .wc-r.prop') : await page.$$('.wcalp .wc-g .wc-b.prop');
     ok(blocks.length === 2, 'two proposals drawn in the week ' + (phone ? 'agenda' : 'grid'));
-    const marks = await Promise.all(blocks.map(b => b.evaluate(e => /PROPOSED/.test(e.textContent) || /proposed task/.test(e.getAttribute('aria-label')))));
-    ok(marks.every(Boolean), 'each proposal block carries a PROPOSED marker');
+    const marks = await Promise.all(blocks.map(b => b.evaluate(e => /SUGGESTED/.test(e.textContent) || /suggested task/.test(e.getAttribute('aria-label')))));
+    ok(marks.every(Boolean), 'each proposal block carries a SUGGESTED marker');
     const dashed = await blocks[0].evaluate(e => getComputedStyle(e).borderTopStyle);
     ok(dashed === 'dashed', 'proposal block has a dashed outline (' + dashed + ')');
     if (phone) await blocks[0].scrollIntoViewIfNeeded();
@@ -101,7 +101,7 @@ function state() {
     ok(!(await page.$('.dsheet .wc-pn')), 'note cleared after a successful move');
 
     // Accept moves it into planned
-    await page.click('.dsheet [data-act="pacc"]');
+    await page.click('.dsheet [data-act="pacc"]'); await page.waitForTimeout(400);   // the card folds away (280 ms) before the re-render
     ok(!(await page.$('.dsheet')), 'detail closed after accept');
     const planned = await page.$$eval((phone ? '.wcalp .wc-ag .wc-r.task' : '.wcalp .wc-g .wc-b.task'), els => els.map(e => e.getAttribute('aria-label')).filter(l => /Sizing: first pass/.test(l)));
     ok(planned.length === 1 && /16:00( to |–)17:00, scheduled task/.test(planned[0]) && (await page.$$('[data-k="planned"][data-id]')).length > 0, 'ACCEPT moved it to planned: ' + planned[0]);

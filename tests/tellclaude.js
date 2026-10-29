@@ -1,4 +1,4 @@
-// Tell Claude: urgency tools (add_task urg, update_task), the RUN light, and the entry points.
+// Tell Claude: urgency tools (add_task urg, update_task), the Sync chip, and the entry points.
 // Run: node tests/tellclaude.js [path/to/page.html]
 // window.claude is absent under Playwright, so a stub is installed before load: use('sample') hands back a
 // fake sampler that runs the tool calls queued in window.__plan against the real tools the page passes it.
@@ -69,39 +69,39 @@ const hit = (page, id) => page.evaluate(id => { const b = document.getElementByI
     await page.addInitScript(STUB);
     console.log(vp.width + 'px');
 
-    // ---- RUN light: four states, plus Sunday and the info sheet ----
+    // ---- Sync chip: four states, plus Sunday and the info sheet ----
     await boot(page, fixture());
     let l = await light(page, runId);
-    check('run light amber when today\'s run failed a step', l && l.txt === 'RUN ⚠' && l.cls === 'exp', l);
-    check('run light visible in this layout', l && l.h > 0, l);
+    check('sync chip amber when today\'s run failed a step', l && l.txt === 'Sync ⚠' && l.cls === 'exp', l);
+    check('sync chip visible in this layout', l && l.h > 0, l);
     const hb = await hit(page, runId);
-    check('run light hit area ' + (phone ? '44' : '40') + 'px', hb.h >= (phone ? 44 : 40) && hb.w >= 44, hb);
+    check('sync chip hit area ' + (phone ? '44' : '40') + 'px', hb.h >= (phone ? 44 : 40) && hb.w >= 44, hb);
     await page.click('#' + runId);
     const sheet = await page.evaluate(() => { const s = document.getElementById('isheet'); return s ? s.textContent : ''; });
-    check('tapping the light opens the runs info sheet', /ROUTINE RUN/i.test(sheet) && /brain doc/.test(sheet) && /OCT 28 07:19 MORNING/.test(sheet), sheet.slice(0, 120));
+    check('tapping the chip opens the last-sync info sheet', /LAST SYNC/i.test(sheet) && /brain doc/.test(sheet) && /OCT 28 07:19 MORNING/.test(sheet), sheet.slice(0, 120));
     await page.keyboard.press('Escape');
     check('info sheet closes', !(await page.$('#isheet')));
 
     let st = fixture(); st.runs = [{ at: '2026-10-28T07:19', k: 'morning', ok: true, fail: [] }, { at: '2026-10-29T07:18', k: 'morning', ok: true, fail: [] }];
     await boot(page, st); l = await light(page, runId);
-    check('run light green RUN 07:18 when today\'s run is clean', l && l.txt === 'RUN 07:18' && l.cls === 'ok', l);
+    check('sync chip green Sync 07:18 when today\'s run is clean', l && l.txt === 'Sync 07:18' && l.cls === 'ok', l);
     st = fixture(); st.runs = [{ at: '2026-10-29T07:18', k: 'morning', ok: true, fail: ['brain doc'] }];
     await boot(page, st); l = await light(page, runId);
-    check('run light amber when ok but fail is non-empty', l && l.txt === 'RUN ⚠' && l.cls === 'exp', l);
+    check('sync chip amber when ok but fail is non-empty', l && l.txt === 'Sync ⚠' && l.cls === 'exp', l);
     st = fixture(); st.runs = [];
     await boot(page, st); l = await light(page, runId);
-    check('run light dim RUN — when runs is empty', l && l.txt === 'RUN —' && l.cls === '', l);
+    check('sync chip dim Sync — when runs is empty', l && l.txt === 'Sync —' && l.cls === '', l);
     st = fixture(); st.runs = [{ at: '2026-10-28T07:19', k: 'morning', ok: true, fail: [] }];
     await boot(page, st); l = await light(page, runId);
-    check('run light red NO RUN after 08:00 with no run today', l && l.txt === 'NO RUN' && l.cls === 'bad', l);
+    check('sync chip red No sync after 08:00 with no run today', l && l.txt === 'No sync' && l.cls === 'bad', l);
     await boot(page, st, '2026-10-29T07:30:00-04:00'); l = await light(page, runId);
-    check('run light dim RUN — before 08:00', l && l.txt === 'RUN —' && l.cls === '', l);
+    check('sync chip dim Sync — before 08:00', l && l.txt === 'Sync —' && l.cls === '', l);
     st = fixture(); st.runs = [{ at: '2026-10-31T07:16', k: 'morning', ok: true, fail: [] }];
     await boot(page, st, '2026-11-01T09:00:00-04:00'); l = await light(page, runId);
-    check('run light red NO RUN on Sunday after 08:00', l && l.txt === 'NO RUN' && l.cls === 'bad', l);
+    check('sync chip red No sync on Sunday after 08:00', l && l.txt === 'No sync' && l.cls === 'bad', l);
     st = fixture(); st.runs = [{ at: '2026-11-01T07:20', k: 'sunday', ok: true, fail: [] }];
     await boot(page, st, '2026-11-01T09:00:00-04:00'); l = await light(page, runId);
-    check('run light green on Sunday after the sunday run', l && l.txt === 'RUN 07:20' && l.cls === 'ok', l);
+    check('sync chip green on Sunday after the sunday run', l && l.txt === 'Sync 07:20' && l.cls === 'ok', l);
     // normalize: bad rows dropped, newest last, max 14
     st = fixture(); st.runs = [{ at: 'nope', k: 'morning', ok: true }, { at: '2026-10-29T07:18', k: 'morning', ok: 'yes', fail: ['x', 3, '  '] }, { at: '2026-10-28T07:19', k: 'lunch', ok: true }, { at: '2026-10-27T07:19', k: 'morning', ok: true }];
     for (let i = 1; i <= 16; i++) st.runs.push({ at: '2026-10-' + (i < 10 ? '0' : '') + i + 'T07:15', k: 'morning', ok: true, fail: [] });
@@ -227,7 +227,7 @@ const hit = (page, id) => page.evaluate(id => { const b = document.getElementByI
     check('set_today_items has no item cap: 5 items saved, note reports the overage against the new capacity', !sti.max && R[4].ok && R[4].res.saved.length === 5 && /^today is now at 8h of 7h$/.test(R[4].res.note) && S.today.items.length === 5 && S.today.items[0].done === true, R[4]);
     const chips3 = await page.evaluate(() => [].map.call(document.querySelectorAll('.tc-chip'), c => c.textContent));
     check('capacity chips', chips3.some(c => /Capacity → 7h weekdays/.test(c)) && chips3.some(c => /Capacity → 4h weekends/.test(c)), chips3);
-    check('flight plan header shows today\'s load in red when over by 50% or more', await page.evaluate(() => { const e = document.getElementById('hload'); return e && e.textContent === '8H OF 7H' && e.classList.contains('c'); }), await page.evaluate(() => { const e = document.getElementById('hload'); return e && [e.textContent, e.className]; }));
+    check('today header shows today\'s load in red when over by 50% or more', await page.evaluate(() => { const e = document.getElementById('hload'); return e && e.textContent === '8H OF 7H' && e.classList.contains('c'); }), await page.evaluate(() => { const e = document.getElementById('hload'); return e && [e.textContent, e.className]; }));
 
     // ---- entry points ----
     await bootTools(page, fixture());
@@ -255,7 +255,7 @@ const hit = (page, id) => page.evaluate(id => { const b = document.getElementByI
     }
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: path.join(__dirname, 'shot-tc-' + vp.width + '.png'), clip: { x: 0, y: 0, width: vp.width, height: phone ? 70 : 150 } });
-    if (phone) { const pb = await page.evaluate(() => { const p = document.querySelector('.pbar'); return { c: p.clientWidth, s: p.scrollWidth }; }); check('phone bar does not overflow with the RUN chip', pb.s <= pb.c, pb); }
+    if (phone) { const pb = await page.evaluate(() => { const p = document.querySelector('.pbar'); return { c: p.clientWidth, s: p.scrollWidth }; }); check('phone bar does not overflow with the Sync chip', pb.s <= pb.c, pb); }
     check('no page errors', errors.length === 0, errors);
     await ctx.close();
   }

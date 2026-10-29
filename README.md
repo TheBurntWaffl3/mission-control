@@ -22,16 +22,31 @@ live snapshot. Never commit a page with real state: this repository is public.
 - Everything is rendered from `S` (the state) by `render()`; actions go through `act(a, el)` and
   `data-a` attributes on buttons. After changing `S`, call `markDirty()` (or `queueSave()`) then
   `render()`.
-- Design: flight-deck console, dark only. Colors follow glass-cockpit convention and are the only
-  colors used: white `--ink` values, green `--green` complete, magenta `--magenta` active,
-  amber `--amber` caution, red `--red` warning, cyan `--cyan` pressable controls. Square corners,
-  mono labels (`.lbl`), nothing under `.75rem`, hit areas at least 40px (44px on phone).
-  Explanations live behind the ⓘ button (`infoBtn(key)` + `rInfo`), never inline; only panels whose
-  behaviour is not obvious carry one (plan, proposed, stats, time log, tell, tasks, week).
+- Design: a plain daily tracker, dark only. The only colors used: white `--ink` values, green
+  `--green` complete, magenta `--magenta` happening now, amber `--amber` caution, red `--red`
+  warning, cyan `--cyan` pressable controls. Rounded 8px only on tappable things, nothing under
+  `.75rem`, hit areas at least 40px (44px on phone). Titles and chips in sentence case; small status
+  tags (NOW, LATE, DONE, IN 30M) stay upper-case. Explanations live behind the ⓘ button
+  (`infoBtn(key)` + `rInfo`), never inline; only panels whose behaviour is not obvious carry one
+  (plan, proposed, stats, time log, tell, tasks, week).
+- Naming: the page reads like a normal tracker, so the UI says Today (the hour plan), Suggested
+  (slots Claude proposed), This week (weekly objectives), Goals with the lights On track / At risk /
+  Off track, Year (the milestone track), Wrap up (the evening debrief), Claude (never CAPCOM), the
+  Sync chip (did the 07:15 routine run) and countdowns like "23d 10h to launch" / "2d" / "2d ago".
+  The data keys keep their old names (`proposals`, `week.items`, `goals[].st` = `go | hold | nogo`,
+  `debrief`, `runs`, `runs[].k`), as do ids, `data-act` names, `data-tab="capcom"` and the INFO keys
+  (`plan`, `proposed`), so the routines and the tests stay valid.
+- Motion: `render()` rebuilds `#app`, so anything that appears (sheets, scrims, toasts, the brush
+  strip) gets `.in` from `render()` only when it was not there before (keyframe plays once), and
+  anything that changes is classed on the live DOM first (`doneFx`, `tkDoneFx`, `.just`) with the
+  re-render delayed by `renderSoon()` / `act(msg, fn, delay)`. Every animation is under 300ms except
+  the suggestion-card collapse; `prefers-reduced-motion` turns all of it off, including the delays.
+  A ticked plan item keeps its card on screen for an hour after its end (`hpKeep`) before EARLIER may
+  fold it. Tests that tick something wait `800ms` before reading the re-rendered DOM.
 - Modules are prefixed: `tk_` tasks, `wc_` week calendar, `tc_` Tell Claude, `st_` stats,
   `hp_` hour plan, `wc_`/`rProps` proposals. Keep new CSS inside the matching CSS comment block.
-- TODAY holds the Flight plan, then Habits (`rHabits`, the 7-day trackers of goals with `g.habit`;
-  the Status board keeps only the lights). Past hours on the plan carry a log chip (`.hlog`,
+- TODAY holds the day plan (`rPlan`, titled Today), then Habits (`rHabits`, the 7-day trackers of
+  goals with `g.habit`; Goals keeps only the lights). Past hours on the plan carry a log chip (`.hlog`,
   `data-act="hlog"`) that opens an inline brush strip (`.hstrip`, `data-act="hbrush"`) writing into
   `log[today]` through `logCommit`, the same path as the Time log on STATS.
 - Phone layout: tabs `today`, `week`, `stats`, `capcom`; the center tab opens Tell Claude.

@@ -4,11 +4,11 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612:wght@400;700&family=B612+Mono:wght@400;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style id="css">
-/* Layout: flight-deck console. Computer: masthead (date + clocks), Tell Claude bar, three consoles
-   (flight plan + habits | week + senior year | proposed, objectives, status board); STATS view = time log | stats.
+/* Layout: a plain daily tracker. Computer: masthead (date + countdowns), Tell Claude bar, three columns
+   (today + habits | week + year | suggested, this week, goals); STATS view = time log | stats.
    Sections are separated by one hairline each; only tappable things (cards, buttons, chips, inputs) carry a border.
-   Phone: sticky clock bar, one console per tab, bottom tab bar with a center capture key.
-   Color follows glass-cockpit convention: white = values, green = complete, magenta = active leg,
+   Phone: sticky clock bar, one section per tab, bottom tab bar with a center capture key.
+   Color: white = values, green = complete, magenta = happening now,
    amber = caution, red = warning, cyan = controls you can press. Nothing else gets color. Single dark theme by design. */
 :root{--bg:#0f0f11;--panel:#17171a;--panel2:#1c1c20;--panel3:#26262b;--rule:#232327;--ink:#ededef;--dim:#9b9ba3;--faint:#74747c;--green:#5ecf87;--amber:#e3b357;--red:#ef6f6f;--cyan:#8b8cf8;--magenta:#d783d1;--mono:"Inter",system-ui,-apple-system,sans-serif;--sans:"Inter",system-ui,-apple-system,sans-serif;color-scheme:dark;}
 *,*::before,*::after{box-sizing:border-box}
@@ -28,7 +28,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .fresh.ok{color:var(--green);border-color:color-mix(in srgb,var(--green) 45%,transparent)}
 .fresh.exp{color:var(--amber);border-color:var(--amber)}
 .fresh.bad{color:var(--red);border-color:var(--red)}
-/* RUN light: chip-sized button; ::after pads the hit area to 42px (44px in the phone bar) without growing the bar */
+/* Sync chip: chip-sized button; ::after pads the hit area to 42px (44px in the phone bar) without growing the bar */
 button.fresh.run{position:relative;background:none;cursor:pointer;white-space:nowrap}
 button.fresh.run::after{content:"";position:absolute;left:-4px;right:-4px;top:-8px;bottom:-8px}
 .mast .tcgo{min-height:40px;padding:8px 12px}
@@ -43,14 +43,14 @@ button.fresh.run::after{content:"";position:absolute;left:-4px;right:-4px;top:-8
 .pbar .fresh{padding:4px 6px}
 @media (max-width:359px){.pbar b,.pbar i{display:none}.pbar em{font-size:.92rem}}
 .pbar button.fresh.run{letter-spacing:0;padding:4px 5px}
-/* phone: one-line PROPOSED strip under the bar (TODAY tab only); tapping it opens the WEEK tab */
+/* phone: one-line SUGGESTED strip under the bar (TODAY tab only); tapping it opens the WEEK tab */
 .pstrip{display:flex}
 .pstrip button{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:0 12px;border:0;border-bottom:1px solid var(--rule);background:transparent;color:var(--cyan);font:500 .8rem/1 var(--mono);letter-spacing:0;text-align:left;cursor:pointer}
 .pstrip button span{font-size:1rem;line-height:1}
 #app:not([data-tab="today"]) .pstrip{display:none}
 .pbar button.fresh.run::after{top:-11px;bottom:-11px}
 .pbar b{white-space:nowrap}
-/* the RUN chip takes the room the bar's labels used on phones (the T− prefix still names the countdown); the 359px rule above drops more */
+/* the Sync chip takes the room the bar's labels used on phones; the 359px rule above drops more */
 @media (max-width:479px){.pbar i{display:none}}
 @media (max-width:429px){.pbar{gap:6px}.pbar b{letter-spacing:0}.pbar em{font-size:.88rem}}
 
@@ -83,9 +83,18 @@ textarea{resize:vertical;min-height:64px}
 ::placeholder{color:var(--faint)}
 .row2{display:flex;gap:8px;align-items:stretch}
 .row2 input{flex:1}
-input[type=checkbox]{appearance:none;-webkit-appearance:none;width:22px;height:22px;margin:0;border:1.5px solid var(--dim);background:transparent;display:grid;place-items:center;cursor:pointer;flex:none}
-input[type=checkbox]:checked{background:var(--green);border-color:var(--green)}
-input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:solid var(--bg);border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+/* checkbox: the real input sits invisible over the whole label (so the hit area is the label), the box and its check are
+   the .ckb span after it. The check is an inline SVG whose stroke draws in (Safari does not render ::after on an input). */
+.cb{position:relative}
+.cb input[type=checkbox]{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;appearance:none;-webkit-appearance:none}
+.ckb{width:22px;height:22px;border:1.5px solid var(--dim);border-radius:6px;background:transparent;display:grid;place-items:center;pointer-events:none;transition:background-color .2s ease-out,border-color .2s ease-out}
+.ckb svg{width:14px;height:14px;fill:none;stroke:#0f0f11;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.ckb path{stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .25s ease-out}
+.cb input:checked+.ckb{background:var(--green);border-color:var(--green)}
+.cb input:checked+.ckb path{stroke-dashoffset:0;transition-delay:.05s}
+.cb input:focus-visible+.ckb{outline:2px solid var(--cyan);outline-offset:2px}
+.cb:hover .ckb{border-color:var(--cyan)}
+.cb input:checked:hover+.ckb{border-color:var(--green)}
 .tag{display:inline-block;vertical-align:middle;font:500 .8rem/1 var(--mono);letter-spacing:0;padding:3px 4px;border:1px solid currentColor;white-space:nowrap}
 .t-act{color:var(--magenta)}.t-late{color:var(--amber)}.t-next{color:var(--ink)}.t-done{color:var(--green)}
 
@@ -103,7 +112,7 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .burn .clock{font:700 2rem/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--magenta)}
 .burn .clock.done{color:var(--green);font-size:1rem;letter-spacing:0}
 
-/* flight plan list */
+/* today list */
 .rows{list-style:none;margin:0;padding:0}
 .rows>li{border-top:1px solid var(--rule)}
 .rows>li:first-child{border-top:0}
@@ -118,7 +127,8 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .row.active{box-shadow:inset 3px 0 0 var(--magenta);background:color-mix(in srgb,var(--magenta) 6%,transparent)}
 .row.active .tm{color:var(--magenta)}
 .row.late .tm{color:var(--amber)}
-.row.done .tx,.row.done .tm{color:var(--dim);text-decoration:line-through}
+.row.done .tx,.row.done .tm{color:var(--dim)}
+.row.done .tm{text-decoration:line-through}
 .expired{padding:10px 12px;border-bottom:1px solid var(--rule);font:500 .8rem/1.5 var(--mono);letter-spacing:0;color:var(--amber)}
 .memo{padding:10px 12px;border-top:1px solid var(--rule)}
 
@@ -143,7 +153,7 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .anyl{border-top:1px solid var(--rule);padding:9px 12px 4px}
 
 
-/* mission track: the whole senior year on one line */
+/* year track: the whole year on one line */
 .trk .body{padding:10px 16px 6px}
 .track{position:relative;height:60px;margin:0 4px}
 .track .ln{position:absolute;left:0;right:0;top:27px;height:6px;background:var(--rule)}
@@ -166,7 +176,7 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .upc.soft .ut{color:var(--dim)}
 .upc .dt{font:400 .8rem/1 var(--mono);letter-spacing:0;color:var(--faint);white-space:nowrap}
 
-/* status board */
+/* goals */
 .poll{display:flex;flex-direction:column}
 .stn{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;min-width:0;border-top:1px solid var(--rule)}
 .stn:first-child{border-top:0}
@@ -186,7 +196,7 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .tel button:disabled{opacity:.3;cursor:default}
 .pace{font:500 .8rem/1.4 var(--mono);letter-spacing:0;color:var(--dim)}
 .pace.c{color:var(--amber)}.pace.w{color:var(--red)}.pace.g{color:var(--green)}
-/* habits: the 7-day trackers (PT, COMMS) on TODAY under the flight plan; .tel and .pace above are shared */
+/* habits: the 7-day trackers (PT, COMMS) on TODAY under the day plan; .tel and .pace above are shared */
 .habs{display:flex;flex-direction:column}
 .hab{padding:8px 12px 14px;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);min-width:0}
 .hab:first-child{border-top:0}
@@ -195,7 +205,7 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .habp .tel button{height:40px}
 @media (max-width:999px){.habp .tel button{height:44px}}
 
-/* CAPCOM, capture, shutdown */
+/* Claude chat, capture, wrap-up */
 .xs{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;margin-bottom:10px}
 .msg{font-size:.9rem;line-height:1.5;white-space:pre-wrap}
 .msg.cc{border-left:2px solid var(--cyan);padding-left:10px}
@@ -448,7 +458,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
   .pbar,.tabbar,.sheet,.scrim,.only-phone,.pstrip{display:none!important}
   .grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,2.4fr) minmax(280px,1fr);gap:16px;align-items:start}
   .col{display:flex;flex-direction:column;gap:16px;min-width:0}
-  /* TODAY (console): flight plan | week + senior year | proposed, objectives, status board. STATS: time log | stats. */
+  /* TODAY (console): today | week + year | suggested, this week, goals. STATS: time log | stats. */
   #app[data-view="console"] .statw{display:none}
   #app[data-view="stats"] .col.a,#app[data-view="stats"] .col.b,#app[data-view="stats"] .col.c{display:none}
   #app[data-view="stats"] .statw{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
@@ -544,9 +554,11 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .taskp .tk-r,.tk-d .tk-r{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:stretch;border-top:1px solid var(--rule);min-width:0}
 .taskp .tk-r.sub{margin-left:24px;border-left:1px solid var(--rule);grid-template-columns:44px minmax(0,1fr)}
 .taskp .tk-cb,.tk-d .tk-cb{display:grid;place-items:center;align-self:stretch;min-height:48px;padding:0;background:none;border:0;cursor:pointer}
-.taskp .tk-cb i,.tk-d .tk-cb i{display:grid;place-items:center;width:22px;height:22px;border:1.5px solid var(--dim)}
+.taskp .tk-cb i,.tk-d .tk-cb i{display:grid;place-items:center;width:22px;height:22px;border:1.5px solid var(--dim);transition:background-color .2s ease-out,border-color .2s ease-out}
 .taskp .tk-cb[aria-checked="true"] i,.tk-d .tk-cb[aria-checked="true"] i{background:var(--green);border-color:var(--green)}
-.taskp .tk-cb[aria-checked="true"] i::after,.tk-d .tk-cb[aria-checked="true"] i::after{content:"";width:6px;height:11px;border:solid var(--bg);border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+.tk-cb i svg{width:14px;height:14px;fill:none;stroke:#0f0f11;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.tk-cb i path{stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .25s ease-out}
+.tk-cb[aria-checked="true"] i path{stroke-dashoffset:0;transition-delay:.05s}
 .taskp .tk-cb:hover i,.tk-d .tk-cb:hover i{border-color:var(--cyan)}
 .taskp .tk-tb,.tk-d .tk-tb{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:5px;align-items:start;width:100%;min-width:0;padding:12px 12px 12px 0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
 .taskp .tk-tt,.tk-d .tk-tt{grid-column:1;min-width:0;font-size:.95rem;line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -561,7 +573,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .taskp .tk-mt .tk-on.pr,.tk-d .tk-mt .tk-on.pr{color:var(--cyan)}
 .taskp .tk-du,.tk-d .tk-du{grid-column:2;grid-row:1 / span 2;font:500 .8rem/1.35 var(--mono);letter-spacing:0;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
 .taskp .tk-du.c,.tk-d .tk-du.c{color:var(--amber)}.taskp .tk-du.w,.tk-d .tk-du.w{color:var(--red)}.taskp .tk-du.dn,.tk-d .tk-du.dn{color:var(--faint)}
-.taskp .tk-r.done .tk-tt,.tk-d .tk-r.done .tk-tt{color:var(--dim);text-decoration:line-through}
+.taskp .tk-r.done .tk-tt,.tk-d .tk-r.done .tk-tt{color:var(--dim)}
 .taskp .tk-ask{display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px 48px;border-top:1px dashed var(--amber);font:500 .8rem/1.4 var(--mono);letter-spacing:0;color:var(--amber)}
 .taskp .tk-ab,.tk-d .tk-ab{display:flex;flex-wrap:wrap;gap:8px}
 @media (max-width:999px){.taskp .tk-ab .btn.sm,.tk-d .tk-ab .btn.sm,.tk-d .tk-f .btn.sm{min-height:40px}}
@@ -579,7 +591,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .tk-d .tk-crumb i{font-style:normal;color:var(--faint)}
 .tk-d .tk-cr{background:none;border:0;padding:0;min-height:32px;color:var(--cyan);font:400 .9rem/1.3 var(--sans);letter-spacing:0;text-transform:none;text-align:left;overflow-wrap:anywhere}
 .tk-d h3{overflow-wrap:anywhere}
-.tk-d h3.tk-x{color:var(--dim);text-decoration:line-through}
+.tk-d h3.tk-x{color:var(--dim)}
 .tk-d .tk-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font:500 .8rem/1.5 var(--mono);letter-spacing:0;color:var(--ink)}
 .tk-d .tk-meta b{color:var(--dim);margin-right:6px;font-weight:700}
 .tk-d .tk-meta .tag{font-size:.8rem}
@@ -877,7 +889,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .hcard.act{border-color:var(--magenta);box-shadow:inset 3px 0 0 var(--magenta);background:color-mix(in srgb,var(--magenta) 8%,transparent)}
 .hcard.act .hcm{color:var(--magenta)}
 .hcard.act .hcx{color:var(--ink)}
-.hcard.done .hcx{color:var(--dim);text-decoration:line-through}
+.hcard.done .hcx{color:var(--dim)}
 .hcard.late .hcm{color:var(--amber)}
 .hcard.lead .hcx{font:700 1.25rem/1.3 var(--sans)}
 .hopen{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 10px;border:0;background:transparent;color:var(--cyan);font:500 .8rem/1 var(--mono);letter-spacing:0;text-align:left;cursor:pointer}
@@ -980,14 +992,12 @@ body{font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-sm
 @media (max-width:999px){.btn.sm{min-height:0;line-height:24px;padding:7px 12px}}
 input[type=text],textarea,input[type=date],input[type=number],input[type=time],.tk-d select,.taskp select,.catf select{border-radius:8px;background:var(--panel);border:1px solid var(--rule);font-family:var(--sans)}
 input[type=text]:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px color-mix(in srgb,var(--cyan) 22%,transparent)}
-input[type=checkbox]{border-radius:6px;border:1.5px solid var(--faint)}
-input[type=checkbox]:checked{background:var(--green);border-color:var(--green)}
-input[type=checkbox]:checked::after{border-color:#0f0f11}
+.ckb{border-radius:6px;border:1.5px solid var(--faint)}
 /* tiny tags keep caps, lightly tracked, as tinted pills */
 .tag,.tk-ut,.tc-s,.st-vd,.wc-tag,.light,.pm .pl,.dm .pl,.tk-d .tk-meta .tk-on,.st-dv em{border:0;border-radius:4px;font:600 .75rem/1 var(--sans);letter-spacing:.04em;text-transform:uppercase;padding:4px 6px;background:color-mix(in srgb,currentColor 14%,transparent)}
 .taskp .tk-mt .tk-ut,.tk-d .tk-mt .tk-ut{padding:3px 6px}
 .taskp .tk-mt .tk-ut.now,.tk-d .tk-mt .tk-ut.now{color:var(--magenta)}
-.light{border-radius:999px;min-width:0;padding:6px 10px 6px 9px;gap:6px}
+.light{border-radius:999px;min-width:0;padding:6px 10px 6px 9px;gap:6px;text-transform:none;letter-spacing:0;font-weight:500;font-size:.8rem}
 .light::before{width:7px;height:7px}
 .pm .pl,.dm .pl{color:var(--cyan);margin-right:8px;letter-spacing:0;font-weight:600}
 /* hour plan */
@@ -1019,7 +1029,7 @@ input[type=checkbox]:checked::after{border-color:#0f0f11}
 .hburn .clock.done{font-size:.85rem;color:var(--green)}
 .hpb{border-bottom:0;font:500 .85rem/1.4 var(--sans);color:var(--amber);padding:8px 12px}
 .hpb.lg{border-top:0}
-/* flight plan rows, timeline, lists */
+/* today rows, timeline, lists */
 .rows>li{border-top:1px solid var(--rule)}
 .row .tm{font:500 .8rem/1.5 var(--sans)}
 .row .gl{font:400 .8rem/1 var(--sans)}
@@ -1042,7 +1052,7 @@ input[type=checkbox]:checked::after{border-color:#0f0f11}
 .pc .dacts .btn{background:var(--panel3)}
 .pc .dacts .btn.fill{background:var(--cyan)}
 .pc .dacts .btn.ghost{background:transparent}
-/* status board */
+/* goals */
 .stn{padding:12px 12px 14px;gap:8px}
 .stn h3{font:600 .95rem/1.2 var(--sans);text-transform:lowercase}
 .stn h3::first-letter{text-transform:uppercase}
@@ -1072,7 +1082,6 @@ input[type=checkbox]:checked::after{border-color:#0f0f11}
 .taskp .tk-g .tk-rows>.tk-r:first-child{border-top:1px solid var(--rule)}
 .taskp .tk-r.sub{margin-left:30px;border-left:0}
 .taskp .tk-cb i,.tk-d .tk-cb i{border-radius:6px;border:1.5px solid var(--faint)}
-.taskp .tk-cb[aria-checked="true"] i::after,.tk-d .tk-cb[aria-checked="true"] i::after{border-color:#0f0f11}
 .taskp .tk-tb,.tk-d .tk-tb{padding:11px 12px 11px 0}
 .taskp .tk-tt,.tk-d .tk-tt{font-size:.95rem}
 .taskp .tk-mt,.tk-d .tk-mt{font:400 .8rem/1.4 var(--sans);color:var(--dim)}
@@ -1146,6 +1155,44 @@ input[type=checkbox]:checked::after{border-color:#0f0f11}
 .stn h3::first-letter{text-transform:uppercase}
 .nx{color:var(--ink);font-size:.95rem}
 .mast .tcgo{font:600 .75rem/22px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.tag.sc{text-transform:none;letter-spacing:0}
+/* ---- motion ----
+   Rules: render() rebuilds #app, so things that appear get a keyframe on a class (.in, added once by render() to elements that
+   were not there before; .just, added by the handler that changed them), and things that change get a transition on the live
+   DOM before the delayed render. Everything under 300ms except the proposal collapse. prefers-reduced-motion turns it all off. */
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes sheetup{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes popin{from{opacity:0;transform:translate(-50%,calc(-50% + 12px))}to{opacity:1;transform:translate(-50%,-50%)}}
+@keyframes fadedown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes toastup{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translateX(-50%)}}
+@keyframes toastdown{from{opacity:0;transform:translate(-50%,-14px)}to{opacity:1;transform:translateX(-50%)}}
+@keyframes ckpop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+/* completion: strike draws across the title, card tints, check pops; .just marks the element that was just toggled */
+.stk{background:linear-gradient(currentColor,currentColor) no-repeat 0 56%/0 1.5px;-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background-size .25s ease-out}
+.done .stk,.tk-x .stk{background-size:100% 1.5px}
+.hcx,.row .tx,.tk-tt,.dsheet h3{transition:color .25s ease-out}
+.hcard{transition:background-color .25s ease-out,border-color .25s ease-out}
+.row{transition:background-color .25s ease-out}
+.hcard.just.done{background:color-mix(in srgb,var(--green) 12%,var(--panel));border-color:color-mix(in srgb,var(--green) 45%,transparent)}
+.row.just.done{background:color-mix(in srgb,var(--green) 10%,transparent)}
+.just .ckb,.tk-cb.just i,.tel button.just,.hlog.just span{animation:ckpop .25s ease-out}
+.tag.fx{animation:fadein .25s ease-out}
+.dsheet h3.done{color:var(--dim)}
+.tel button{transition:background-color .15s ease-out,border-color .15s ease-out,color .15s ease-out}
+.btn,.hopen,.hlog span,.bc,.seg button{transition:background-color .15s ease-out,border-color .15s ease-out,color .15s ease-out}
+/* sheets slide up, scrims fade, toasts slide in; only when they appear (.in), not on every re-render while open */
+.scrim.in,.iscrim.in,.tc-scrim.in,.wc-scrim.in,.br-scrim.in{animation:fadein .2s ease-out}
+.dsheet.in,.sheet.in,.tc-sheet.in,.isheet.in,.wc-evs.in{animation:sheetup .2s ease-out}
+.hstrip.in{animation:fadedown .2s ease-out}
+.toast.in{animation:toastup .2s ease-out}
+@media (max-width:999px){#app:has(.tc-sheet) .toast.in{animation-name:toastdown}}
+@media (min-width:1000px){.dsheet.in,.tc-sheet.in,.wc-evs.in{animation-name:popin}.isheet.in{animation-name:fadedown}.isheet.ctr.in{animation-name:popin}}
+/* tab or view switch: the sections fade in */
+#app.tabin .p{animation:fadein .15s ease-out}
+/* an accepted or declined suggestion folds away before the re-render removes it (the one height animation, via max-height) */
+.pc{transition:max-height .25s ease-in,opacity .2s ease-out,padding .25s ease-in,margin .25s ease-in}
+.pc.out{opacity:0;padding-top:0;padding-bottom:0;margin-bottom:0;overflow:hidden;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.stk{transition:none}.pc,.hcard,.row,.ckb,.ckb path,.tk-cb i,.tk-cb i path{transition:none!important}}
 </style>
 <main id="app"></main>
 <script type="application/json" id="state">{"v":2}</script>
@@ -1175,7 +1222,8 @@ ui.turns=ui.turns.filter(function(m){return m&&(m.role==='user'||m.role==='assis
 if(typeof ui.draft!=='string')ui.draft='';
 (function(){var en=LS.get('energy',null);ui.energy=en&&en.date===ops().date&&+en.v>=1&&+en.v<=5?+en.v:0;})();
 var DL=['M','T','W','T','F','S','S'],DN=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-var NEXT={go:'hold',hold:'nogo',nogo:'go'},LBL={go:'GO',hold:'HOLD',nogo:'NO-GO'};
+/* goal lights: the data keeps go | hold | nogo, only the labels changed */
+var NEXT={go:'hold',hold:'nogo',nogo:'go'},LBL={go:'On track',hold:'At risk',nogo:'Off track'};
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function p2(n){return (n<10?'0':'')+n;}
@@ -1229,9 +1277,10 @@ function unloggedIdx(){var o=ops(),L=logOf(o.date);for(var i=1;i<LOGN;i++){if(sl
 function logCommit(ds,str){S.log[ds]=str;var ks=Object.keys(S.log).sort();while(ks.length>42)delete S.log[ks.shift()];if(ds===ops().date&&S.debrief&&S.debrief.date===ds)upsertHistory();else S.history.forEach(function(r){if(r.date===ds)logInto(r,S.log[ds]);});queueSave(4000);}
 function weekGoalHours(){var o=ops(),m=monday(o.day),h={};GIDS.forEach(function(g){h[g]=0;});for(var d=0;d<7;d++){var dt=new Date(m.getFullYear(),m.getMonth(),m.getDate()+d);if(dt>o.day)break;var L=logOf(iso(dt));for(var i=0;i<LOGN;i++){var c=catOf(L.charAt(i));if(c&&c.g)h[c.g]++;}}return h;}
 function hrs(n){return (Math.round(n*10)/10)+'H';}
-function tminus(){var ms=LAUNCH-new Date();if(ms<=0)return 'T+ LIVE';var s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;return 'T−'+p2(d)+':'+p2(Math.floor(s/3600))+':'+p2(Math.floor(s%3600/60))+':'+p2(s%60);}
-/* masthead form: days and hours:minutes only */
-function tminusD(){var ms=LAUNCH-new Date();if(ms<=0)return 'T+ LIVE';var s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;return 'T−'+d+'D '+p2(Math.floor(s/3600))+':'+p2(Math.floor(s%3600/60));}
+/* phone bar countdown to launch, live to the second: "Launch in 23d 10:29:57" */
+function tminus(){var ms=LAUNCH-new Date();if(ms<=0)return 'Launched';var s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;return 'Launch in '+d+'d '+p2(Math.floor(s/3600))+':'+p2(Math.floor(s%3600/60))+':'+p2(s%60);}
+/* masthead form: days and hours only */
+function tminusD(){var ms=LAUNCH-new Date();if(ms<=0)return 'Launched';var s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;return d+'d '+Math.floor(s/3600)+'h to launch';}
 function str(v,max){return v==null?'':String(v).slice(0,max||400);}
 function bool(v){return v===true||v===1||(typeof v==='string'&&/^(true|yes|y|1|done)$/i.test(v.trim()));}
 function normT(v){if(typeof v==='number'&&isFinite(v))v=String(Math.round(v));if(typeof v!=='string')return '';v=v.trim().toLowerCase().replace(/\./g,'');if(!v)return '';var ap=null,am=v.match(/(am|pm)$/);if(am){ap=am[1];v=v.slice(0,-2).trim();}var h,m,a=v.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/),b=v.match(/^(\d{1,2})(\d{2})$/),c=v.match(/^(\d{1,2})$/);if(a){h=+a[1];m=+a[2];}else if(b){h=+b[1];m=+b[2];}else if(c&&ap){h=+c[1];m=0;}else return '';if(ap){if(h<1||h>12)return '';if(ap==='pm'&&h<12)h+=12;if(ap==='am'&&h===12)h=0;}if(h>23||m>59)return '';return p2(h)+':'+p2(m);}
@@ -1298,16 +1347,16 @@ function timeTxt(it){return it.s?(esc(it.s)+(it.e?'<br>'+esc(it.e):'')):esc(it.l
 function stamp(){var o=ops();return o.day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();}
 
 /* ---------- render pieces ---------- */
-/* RUN light: did the 07:15 routine write today's state? Calendar day in the viewer's zone (Eastern), not the working day.
-   green RUN HH:MM = ran today, clean; amber RUN ⚠ = ran today, a step failed; red NO RUN = nothing today, from 08:00; dim RUN — = not due yet or no runs logged. */
+/* Sync chip: did the 07:15 routine write today's state? Calendar day in the viewer's zone (Eastern), not the working day.
+   green Sync HH:MM = ran today, clean; amber Sync ⚠ = ran today, a step failed; red No sync = nothing today, from 08:00; dim Sync — = not due yet or no runs logged. */
 function runState(){
   var n=new Date(),ds=iso(n),R=Array.isArray(S.runs)?S.runs:[],tr=R.filter(function(r){return r.at.slice(0,10)===ds;}),last=tr.length?tr[tr.length-1]:null;
-  if(last){var bad=!last.ok||last.fail.length>0;return {cls:bad?'exp':'ok',txt:bad?'RUN ⚠':'RUN '+last.at.slice(11)};}
-  if(!R.length||n.getHours()<8)return {cls:'',txt:'RUN —'};
-  return {cls:'bad',txt:'NO RUN'};}
-function rRun(id){var r=runState();return '<button type="button" class="fresh run'+(r.cls?' '+r.cls:'')+'" id="'+id+'" data-act="info" data-v="runs" aria-label="Routine run: '+esc(r.txt)+'">'+esc(r.txt)+'</button>';}
+  if(last){var bad=!last.ok||last.fail.length>0;return {cls:bad?'exp':'ok',txt:bad?'Sync ⚠':'Sync '+last.at.slice(11)};}
+  if(!R.length||n.getHours()<8)return {cls:'',txt:'Sync —'};
+  return {cls:'bad',txt:'No sync'};}
+function rRun(id){var r=runState();return '<button type="button" class="fresh run'+(r.cls?' '+r.cls:'')+'" id="'+id+'" data-act="info" data-v="runs" aria-label="Last sync: '+esc(r.txt)+'">'+esc(r.txt)+'</button>';}
 function runInfo(){
-  var R=Array.isArray(S.runs)?S.runs:[],L=['The RUN light says whether the 07:15 routine (morning brief Mon–Sat, Sunday plan) has written today’s state: {green:green} it ran today and every step passed, {amber:RUN ⚠} it ran today but a step failed, {red:NO RUN} nothing ran today (checked from 08:00), dim = not due yet or no runs logged.'];
+  var R=Array.isArray(S.runs)?S.runs:[],L=['The Sync chip says whether the 07:15 routine (morning brief Mon–Sat, Sunday plan) has written today’s state: {green:green} it ran today and every step passed, {amber:Sync ⚠} it ran today but a step failed, {red:No sync} nothing ran today (checked from 08:00), dim = not due yet or no runs logged.'];
   if(!R.length)L.push('No runs logged yet.');
   else{L.push('Last runs:');R.slice(-5).reverse().forEach(function(r){var d=pd(r.at.slice(0,10));
     L.push(d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase()+' '+r.at.slice(11)+' '+r.k.toUpperCase()+' · '+(r.ok&&!r.fail.length?'{green:OK}':'{amber:'+(r.fail.length?'FAILED: '+r.fail.join(', '):'FAILED')+'}'));});}
@@ -1316,9 +1365,9 @@ function rMast(){
   var n=new Date(),f=fresh();
   var vt='<div class="vt" role="group" aria-label="View"><button type="button" id="vw-console" data-act="view" data-v="console" aria-pressed="'+(ui.view==='console')+'">TODAY</button><button type="button" id="vw-tasks" data-act="view" data-v="tasks" aria-pressed="'+(ui.view==='tasks')+'">TASKS</button><button type="button" id="vw-stats" data-act="view" data-v="stats" aria-pressed="'+(ui.view==='stats')+'">STATS</button></div>';
   var tg='<button type="button" class="btn tcgo" id="tc-go" data-act="tcgo">TELL CLAUDE</button>';
-  var h='<header class="mast"><div class="mdt"><b>'+esc(n.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}).toUpperCase())+'</b><span class="mck"><span id="ck-t">'+tminusD()+'</span> · '+esc(tzName(n))+' <span id="ck-l">'+hhmm(n)+'</span> · GRAD '+Math.max(0,daysBetween(n,GRAD))+'D</span></div><div class="mr">'+vt+tg+rRun('run-m')+(parseErr||f?'':'<span class="fresh exp">PLAN EXPIRED</span>')+'</div></header>';
-  h+='<div class="pbar"><span><b>'+esc(n.toLocaleDateString('en-US',{weekday:'short',day:'numeric'}).toUpperCase())+'</b><em id="ck-l2">'+hhmm(n)+'</em></span>'+rRun('run-p')+'<span><i>LAUNCH</i><em id="ck-t2">'+tminus()+'</em></span></div>';
-  if(S.proposals.length)h+='<div class="pstrip"><button type="button" id="pstrip" data-act="tab" data-v="week">'+S.proposals.length+' PROPOSED<span aria-hidden="true">›</span></button></div>';
+  var h='<header class="mast"><div class="mdt"><b>'+esc(n.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}).toUpperCase())+'</b><span class="mck"><span id="ck-t">'+tminusD()+'</span> · '+esc(tzName(n))+' <span id="ck-l">'+hhmm(n)+'</span> · '+Math.max(0,daysBetween(n,GRAD))+'d to graduation</span></div><div class="mr">'+vt+tg+rRun('run-m')+(parseErr||f?'':'<span class="fresh exp">Plan expired</span>')+'</div></header>';
+  h+='<div class="pbar"><span><b>'+esc(n.toLocaleDateString('en-US',{weekday:'short',day:'numeric'}).toUpperCase())+'</b><em id="ck-l2">'+hhmm(n)+'</em></span>'+rRun('run-p')+'<span><em id="ck-t2">'+tminus()+'</em></span></div>';
+  if(S.proposals.length)h+='<div class="pstrip"><button type="button" id="pstrip" data-act="tab" data-v="week">'+S.proposals.length+' suggested<span aria-hidden="true">›</span></button></div>';
   if(parseErr)h+='<div class="err">COULD NOT READ SAVED STATE, SO SAVING IS LOCKED. TELL CLAUDE “MISSION CONTROL STATE ERROR”.</div>';
   return h;
 }
@@ -1341,8 +1390,8 @@ function rNow(){
     if(nx)r+=then('NEXT',esc(nx.s)+' · IN '+inM(tS(nx)),itB(nx));else if(evNext)r+=then('NEXT',esc(evNext.s)+' · IN '+inM(evNext.sm),evB(evNext));return r;}
   var h='<section class="p now'+(act||evNow?' is-act':'')+'" data-tab="today">'+phd('Now')+'<div class="body">';
   var o=ops(),sdDone=S.debrief&&S.debrief.date===o.date,hr=o.n.getHours(),closing=hr>=22||hr<DAYCUT,quiet=f&&(sdDone||closing);
-  if(f&&sdDone){h+='<div class="state"><span class="tag t-done">SHUTDOWN COMPLETE</span></div><div class="big">Phone on the charger.</div>';}
-  else if(f&&closing){h+='<div class="state"><span class="tag t-late">SHUTDOWN DUE</span>'+(left?'<span class="when">'+left+' OPEN</span>':'')+'</div><div><button type="button" id="goshut" class="btn" data-act="goshut">RUN SHUTDOWN</button></div>';}
+  if(f&&sdDone){h+='<div class="state"><span class="tag t-done sc">Day wrapped up</span></div><div class="big">Phone on the charger.</div>';}
+  else if(f&&closing){h+='<div class="state"><span class="tag t-late sc">Wrap up tonight</span>'+(left?'<span class="when">'+left+' OPEN</span>':'')+'</div><div><button type="button" id="goshut" class="btn" data-act="goshut">WRAP UP</button></div>';}
   else if(!f&&o.min<8*60+15){h+='<div class="state"><span class="tag t-late">PLAN EXPIRED</span></div><div class="big">New plan at 07:15.</div>';}
   else if(!f){var carry=S.today.items.filter(function(i){return !i.done;}).length;h+='<div class="state"><span class="tag t-late">NO PLAN TODAY</span></div><div class="dacts">'+(carry?'<button type="button" id="carry" class="btn" data-act="carry">CARRY OVER '+carry+'</button>':'')+'<button type="button" id="askplan" class="btn fill" data-act="askplan">ASK CLAUDE</button></div>';}
   else if(!its.length){h+=evNow?evActive(evNow):'<div class="big">Nothing planned.</div>';}
@@ -1362,9 +1411,11 @@ function rNow(){
   return h+'</div></section>';
 }
 function mmss(ms){var s=Math.max(0,Math.ceil(ms/1000));return p2(Math.floor(s/60))+':'+p2(s%60);}
-function ck(k,it,pfx){return '<label class="cb" for="'+pfx+'-'+esc(it.id)+'"><input type="checkbox" id="'+pfx+'-'+esc(it.id)+'" data-k="'+k+'" data-id="'+esc(it.id)+'"'+(it.done?' checked':'')+' aria-label="Done: '+esc(it.t.slice(0,60))+'"></label>';}
+/* the check glyph: an inline SVG whose stroke draws in (stroke-dashoffset); shared by plan items and tasks */
+var SVG_CK='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function ck(k,it,pfx){return '<label class="cb" for="'+pfx+'-'+esc(it.id)+'"><input type="checkbox" id="'+pfx+'-'+esc(it.id)+'" data-k="'+k+'" data-id="'+esc(it.id)+'"'+(it.done?' checked':'')+' aria-label="Done: '+esc(it.t.slice(0,60))+'"><span class="ckb" aria-hidden="true">'+SVG_CK+'</span></label>';}
 function rowHTML(it,pfx,nx){var st=itemState(it);
-  return '<li class="row '+st+'"><button type="button" class="rt" data-act="open" data-k="today" data-id="'+esc(it.id)+'"><span class="tm">'+timeTxt(it)+tagFor(st,nx===it)+'</span><span class="tx">'+esc(it.t)+'</span></button>'+ck('today',it,pfx)+'</li>';}
+  return '<li class="row '+st+'"><button type="button" class="rt" data-act="open" data-k="today" data-id="'+esc(it.id)+'"><span class="tm">'+timeTxt(it)+tagFor(st,nx===it)+'</span><span class="tx"><span class="stk">'+esc(it.t)+'</span></span></button>'+ck('today',it,pfx)+'</li>';}
 /* ---------- TODAY: the day by the hour ----------
    Blocks = today's timed items, planned items dated today, calendar events. An hour with 30+ free minutes
    gets "+ ADD" (pick a task from the backlog). The hour you are in, or the block happening now, is magenta. */
@@ -1393,19 +1444,22 @@ function hpCard(x,n,isNext,lead){var on=x.s<=n&&x.e>n,tg='',ld=lead?' lead':'';
   else if(st==='done')tg='<span class="tag t-done">DONE</span>';
   else if(x.k==='planned')tg='<span class="tag t-next">SCHEDULED</span>';
   else if(isNext)tg='<span class="tag t-next">IN '+dur((x.s-n)*60000)+'</span>';
-  return '<div class="hcard '+(x.k==='today'?'it '+st:'pl')+(live?' act':'')+ld+'"><button type="button" class="rt hct" data-act="open" data-k="'+x.k+'" data-id="'+esc(it.id)+'"><span class="hcm">'+esc(it.s)+'–'+m2h(x.e)+tg+'</span><span class="hcx">'+esc(it.t)+'</span></button>'+(x.k==='today'?ck('today',it,'h'):'')+'</div>';}
+  return '<div class="hcard '+(x.k==='today'?'it '+st:'pl')+(live?' act':'')+ld+'"><button type="button" class="rt hct" data-act="open" data-k="'+x.k+'" data-id="'+esc(it.id)+'"><span class="hcm">'+esc(it.s)+'–'+m2h(x.e)+tg+'</span><span class="hcx"><span class="stk">'+esc(it.t)+'</span></span></button>'+(x.k==='today'?ck('today',it,'h'):'')+'</div>';}
+/* a done item stays where it was for an hour after its end before EARLIER may fold it (so a tick never makes the card vanish) */
+function hpKeep(it,n){if(!it.done)return false;var s=tS(it);if(s===null)return false;var e=itemEnd(it);return e<=n&&e>n-60;}
 function rPlan(){
   var o=ops(),f=fresh(),ds=o.date,n=o.min,its=f?S.today.items:[],bl=hpBlocks(ds);
   var LD=f?dayLoad(ds):null,lcl=LD&&LD.over?(LD.min>=LD.cap*1.5?' w':' c'):'';
-  var h='<section class="p plan" data-tab="today">'+phd('Flight plan','plan','<span class="pha">'+(LD?'<span class="lbl hld'+lcl+'" id="hload" aria-label="Today\'s load: '+hrs(LD.min)+' of '+hrs(LD.cap)+' hours'+(LD.over?', over capacity':'')+'">'+loadTxt(ds).toUpperCase()+'</span>':'')+'<button type="button" id="breathe" class="btn sm" data-act="breathe">BREATHE</button></span>')+'<div class="hp">';
+  var h='<section class="p plan" data-tab="today">'+phd('Today','plan','<span class="pha">'+(LD?'<span class="lbl hld'+lcl+'" id="hload" aria-label="Today\'s load: '+hrs(LD.min)+' of '+hrs(LD.cap)+' hours'+(LD.over?', over capacity':'')+'">'+loadTxt(ds).toUpperCase()+'</span>':'')+'<button type="button" id="breathe" class="btn sm" data-act="breathe">BREATHE</button></span>')+'<div class="hp">';
   if(!f&&!parseErr){
-    if(o.min<8*60+15&&okDate(S.today.date)&&S.today.date!=='1970-01-01')h+='<div class="hpb"><span>NEW PLAN AT 07:15</span></div>';
-    else{var carry=S.today.items.filter(function(i){return !i.done;}).length;h+='<div class="hpb"><span>NO PLAN TODAY</span><span class="hpa">'+(carry?'<button type="button" id="carry" class="btn sm" data-act="carry">CARRY OVER '+carry+'</button>':'')+'<button type="button" id="askplan" class="btn sm fill" data-act="askplan">ASK CLAUDE</button></span></div>';}}
+    if(o.min<8*60+15&&okDate(S.today.date)&&S.today.date!=='1970-01-01')h+='<div class="hpb"><span>New plan at 07:15</span></div>';
+    else{var carry=S.today.items.filter(function(i){return !i.done;}).length;h+='<div class="hpb"><span>No plan today</span><span class="hpa">'+(carry?'<button type="button" id="carry" class="btn sm" data-act="carry">CARRY OVER '+carry+'</button>':'')+'<button type="button" id="askplan" class="btn sm fill" data-act="askplan">ASK CLAUDE</button></span></div>';}}
   var aev=wc_eventsOn(ds).filter(function(x){return x.allDay;});
   if(aev.length)h+='<div class="tl-ad">'+aev.map(function(x){return '<button type="button" id="ad-ev-'+esc(x.id)+'" data-act="wc-ev" data-id="'+esc(x.id)+'">'+esc(x.t)+'</button>';}).join('')+'</div>';
   var showPast=hpShowPast();
-  var anyt=its.filter(function(it){var st=itemState(it);return tS(it)===null||(st==='late'&&!showPast);});
-  if(anyt.length)h+='<div class="hgrp"><div class="lbl">ANYTIME</div><ul class="rows">'+anyt.map(function(it){return rowHTML(it,'a',null);}).join('')+'</ul></div>';
+  /* the ANYTIME group: untimed items, plus (while EARLIER is folded) the late and just-finished items whose hour row is folded away;
+     lateL is filled by the hour loop below, so an item is never drawn twice */
+  var lateL={};
   var H0=7*60,H1=24*60;bl.forEach(function(x){if(x.s<H0&&x.s>=5*60)H0=Math.floor(x.s/60)*60;if(x.e>H1)H1=Math.min(28*60,Math.ceil(x.e/60)*60);});
   if(n>=H1-30)H1=Math.min(28*60,(Math.floor(n/60)+2)*60);
   if(n<H0&&n>=5*60)H0=Math.floor(n/60)*60;
@@ -1423,7 +1477,8 @@ function rPlan(){
     if(!st.length&&free<30&&!(isNow&&!live)){/* an hour swallowed by a block from an earlier row: its log chip rides on that row */
       if(past&&!showPast){if(unl(a))pastUn++;flush();continue;}
       flush();var lastR=rowsA[rowsA.length-1];if(lastR&&hIdx(a)>=0)lastR.hrs.push(a);continue;}
-    if(past){hasPast=true;if(!showPast){pastN++;if(unl(a))pastUn++;flush();continue;}}
+    if(past){hasPast=true;if(!showPast){pastN++;if(unl(a))pastUn++;flush();
+      st.forEach(function(x){if(x.k==='today'&&(itemState(x.it)==='late'||hpKeep(x.it,n)))lateL[x.it.id]=1;});continue;}}
     var open='';if(b>n&&free>=30){var fs=hpFreeStart(bl,isNow?Math.max(a,hpNowStart()):a,b);if(fs!==null&&b-fs>=15)open='<button type="button" class="hopen" id="hadd-'+a+'" data-act="hadd" data-h="'+a+'">＋ ADD</button>';}
     if(!st.length&&!isNow){if(run&&run.b===a&&run.past===past){run.b=b;run.hrs.push(a);}else{flush();run={free:true,a:a,b:b,past:past,add:open,hrs:[a]};}continue;}
     flush();
@@ -1434,10 +1489,12 @@ function rPlan(){
     return '<button type="button" class="hlog '+(c?c.grp:w==='past'?'miss':'now')+(on?' open':'')+'" id="hlog-'+i+'" data-act="hlog" data-i="'+i+'" aria-expanded="'+on+'" aria-label="'+m2h(a)+', '+(c?esc(c.n):'not logged')+'. Log this hour"><span>'+(c?esc(c.ab):'LOG')+'</span></button>';}
   /* the brush strip sits under the row that holds the hour being logged */
   function strip(hrsIn){var i=ui.hlog;if(i===null||i===undefined)return '';var a=(LOG0+i)*60;if(hrsIn.indexOf(a)<0)return '';var cur=L.charAt(i);
-    return '<li class="hstrip" id="hstrip"><div class="hsh"><span class="lbl">'+m2h(a)+'–'+m2h(a+60)+' · LOG AS</span></div><div class="hbr" role="group" aria-label="Category for '+m2h(a)+'">'+allCats().map(function(c){return '<button type="button" id="hb-'+(c.cust?'u':'')+c.k+'" class="bc'+(c.cust?' cu':'')+'" data-act="hbrush" data-i="'+i+'" data-v="'+c.k+'" aria-pressed="'+(cur===c.k)+'"><span class="sw '+c.grp+'"></span>'+esc(c.n)+'</button>';}).join('')+'<button type="button" id="hb-clear" class="bc" data-act="hbrush" data-i="'+i+'" data-v="."'+(cur==='.'?' disabled':'')+'>CLEAR</button></div></li>';}
+    return '<li class="hstrip" id="hstrip" data-i="'+i+'"><div class="hsh"><span class="lbl">'+m2h(a)+'–'+m2h(a+60)+' · LOG AS</span></div><div class="hbr" role="group" aria-label="Category for '+m2h(a)+'">'+allCats().map(function(c){return '<button type="button" id="hb-'+(c.cust?'u':'')+c.k+'" class="bc'+(c.cust?' cu':'')+'" data-act="hbrush" data-i="'+i+'" data-v="'+c.k+'" aria-pressed="'+(cur===c.k)+'"><span class="sw '+c.grp+'"></span>'+esc(c.n)+'</button>';}).join('')+'<button type="button" id="hb-clear" class="bc" data-act="hbrush" data-i="'+i+'" data-v="."'+(cur==='.'?' disabled':'')+'>CLEAR</button></div></li>';}
   var rows=rowsA.map(function(r){var ch=r.hrs.map(chip).join('');
     if(r.free)return '<li class="hrw free'+(r.past?' past':'')+'"><div class="hfr"><span class="hfl">'+m2h(r.a)+'–'+m2h(r.b)+' · FREE</span>'+(ch?'<span class="hlogs">'+ch+'</span>':'')+r.add+'</div></li>'+strip(r.hrs);
     return '<li class="hrw'+(r.isNow?' now':'')+(r.past?' past':'')+'"><div class="hh">'+m2h(r.a)+(r.isNow?'<b>NOW</b>':'')+(ch?'<span class="hlogs">'+ch+'</span>':'')+'</div><div class="hb">'+r.cards+r.add+'</div></li>'+strip(r.hrs);}).join('');
+  var anyt=its.filter(function(it){return tS(it)===null||lateL[it.id];});
+  if(anyt.length)h+='<div class="hgrp"><div class="lbl">Anytime</div><ul class="rows">'+anyt.map(function(it){return rowHTML(it,'a',null);}).join('')+'</ul></div>';
   if(pastN)h+='<button type="button" class="hearly'+(pastUn?' c':'')+'" id="hearly" data-act="hpast" aria-expanded="false">EARLIER · '+pastN+'H'+(pastUn?' · '+pastUn+'H NOT LOGGED':'')+'<span aria-hidden="true"> ›</span></button>';
   else if(showPast&&hasPast)h+='<button type="button" class="hearly'+(missN?' c':'')+'" id="hearly" data-act="hpast" aria-expanded="true">HIDE EARLIER'+(missN?' · '+missN+'H NOT LOGGED':'')+'</button>';
   h+='<ul class="hrs">'+rows+'</ul>';
@@ -1454,8 +1511,8 @@ function rPick(){if(!ui.pick)return '';var o=ops(),st=hpPickStart(ui.pick.h);if(
   var ur=typeof tk_urgRank==='function'?tk_urgRank:function(){return 2;};
   T.sort(function(x,y){return (ur(x)-ur(y))||((x.due||'9999')<(y.due||'9999')?-1:(x.due||'9999')>(y.due||'9999')?1:0);});
   var rows=T.map(function(t){var m=t.m>0?t.m:30,dn=t.due?daysBetween(o.day,pd(t.due)):null,pn=P[t.proj]||'';
-    return '<li><button type="button" class="hpi" id="hpi-'+esc(t.id)+'" data-act="hpick" data-id="'+esc(t.id)+'"><span class="hpt">'+esc(t.t)+'</span><span class="hpm">'+(pn?esc(pn.toUpperCase())+' · ':'')+m+'M'+(t.due?' · <b class="'+(dn<=2?'c':'')+'">'+(dn<0?'OVERDUE':dn===0?'DUE TODAY':'DUE T−'+dn+'D')+'</b>':'')+'</span></button></li>';}).join('');
-  return '<div class="scrim dscrim" data-act="hpickx"></div><div class="dsheet hpk" role="dialog" aria-modal="true" aria-labelledby="hpk-t"><div class="dhd"><h3 id="hpk-t">ADD AT '+m2h(st)+'</h3><button type="button" class="x" id="hpk-x" data-act="hpickx" aria-label="Close">✕</button></div>'+
+    return '<li><button type="button" class="hpi" id="hpi-'+esc(t.id)+'" data-act="hpick" data-id="'+esc(t.id)+'"><span class="hpt">'+esc(t.t)+'</span><span class="hpm">'+(pn?esc(pn.toUpperCase())+' · ':'')+m+'M'+(t.due?' · <b class="'+(dn<=2?'c':'')+'">'+(dn<0?'OVERDUE':dn===0?'DUE TODAY':'DUE IN '+dn+'D')+'</b>':'')+'</span></button></li>';}).join('');
+  return '<div class="scrim dscrim" data-act="hpickx"></div><div class="dsheet hpk" role="dialog" aria-modal="true" aria-labelledby="hpk-t"><div class="dhd"><h3 id="hpk-t">Add at '+m2h(st)+'</h3><button type="button" class="x" id="hpk-x" data-act="hpickx" aria-label="Close">✕</button></div>'+
     (rows?'<ul class="hpl">'+rows+'</ul>':'<p class="dd">No open tasks.</p>')+'<div class="dacts"><button type="button" class="btn" id="hpk-tell" data-act="htell">SOMETHING ELSE · TELL CLAUDE</button></div></div>';}
 /* BREATHE: one guided minute of box breathing (in 4, hold 4, out 4, hold 4) x4 */
 function rBreathe(){if(!ui.breathe)return '';var el=(Date.now()-ui.breathe.t0)/1000;
@@ -1465,40 +1522,40 @@ function brTick(){if(!ui.breathe){clearInterval(ui.brT);ui.brT=null;return;}
   if(el>=64){if(ph)ph.textContent='DONE';if(nn)nn.textContent='';if(lf)lf.textContent='BACK TO IT';if(cc)cc.classList.add('stop');clearInterval(ui.brT);ui.brT=null;return;}
   var cy=el%16,pi=Math.floor(cy/4);if(ph)ph.textContent=['IN','HOLD','OUT','HOLD'][pi];if(nn)nn.textContent=String(4-Math.floor(cy%4));if(lf)lf.textContent=Math.ceil(64-el)+'S';}
 function rObj(){
-  return '<section class="p objp" data-tab="week">'+phd('Objectives')+
+  return '<section class="p objp" data-tab="week">'+phd('This week')+
     (S.week.items.length?'<ul class="rows">'+S.week.items.map(function(it){
-    return '<li class="row obj'+(it.done?' done':'')+'"><button type="button" class="rt" data-act="open" data-k="week" data-id="'+esc(it.id)+'"><span class="tx">'+esc(it.t)+'</span></button>'+ck('week',it,'w')+'</li>';}).join('')+'</ul>':'<div class="body note">None set. They come from the Sunday plan.</div>')+'</section>';
+    return '<li class="row obj'+(it.done?' done':'')+'"><button type="button" class="rt" data-act="open" data-k="week" data-id="'+esc(it.id)+'"><span class="tx"><span class="stk">'+esc(it.t)+'</span></span></button>'+ck('week',it,'w')+'</li>';}).join('')+'</ul>':'<div class="body note">None set. They come from the Sunday plan.</div>')+'</section>';
 }
 /* hard deadlines read bright, soft ones dim; amber = hard and within 2 days */
 function rUpc(){
   var t0=ops().day,list=S.dates.filter(function(d){return pd(d.d)>=t0;}).concat(S.planned.filter(function(p){return pd(p.date)>=t0;}).map(function(p){return {d:p.date,t:p.t,task:p};})).concat(S.proposals.filter(function(p){return pd(p.date)>=t0;}).map(function(p){return {d:p.date,t:p.t,task:p,prop:true};})).sort(function(a,b){return (pd(a.d)-pd(b.d))||((a.task?mins(a.task.s)||0:-1)-(b.task?mins(b.task.s)||0:-1));}).slice(0,9);
   if(!list.length)return '';
-  return '<section class="p upcp" data-tab="week">'+phd('Upcoming',null,wc_toggle('u'))+'<ul class="rows">'+list.map(function(d){var n=daysBetween(t0,pd(d.d)),dd='<span class="dd">'+(n===0?'TODAY':'T−'+n+'D')+'</span>';
-    if(d.task)return '<li class="upc '+(d.prop?'prop':'task')+'">'+dd+'<button type="button" class="rt ut" data-act="open" data-k="'+(d.prop?'proposal':'planned')+'" data-id="'+esc(d.task.id)+'">'+esc(d.t)+'</button><span class="dt">'+(d.task.s?esc(d.task.s):'')+(d.prop?'<b>PROPOSED</b>':'')+'</span></li>';
+  return '<section class="p upcp" data-tab="week">'+phd('Upcoming',null,wc_toggle('u'))+'<ul class="rows">'+list.map(function(d){var n=daysBetween(t0,pd(d.d)),dd='<span class="dd">'+(n===0?'Today':n+'d')+'</span>';
+    if(d.task)return '<li class="upc '+(d.prop?'prop':'task')+'">'+dd+'<button type="button" class="rt ut" data-act="open" data-k="'+(d.prop?'proposal':'planned')+'" data-id="'+esc(d.task.id)+'">'+esc(d.t)+'</button><span class="dt">'+(d.task.s?esc(d.task.s):'')+(d.prop?'<b>SUGGESTED</b>':'')+'</span></li>';
     return '<li class="upc '+(d.hard?'hard'+(n<=2?' near':''):'soft')+'">'+dd+'<span class="ut">'+esc(d.t)+'</span></li>';}).join('')+'</ul></section>';
 }
 
 var YR0=new Date(2026,7,31),MS=[
- {d:new Date(2026,7,31),t:'FALL',pos:'dn l'},
- {d:LAUNCH,t:'LAUNCH',pos:'up key',chip:'SPOTTER LAUNCH'},
+ {d:new Date(2026,7,31),t:'Fall',pos:'dn l'},
+ {d:LAUNCH,t:'Launch',pos:'up key',chip:'SPOTTER LAUNCH'},
  {d:new Date(2026,10,25),e:new Date(2026,10,29),t:'',chip:'THANKSGIVING',band:1},
- {d:new Date(2026,11,14),e:new Date(2026,11,21),t:'FINALS',pos:'dn',chip:'FALL FINALS',band:1},
- {d:new Date(2027,0,27),t:'SPRING',pos:'up',chip:'SPRING CLASSES'},
- {d:new Date(2027,2,14),e:new Date(2027,2,21),t:'BREAK',pos:'up',chip:'SPRING BREAK',band:1},
- {d:GRAD,t:'GRAD',pos:'dn r key',chip:'COMMENCEMENT'}];
+ {d:new Date(2026,11,14),e:new Date(2026,11,21),t:'Finals',pos:'dn',chip:'FALL FINALS',band:1},
+ {d:new Date(2027,0,27),t:'Spring',pos:'up',chip:'SPRING CLASSES'},
+ {d:new Date(2027,2,14),e:new Date(2027,2,21),t:'Spring break',pos:'dn',chip:'SPRING BREAK',band:1},
+ {d:GRAD,t:'Graduation',pos:'up r key',chip:'COMMENCEMENT'}];
 function rTrack(){
   var o=ops(),span=daysBetween(YR0,GRAD);
   function pc(d){return Math.min(100,Math.max(0,daysBetween(YR0,d)/span*100)).toFixed(2)+'%';}
-  var h='<section class="p trk" data-tab="week">'+phd('Senior year')+'<div class="body"><div class="track" aria-hidden="true"><div class="ln"></div><div class="el" style="width:'+pc(o.day)+'"></div>';
+  var h='<section class="p trk" data-tab="week">'+phd('Year')+'<div class="body"><div class="track" aria-hidden="true"><div class="ln"></div><div class="el" style="width:'+pc(o.day)+'"></div>';
   MS.forEach(function(m){if(m.band)h+='<div class="band" style="left:'+pc(m.d)+';width:calc('+pc(m.e)+' - '+pc(m.d)+')"></div>';});
   MS.forEach(function(m){if(m.t)h+='<div class="ms '+m.pos+'" style="left:'+pc(m.d)+'"><span>'+m.t+'</span></div>';});
   return h+'<div class="td" style="left:'+pc(o.day)+'"></div></div></div></section>';
 }
 /* countdowns to each milestone, for the track's info sheet */
-function trackLine(){var o=ops(),out=[];MS.forEach(function(m){if(!m.chip)return;var n=daysBetween(o.day,m.d),ne=m.e?daysBetween(o.day,m.e):n;if(ne<0)return;out.push(m.chip.charAt(0)+m.chip.slice(1).toLowerCase()+' '+(n>0?'T−'+n+'D':n===0?'today':'now'));});return out.join(' · ');}
+function trackLine(){var o=ops(),out=[];MS.forEach(function(m){if(!m.chip)return;var n=daysBetween(o.day,m.d),ne=m.e?daysBetween(o.day,m.e):n;if(ne<0)return;out.push(m.chip.charAt(0)+m.chip.slice(1).toLowerCase()+' '+(n>0?'in '+n+'d':n===0?'today':'now'));});return out.join(' · ');}
 function rProps(){
   if(!S.proposals.length&&!ui.proposing)return '';
-  var h='<section class="p prop" data-tab="today">'+phd('Proposed','proposed',ui.proposing?'<span>FINDING A SLOT…</span>':'');
+  var h='<section class="p prop" data-tab="today">'+phd('Suggested','proposed',ui.proposing?'<span>Finding a slot…</span>':'');
   h+=S.proposals.map(function(p){
     var when=dayLbl(p.date).replace(/^[A-Z]+, /,'');
     var x='<div class="pc"><button type="button" class="rt pt" data-act="open" data-k="proposal" data-id="'+esc(p.id)+'">'+esc(p.t)+'</button><div class="pm"><span class="pl">'+esc(wc_pLands(p))+'</span>~'+(p.m||itemMin(p))+' MIN · '+when+(p.g?' · '+esc(call(p.g)):'')+'</div>';
@@ -1605,7 +1662,7 @@ function st_load(t0,f){
   else v=['STEADY','n'];
   /* a light week that simply hasn't been scheduled is not "room to spare" */
   if(empty>=3&&(v[1]==='g'||v[1]==='n'))v=['PARTLY PLANNED','n'];
-  var h='<div class="st-sec st-load">'+st_hd('Load','',tot?st_vd(v):'');
+  var h='<div class="st-sec st-load">'+st_hd('Hours','',tot?st_vd(v):'');
   if(!tot)return h+'<p class="st-empty">Nothing scheduled.</p></div>';
   h+='<div class="st-fig"><b class="st-big">'+st_h(tot)+'</b><span class="st-of">of '+st_h(cap)+
     (over?'<br><em class="'+worst+'">'+over+' day'+(over>1?'s':'')+' over</em>':'')+'</span></div>';
@@ -1662,7 +1719,7 @@ function st_fol(t0,hist){
   var slip='<div class="st-tile"><b class="st-mid">'+sl+'</b><span class="st-of">bumped</span></div>';
   if(!ok){
     var pp='';for(i=0;i<3;i++)pp+='<i'+(i<nR?' class="on"':'')+'></i>';
-    h+='<div class="st-figs"><div class="st-tile"><span class="st-pips lg" aria-hidden="true">'+pp+'</span><span class="st-of"><b>'+nR+'/3</b> shutdowns</span></div>'+slip+'</div>';
+    h+='<div class="st-figs"><div class="st-tile"><span class="st-pips lg" aria-hidden="true">'+pp+'</span><span class="st-of"><b>'+nR+'/3</b> wrap-ups</span></div>'+slip+'</div>';
     return h+'</div>';
   }
   h+='<div class="st-figs"><div class="st-tile"><b class="st-mid">'+Math.round(R*100)+'%</b><span class="st-of">done</span></div>'+slip+'</div>';
@@ -1670,7 +1727,7 @@ function st_fol(t0,hist){
   var cols='',tb='';
   for(i=0;i<14;i++){
     var x=days[i],lab=st_mon(x.d)+' '+x.d.getDate();
-    if(x.rt===null)cols+='<span title="'+lab+(x.r?': nothing planned':': no shutdown logged')+'"></span>';
+    if(x.rt===null)cols+='<span title="'+lab+(x.r?': nothing planned':': no wrap-up logged')+'"></span>';
     else cols+='<span title="'+lab+': '+Math.min(x.dn,x.pl)+' of '+x.pl+' done ('+Math.round(x.rt*100)+'%)"><i style="height:'+(x.rt?(x.rt*100).toFixed(1)+'%':'2px')+'"></i></span>';
     tb+='<tr><th scope="row">'+lab+'</th><td>'+(x.r?x.dn+'/'+x.pl:'–')+'</td><td>'+(x.en===null?'–':x.en)+'</td></tr>';
   }
@@ -1694,7 +1751,7 @@ function st_fol(t0,hist){
 /* 4. QUEUE: what is waiting to be placed */
 function st_queue(ds){
   var pl=0,P=S.planned||[],i;for(i=0;i<P.length;i++)if(P[i]&&P[i].date>=ds)pl++;
-  var c=[['Inbox',(S.inbox||[]).length],['Proposals',(S.proposals||[]).length],['Planned',pl],['Bumped',(S.bumped||[]).length]],h='';
+  var c=[['Inbox',(S.inbox||[]).length],['Suggested',(S.proposals||[]).length],['Planned',pl],['Bumped',(S.bumped||[]).length]],h='';
   for(i=0;i<4;i++)h+='<div><dt>'+c[i][0]+'</dt><dd'+(c[i][1]?'':' class="z"')+'>'+c[i][1]+'</dd></div>';
   return '<div class="st-sec st-q">'+st_hd('Queue','','')+'<dl class="st-qs">'+h+'</dl></div>';
 }
@@ -1738,7 +1795,7 @@ function habitInfo(g,arr,ti){
   return {lvl:'',txt:''};
 }
 function weekIdx(){return Math.min(6,Math.max(0,daysBetween(pd(S.habits.weekStart),ops().day)));}
-/* ---------- TODAY: habits. The 7-day trackers (goals with g.habit), under the flight plan; the pace line explains itself. ---------- */
+/* ---------- TODAY: habits. The 7-day trackers (goals with g.habit), under the day plan; the pace line explains itself. ---------- */
 function telRow(g,arr,ti,ws){return '<div class="tel">'+arr.map(function(on,i){var dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+i);return '<button type="button" id="h-'+g.habit+'-'+i+'" class="'+(on?'on ':'')+(i===ti?'today':'')+'" data-act="hab" data-h="'+g.habit+'" data-i="'+i+'" aria-pressed="'+on+'" aria-label="'+esc(g.call)+' '+DN[i]+' '+dt.getDate()+'"'+(i>ti?' disabled':'')+'>'+DL[i]+'</button>';}).join('')+'</div>';}
 function rHabits(){
   var H=S.goals.filter(function(g){return g.habit;});if(!H.length)return '';
@@ -1747,7 +1804,7 @@ function rHabits(){
     return '<div class="hab"><div class="habh"><h3>'+esc(g.call)+'</h3><span class="pace '+inf.lvl+'">'+arr.filter(Boolean).length+'/'+g.goal+(inf.txt?' · '+inf.txt:'')+'</span></div>'+telRow(g,arr,ti,ws)+'</div>';}).join('')+'</div></section>';
 }
 function rStatus(){
-  var h='<section class="p stat" data-tab="stats">'+phd('Status board');
+  var h='<section class="p stat" data-tab="stats">'+phd('Goals');
   if(!S.goals.length)return h+'<div class="body note">No goals loaded.</div></section>';
   return h+'<div class="poll">'+S.goals.map(function(g){
     var x='<div class="stn"><button type="button" class="stn-h" data-act="open" data-k="goal" data-id="'+esc(g.id)+'" aria-label="'+esc(g.call)+', '+LBL[g.st]+'. Open details."><h3>'+esc(g.call)+'</h3><span class="light '+g.st+'">'+LBL[g.st]+'</span></button>';
@@ -1755,11 +1812,11 @@ function rStatus(){
   }).join('')+'</div></section>';
 }
 function rCapcom(){
-  var h='<section class="p ccp" data-tab="capcom">'+phd('CAPCOM')+'<div class="body">';
+  var h='<section class="p ccp" data-tab="capcom">'+phd('Claude')+'<div class="body">';
   if(!sample){return h+'<div class="note">'+esc(ccOff||'Offline. Open this page in Claude.')+'</div></div></section>';}
   var t=ui.turns.slice(-6);
-  if(t.length||busy)h+='<div class="xs" id="xs" aria-live="polite">'+t.map(function(m){return '<div class="msg'+(m.role==='assistant'?' cc':'')+'"><span class="sr">'+(m.role==='assistant'?'CAPCOM: ':'You: ')+'</span>'+esc(m.content)+'</div>';}).join('')+(busy?'<div class="msg cc"><span class="sr">CAPCOM: </span><span id="live">Thinking…</span></div>':'')+'</div>';
-  h+='<form id="ask-f" class="capf"><textarea id="ask" rows="2" placeholder="What changed?" aria-label="Message to CAPCOM"'+(busy?' disabled':'')+'>'+esc(ui.draft)+'</textarea><div class="acts"><span class="note">'+(ccOff?esc(ccOff):'')+'</span>'+(busy?'<button type="button" id="cc-stop" class="btn" data-act="stop">STOP</button>':'<button type="submit" class="btn fill">SEND</button>')+'</div></form>';
+  if(t.length||busy)h+='<div class="xs" id="xs" aria-live="polite">'+t.map(function(m){return '<div class="msg'+(m.role==='assistant'?' cc':'')+'"><span class="sr">'+(m.role==='assistant'?'Claude: ':'You: ')+'</span>'+esc(m.content)+'</div>';}).join('')+(busy?'<div class="msg cc"><span class="sr">Claude: </span><span id="live">Thinking…</span></div>':'')+'</div>';
+  h+='<form id="ask-f" class="capf"><textarea id="ask" rows="2" placeholder="What changed?" aria-label="Message to Claude"'+(busy?' disabled':'')+'>'+esc(ui.draft)+'</textarea><div class="acts"><span class="note">'+(ccOff?esc(ccOff):'')+'</span>'+(busy?'<button type="button" id="cc-stop" class="btn" data-act="stop">STOP</button>':'<button type="submit" class="btn fill">SEND</button>')+'</div></form>';
   if(t.length&&!busy)h+='<button type="button" id="cc-clear" class="btn sm" data-act="clearcc" style="margin-top:8px">CLEAR</button>';
   return h+'</div></section>';
 }
@@ -1773,13 +1830,13 @@ function rCapture(){
 function rShutdown(){
   var o=ops(),d=S.debrief&&S.debrief.date===o.date?S.debrief:null,ln=lateNight();
   if(!d&&!ln)return '';
-  var h='<section class="p shut" data-tab="today">'+phd('Shutdown',null,d?'':'<span class="c">DUE TONIGHT</span>')+'<div class="body">';
+  var h='<section class="p shut" data-tab="today">'+phd('Wrap up',null,d?'':'<span class="c">Wrap up tonight</span>')+'<div class="body">';
   if(d){var meta=(d.energy?'ENERGY '+d.energy+'/5':'')+(d.note?(d.energy?' · ':'')+esc(d.note):'');
-    h+='<div class="sdone">SHUTDOWN COMPLETE</div>'+(meta?'<div class="note" style="margin-top:6px">'+meta+'</div>':'')+'<button type="button" id="reopen" class="btn sm" data-act="reopen" style="margin-top:10px">REOPEN</button>';return h+'</div></section>';}
+    h+='<div class="sdone">Day wrapped up</div>'+(meta?'<div class="note" style="margin-top:6px">'+meta+'</div>':'')+'<button type="button" id="reopen" class="btn sm" data-act="reopen" style="margin-top:10px">REOPEN</button>';return h+'</div></section>';}
   var open=fresh()?S.today.items.filter(function(i){return !i.done;}).length:0,ul=logSum(o.date).un;
   if(open||ul)h+='<div class="sdl">'+(open?'<span>'+open+' OPEN</span>':'')+(ul?'<span class="c">'+ul+'H NOT LOGGED</span><button type="button" id="golog2" class="btn sm" data-act="golog">LOG</button>':'')+'</div>';
   h+='<div class="eng" role="group" aria-label="Energy, 1 low to 5 high"><span class="lbl" style="margin-right:6px">ENERGY</span>'+[1,2,3,4,5].map(function(v){return '<button type="button" id="en-'+v+'" class="'+(ui.energy===v?'on':'')+'" data-act="energy" data-v="'+v+'" aria-pressed="'+(ui.energy===v)+'">'+v+'</button>';}).join('')+'</div>';
-  h+='<form id="sd-f" class="capf"><input type="text" id="sd-note" maxlength="300" placeholder="One line on the day" autocomplete="off" aria-label="One line on the day"><div class="acts"><span></span><button class="btn fill" type="submit">SHUT DOWN</button></div></form>';
+  h+='<form id="sd-f" class="capf"><input type="text" id="sd-note" maxlength="300" placeholder="One line on the day" autocomplete="off" aria-label="One line on the day"><div class="acts"><span></span><button class="btn fill" type="submit">WRAP UP</button></div></form>';
   return h+'</div></section>';
 }
 /* ---------- info: one map, one sheet ----------
@@ -1788,13 +1845,13 @@ function rShutdown(){
    and put infoBtn('topic') in the panel header (phd(title, 'topic') does that). Only panels whose behaviour is not obvious
    get one (plan, proposed, stats, time log, tell, tasks, week); the rest explain themselves in place. */
 var INFO={
- plan:{title:'Flight plan',text:'Your day by the hour: calendar events in grey, your items in white, dashed = scheduled for today. The hour you are in, or what is happening now, is {magenta:magenta}.\n＋ ADD on an open hour opens your task list; pick one and it lands in that hour. Tick an item when it is done.\nEARLIER folds the hours already gone. BREATHE runs one guided minute of box breathing.'},
- proposed:{title:'Proposed',text:'Slots Claude picked for tasks you added. ACCEPT puts it on that day, CHANGE lets you set the day, start and minutes, LATER keeps the task in Tasks with no time. DECLINE (on one-offs) drops it.\nTap the title to see why that slot, and the week strip under it: one chip per day with its load in hours; {amber:amber} when the day is at its capacity. Tap a day to move the proposal there, same start if it is free, else the nearest free slot; the list under the strip shows what sits around it.'},
- stats:{title:'Stats',text:'LOAD: hours committed per day for the next 7 days. The white tick is your focus capacity; OVER = past it.\nBALANCE: the last 7 days, work (career, launch, academics) vs life (gym, phone, family).\nFOLLOW-THROUGH: share of planned items done over the last 14 days, from your shutdowns. Energy appears after 3 ratings. BUMPED = moved to tomorrow in the last 7 days.\nQUEUE: what’s waiting in the inbox, proposals, planned and bumped.'},
+ plan:{title:'Today',text:'Your day by the hour: calendar events in grey, your items in white, dashed = scheduled for today. The hour you are in, or what is happening now, is {magenta:magenta}.\n＋ ADD on an open hour opens your task list; pick one and it lands in that hour. Tick an item when it is done.\nEARLIER folds the hours already gone. BREATHE runs one guided minute of box breathing.'},
+ proposed:{title:'Suggested',text:'Slots Claude suggested for tasks you added. ACCEPT puts it on that day, CHANGE lets you set the day, start and minutes, LATER keeps the task in Tasks with no time. DECLINE (on one-offs) drops it.\nTap the title to see why that slot, and the week strip under it: one chip per day with its load in hours; {amber:amber} when the day is at its capacity. Tap a day to move the suggestion there, same start if it is free, else the nearest free slot; the list under the strip shows what sits around it.'},
+ stats:{title:'Stats',text:'HOURS: hours committed per day for the next 7 days. The white tick is your focus capacity; OVER = past it.\nBALANCE: the last 7 days, work (career, launch, academics) vs life (gym, phone, family).\nFOLLOW-THROUGH: share of planned items done over the last 14 days, from your wrap-ups. Energy appears after 3 ratings. BUMPED = moved to tomorrow in the last 7 days.\nQUEUE: what’s waiting in the inbox, suggested, planned and bumped.'},
  timelog:{title:'Time log',text:function(){return 'Pick a category, then tap hours to paint them; tap a painted hour again to clear it. Later hours today can be logged ahead. Dashed {amber:amber} = a past hour not logged.\n＋ NEW adds your own category, like HYPERSONICS, and picks what it counts as, so its hours still feed that goal. Tap your category to see or remove it; removing turns its hours into the category it counted as.\nREST is downtime you chose. ROT is time that vanished: scrolling, unplanned couch. More than '+hrs(S.settings.rotBudget/60)+' of rot a day turns {red:red}.\nWEEK: hours per goal vs your weekly target. The tick marks where you should be after the days already finished; {amber:BEHIND} = under 80% of that.\nFILL FROM PLAN logs finished timed items. NIGHT = SLEEP marks unlogged hours before 08:00; after 20:00 it also logs tonight, 23:00 to 03:00, ahead.';}},
  tell:{"title": "Tell Claude", "text": "Type anything in plain words: hours you spent (“2-4 studied, 4-5 tiktok”), a new task, a change to today, or a question.\nClaude logs the hours, files tasks under the right project with a time estimate, proposes a slot around your calendar, or replans today. Each change shows as a chip; one UNDO reverts the whole reply.\nWithout Claude, your text waits in the inbox for the 07:15 run. Press / to jump here."},
  tasks:{"title": "Tasks", "text": "Your whole backlog, grouped by project, due date or goal, with subtasks under their parent.\nTap a task to schedule it, pull it into today or break it into steps. Ticking a linked item on today’s plan checks the task off here.\nTo add a lot at once, tell Claude."},
- weekcal:{"title": "Week", "text": "Your next 7 days in one place: Google Calendar events in grey, scheduled tasks in white, proposals waiting for your OK with a dashed {cyan:cyan} edge, deadlines on top.\n{amber:CLASH} means a task overlaps a busy event.\nSYNCED is the morning snapshot; {green:LIVE} means the page just read Google Calendar itself. Tap it to refresh."}
+ weekcal:{"title": "Week", "text": "Your next 7 days in one place: Google Calendar events in grey, scheduled tasks in white, suggested slots waiting for your OK with a dashed {cyan:cyan} edge, deadlines on top.\n{amber:CLASH} means a task overlaps a busy event.\nSYNCED is the morning snapshot; {green:LIVE} means the page just read Google Calendar itself. Tap it to refresh."}
 };
 function infoBtn(k,sfx){var I=k&&INFO[k];if(!I)return '';return '<button type="button" class="info" data-act="info" data-v="'+esc(k)+'" id="info-'+esc(k)+(sfx?'-'+esc(sfx):'')+'" aria-label="About '+esc(I.title)+'">i</button>';}
 function rInfo(){
@@ -1839,14 +1896,14 @@ function rDetail(){
     h+='<h3 id="d-title">'+esc(g.call)+' · '+esc(g.name)+'</h3>'+(g.tgt?'<div class="dm">TARGET · '+esc(g.tgt)+'</div>':'');
     if(g.cue)h+='<p class="dd"><b>WHEN</b> '+esc(g.cue)+'</p>';
     if(g.next)h+='<p class="dd"><b>NEXT</b> '+esc(g.next)+'</p>';
-    h+='<div class="lbl" style="margin-top:14px">STATUS</div><div class="seg" role="group" aria-label="Status">'+['go','hold','nogo'].map(function(v){return '<button type="button" id="st-'+v+'" class="'+v+(g.st===v?' on':'')+'" data-act="setst" data-v="'+v+'" aria-pressed="'+(g.st===v)+'">'+LBL[v]+'</button>';}).join('')+'</div>';
+    h+='<div class="lbl" style="margin-top:14px">Status</div><div class="seg" role="group" aria-label="Status">'+['go','hold','nogo'].map(function(v){return '<button type="button" id="st-'+v+'" class="'+v+(g.st===v?' on':'')+'" data-act="setst" data-v="'+v+'" aria-pressed="'+(g.st===v)+'">'+LBL[v]+'</button>';}).join('')+'</div>';
     return h+'</div>';}
-  if(D.k==='proposal'){h+='<h3 id="d-title">'+esc(it.t)+'</h3><div class="dm"><span class="pl">'+esc(wc_pLands(it))+'</span>PROPOSED · ~'+(it.m||itemMin(it))+' MIN · '+dayLbl(it.date).replace(/^[A-Z]+, /,'')+(it.g?' · '+esc(call(it.g)):'')+'</div>'+(it.d?'<p class="dd">'+esc(it.d)+'</p>':'')+(it.why?'<p class="dd"><b>WHY THIS SLOT</b> '+esc(it.why)+'</p>':'')+wc_pPanel(it)+'<div class="dacts"><button type="button" class="btn fill" data-act="pacc" data-id="'+esc(it.id)+'">ACCEPT</button><button type="button" class="btn" data-act="pchg" data-id="'+esc(it.id)+'">CHANGE</button><button type="button" class="btn ghost" data-act="pdec" data-id="'+esc(it.id)+'">'+(it.task?'LATER':'DECLINE')+'</button></div></div>';return h;}
+  if(D.k==='proposal'){h+='<h3 id="d-title">'+esc(it.t)+'</h3><div class="dm"><span class="pl">'+esc(wc_pLands(it))+'</span>SUGGESTED · ~'+(it.m||itemMin(it))+' MIN · '+dayLbl(it.date).replace(/^[A-Z]+, /,'')+(it.g?' · '+esc(call(it.g)):'')+'</div>'+(it.d?'<p class="dd">'+esc(it.d)+'</p>':'')+(it.why?'<p class="dd"><b>WHY THIS SLOT</b> '+esc(it.why)+'</p>':'')+wc_pPanel(it)+'<div class="dacts"><button type="button" class="btn fill" data-act="pacc" data-id="'+esc(it.id)+'">ACCEPT</button><button type="button" class="btn" data-act="pchg" data-id="'+esc(it.id)+'">CHANGE</button><button type="button" class="btn ghost" data-act="pdec" data-id="'+esc(it.id)+'">'+(it.task?'LATER':'DECLINE')+'</button></div></div>';return h;}
   if(D.k==='planned'){h+='<h3 id="d-title">'+esc(it.t)+'</h3><div class="dm">SCHEDULED · '+dayLbl(it.date)+(it.s?' · '+esc(it.s)+'–'+m2h(itemEnd(it)):' · ANYTIME')+(it.g?' · '+esc(call(it.g)):'')+'</div>'+(it.d?'<p class="dd">'+esc(it.d)+'</p>':'');
     if(ui.confirm)return h+'<div class="confirm"><div>Drop this for good?</div><div class="dacts"><button type="button" class="btn" data-act="dropno">KEEP IT</button><button type="button" class="btn warn" data-act="pdrop">DROP IT</button></div></div></div>';
     return h+'<div class="dacts"><button type="button" class="btn fill" data-act="pdo">DO TODAY</button><button type="button" class="btn ghost" data-act="pdrop">DROP</button></div><form id="pmove-f" class="dtime"><label>DAY<input type="date" id="pm-d" value="'+esc(it.date)+'" min="'+ops().date+'"></label><label>START<input type="time" id="pm-s" value="'+esc(it.s)+'"></label><button type="submit" class="btn sm">MOVE</button></form></div>';}
   var st=D.k==='today'?itemState(it):(it.done?'done':'open');
-  h+='<h3 id="d-title">'+esc(it.t)+'</h3><div class="dm">'+(D.k==='today'?(it.s?esc(it.s)+'–'+m2h(itemEnd(it)):esc(it.lbl||'ANYTIME')):'WEEK OBJECTIVE')+(it.g?' · '+esc(call(it.g)):'')+' '+tagFor(st,false)+'</div>';
+  h+='<h3 id="d-title"'+(it.done?' class="done"':'')+'><span class="stk">'+esc(it.t)+'</span></h3><div class="dm">'+(D.k==='today'?(it.s?esc(it.s)+'–'+m2h(itemEnd(it)):esc(it.lbl||'ANYTIME')):'THIS WEEK')+(it.g?' · '+esc(call(it.g)):'')+' '+tagFor(st,false)+'</div>';
   if(it.d)h+='<p class="dd">'+esc(it.d)+'</p>';
   if(ui.confirm){return h+'<div class="confirm"><div>Drop this for good?</div><div class="dacts"><button type="button" class="btn" data-act="dropno">KEEP IT</button><button type="button" class="btn warn" data-act="dropok">DROP IT</button></div></div></div>';}
   h+='<div class="dacts"><button type="button" class="btn fill" data-act="dtoggle">'+(it.done?'NOT DONE':'DONE')+'</button>';
@@ -1859,11 +1916,41 @@ function rToast(){return ui.toast?'<div class="toast" role="status"><span>'+esc(
 var toastT=null;
 function toast(msg,undo){ui.toast={msg:msg,undo:undo||null};clearTimeout(toastT);toastT=setTimeout(function(){ui.toast=null;var t=document.querySelector('.toast');if(t)t.parentNode.removeChild(t);},6000);}
 function snapshot(){return JSON.stringify(S);}
-function act(msg,fn){var before=snapshot();fn();ui.detail=null;ui.confirm=false;toast(msg,function(){S=JSON.parse(before);normalize();});render();queueSave(6500);}
+/* one undoable change: snapshot, apply, close the detail, toast with UNDO, render, save. With delay (ms) the close, toast and render
+   wait so a completion animation on the live DOM can play first; after() runs once that is done (tk_act uses it to keep the sheet). */
+var actT=null;
+function act(msg,fn,delay,after){var before=snapshot();fn();
+  function fin(){actT=null;ui.detail=null;ui.confirm=false;toast(msg,function(){S=JSON.parse(before);normalize();});render();queueSave(6500);if(after)after();}
+  if(delay&&!RM){clearTimeout(actT);actT=setTimeout(fin,delay);}else fin();}
+/* ---------- motion: class the live DOM first, re-render once the transition has played ----------
+   render() rebuilds #app, so a change shows twice: at once on the element already on screen (a class a transition reacts to),
+   then for real by the delayed render. Things that appear (sheets, scrims, toasts, the brush strip) get .in from render() only
+   when they were not there before the render, so a click inside an open sheet does not replay its entrance. Reduced motion: no delays. */
+var RM=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches),fxT=null,tabT=null;
+var FX_IN='.dsheet,.sheet,.tc-sheet,.isheet,.wc-evs,.hstrip,.toast,.scrim,.iscrim,.tc-scrim,.wc-scrim,.br-scrim';
+function fxKey(el){return el.className.split(' ')[0]+'|'+(el.id||'')+'|'+(el.getAttribute('data-i')||'');}
+function fxDelay(ms){return RM?0:ms;}
+function renderSoon(ms){clearTimeout(fxT);fxT=null;if(RM||!ms){render();return;}fxT=setTimeout(function(){fxT=null;render();},ms);}
+/* the DONE tag on a live meta line (.hcm, .tm or .dm): added, or taken away when unticked */
+function tagFx(meta,on){if(!meta)return;var tg=meta.querySelector('.tag');
+  if(on){if(!tg){tg=document.createElement('span');meta.appendChild(tg);}tg.className='tag t-done fx';tg.textContent='DONE';}
+  else if(tg&&tg.classList.contains('t-done'))tg.parentNode.removeChild(tg);}
+/* a plan item was ticked: strike, tint and tag the card that is already on screen */
+function doneFx(el,on){var card=el.closest('.hcard,.row');if(!card)return;card.classList.toggle('done',on);card.classList.add('just');tagFx(card.querySelector('.hcm,.tm'),on);}
+/* a task row's checkbox button */
+function tkDoneFx(b,on){b.setAttribute('aria-checked',on);b.classList.add('just');var r=b.closest('.tk-r');if(r)r.classList.toggle('done',on);}
+/* the open detail sheet's title */
+function titleFx(on){var h=document.getElementById('d-title');if(h)h.classList.toggle('done',on);}
+/* phone tab or desktop view switch: the sections fade in */
+function tabFx(){render();if(RM)return;app.classList.add('tabin');clearTimeout(tabT);tabT=setTimeout(function(){app.classList.remove('tabin');},200);}
+/* an accepted or declined suggestion folds its card when one is on screen; returns the delay before the re-render removes it */
+function propFx(id){if(RM)return 0;var pc=null;[].forEach.call(document.querySelectorAll('.pc'),function(x){var a=x.querySelector('[data-act="pacc"]');if(!pc&&x.offsetParent&&a&&a.dataset.id===id)pc=x;});
+  if(!pc)return 0;pc.style.maxHeight=pc.offsetHeight+'px';void pc.offsetHeight;pc.classList.add('out');pc.style.maxHeight='0px';return 280;}
 function render(){
   if(!parseErr)rollWeek();
   var ae=document.activeElement,keep=ae&&ae.id?ae.id:null,sel=null;try{sel=keep&&ae.selectionStart!=null?[ae.selectionStart,ae.selectionEnd]:null;}catch(x){}
   var vals={};[].forEach.call(app.querySelectorAll('input[id]:not([type=checkbox]),textarea[id]'),function(el){vals[el.id]=el.value;});
+  var had={};[].forEach.call(app.querySelectorAll(FX_IN),function(el){had[fxKey(el)]=1;});
   var h=rMast();
   h+='<div class="loop" id="loop" role="status"'+(loopWarn?'':' hidden')+'>'+esc(loopT)+'</div>';
   h+=tc_bar();
@@ -1871,6 +1958,7 @@ function render(){
   h+=tk_render();
   h+=rTabs()+rToast()+rDetail()+wc_sheet()+rPick()+rBreathe()+rInfo();
   app.dataset.tab=ui.tab;app.dataset.view=ui.view;app.innerHTML=h;
+  if(!RM)[].forEach.call(app.querySelectorAll(FX_IN),function(el){if(!had[fxKey(el)])el.classList.add('in');});
   Object.keys(vals).forEach(function(id){if(ui.noKeep[id])return;var el=document.getElementById(id);if(el&&el.tagName!=='TEXTAREA'&&el.value!==vals[id])el.value=vals[id];});
   if(ui.drafts&&typeof ui.drafts==='object')['cap','sheet-in','sd-note'].forEach(function(id){var el=document.getElementById(id);if(el&&!el.value&&ui.drafts[id]&&!ui.noKeep[id])el.value=ui.drafts[id];});
   ui.noKeep={};
@@ -1928,18 +2016,18 @@ function flush(){if(saveT){clearTimeout(saveT);save();}}
 window.addEventListener('pagehide',flush);
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')flush();});
 
-/* ---------- CAPCOM ---------- */
+/* ---------- Claude chat panel (legacy; Tell Claude is the live path) ---------- */
 function rules(){
   var o=ops();
   var st={today:fresh()?S.today:{date:S.today.date,expired:true,items:S.today.items},week:S.week,upcoming:S.dates,goals:S.goals.map(function(g){return {id:g.id,call:g.call,name:g.name,status:g.st,target:g.tgt,next:g.next};}),habits:{weekStart:S.habits.weekStart,gym:S.habits.pt,phoneDown:S.habits.comms},inbox:S.inbox.slice(-20).map(function(c){return c.t;}),timeToday:(function(){var x=logSum(ops().date);return {goalH:x.goal,lifeH:x.life,sleepH:x.sleep,rotH:x.rot,missingH:x.un,rotBudgetH:S.settings.rotBudget/60};})(),weekGoalHours:weekGoalHours(),weeklyTargetsH:S.settings.tgtH,capacity:{todayMin:loadOn(o.date),todayCapMin:capMin(o.day),weekdayMin:S.settings.capWeekday,weekendMin:S.settings.capWeekend}};
-  return 'You are CAPCOM, Claude speaking through Kevin Kyle\'s Mission Control page. Kevin is a UMD aerospace engineering senior (commencement May 24, 2027), co-founder/CEO of the startup Spotter (launching Nov 22, 2026), job hunting in hypersonics/defense. Goals: CAREER (job offer), LAUNCH (Spotter live Nov 22), ACADEMICS, PT (gym 3x/week), COMMS (phone down by 23:00, less stress), HOME (see Mom and Dad every 2 weeks).\n'+
+  return 'You are Claude, speaking through Kevin Kyle\'s Mission Control page. Kevin is a UMD aerospace engineering senior (commencement May 24, 2027), co-founder/CEO of the startup Spotter (launching Nov 22, 2026), job hunting in hypersonics/defense. Goals: CAREER (job offer), LAUNCH (Spotter live Nov 22), ACADEMICS, PT (gym 3x/week), COMMS (phone down by 23:00, less stress), HOME (see Mom and Dad every 2 weeks).\n'+
   'Rules: today\'s plan holds what fits its capacity (minutes shown); lead with the item that moves a goal most; if he is overloaded, say what to cut; protect sleep and the phone-down habit. Be blunt and brief: under 80 words, plain sentences, no flattery, no emoji. '+
   (toolsOK?'Use set_today_items only when he asks to change the plan or clearly agrees; keep existing ids for items you keep; give each item a short title (max 40 chars) and a 1-3 sentence d. Use capture for anything to deal with later. ':'You cannot change the page; tell him what to change. ')+
   'You cannot send messages, browse, or see his calendar or email. The working day runs until 04:00.\n'+
   'Now: '+o.n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+', '+hhmm(o.n)+' Eastern (working day '+o.date+').\nPage state: '+JSON.stringify(st);
 }
 var TOOLS=[
- {name:'set_today_items',description:'Replace today\'s flight plan on the page. Pass the full ordered list (as many items as fit the day\'s capacity in minutes; over capacity is saved and reported in note). Keep an existing item\'s id to keep its done flag. Returns the saved plan.',
+ {name:'set_today_items',description:'Replace today\'s plan on the page. Pass the full ordered list (as many items as fit the day\'s capacity in minutes; over capacity is saved and reported in note). Keep an existing item\'s id to keep its done flag. Returns the saved plan.',
   inputSchema:{type:'object',properties:{items:{type:'array',items:{type:'object',properties:{id:{type:'string',description:'Existing item id, omit for a new item'},t:{type:'string',description:'Short verb-first title, max 40 characters'},s:{type:'string',description:'Start time HH:MM 24h, optional'},e:{type:'string',description:'End time HH:MM 24h, optional'},lbl:{type:'string',description:'Short label when untimed, e.g. DUE, PM'},d:{type:'string',description:'1-3 sentences: what it is, why it matters, what done looks like'},g:{type:'string',description:'Goal id: career, launch, acad, pt, comms, home'}},required:['t']}}},required:['items']},
   execute:function(inp){var arr=inp&&inp.items;if(!Array.isArray(arr)||!arr.length)throw new Error('items must be a non-empty array');
     var old={};if(fresh())S.today.items.forEach(function(i){old[i.id]=i;});
@@ -1965,25 +2053,27 @@ function ask(text){
   Promise.resolve().then(function(){return sample(input,opts);}).then(function(r){ui.turns.push({role:'assistant',content:str(r&&r.text,4000)||'(no reply)'});}).catch(function(e){
     var c=e&&e.code;
     if(e&&e.text)ui.turns.push({role:'assistant',content:e.text+(c==='cancelled'?' [stopped]':' [interrupted]')});
-    if(['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].indexOf(c)>=0){sample=null;ccOff='CAPCOM is off. Allow Claude in this page’s Permissions menu.';}
-    else if(c==='tools_unavailable'){toolsOK=false;ccOff='CAPCOM can’t edit the plan here. Send again.';}
+    if(['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].indexOf(c)>=0){sample=null;ccOff='Claude is off. Allow Claude in this page’s Permissions menu.';}
+    else if(c==='tools_unavailable'){toolsOK=false;ccOff='Claude can’t edit the plan here. Send again.';}
     else if(c==='rate_limited')ccOff='Rate limited. Try again in a few minutes.';
     else if(c==='session_expired')ccOff='Sign in to Claude again, then retry.';
-    else if(c==='refused')ccOff='CAPCOM declined. Rephrase it.';
+    else if(c==='refused')ccOff='Claude declined. Rephrase it.';
     else if(c==='prompt_too_large'){ui.turns=ui.turns.slice(-2);ccOff='Log too long, trimmed. Send again.';}
     else if(c!=='cancelled')ccOff=ccChanged?'Plan updated; reply cut off.':'Transmission failed. Send again.';
   }).then(function(){busy=false;ctl=null;ui.turns=ui.turns.slice(-8);LS.set('turns',ui.turns);var bf=ccBefore;
-    if(ccChanged&&bf)toast('CAPCOM changed your plan',function(){S=JSON.parse(bf);normalize();});render();if(pending){pending=false;queueSave(ccChanged?6500:900);}});
+    if(ccChanged&&bf)toast('Claude changed your plan',function(){S=JSON.parse(bf);normalize();});render();if(pending){pending=false;queueSave(ccChanged?6500:900);}});
 }
 function addInbox(t){var n=new Date();S.inbox.push({id:'i'+Date.now().toString(36)+Math.floor(Math.random()*1e4),t:str(t,300),at:n.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase()+' '+hhmm(n)});}
 
 /* ---------- events ---------- */
 function closeDetail(){var op=ui.opener;ui.detail=null;ui.confirm=false;render();if(op){var p=op.split(':'),el=document.querySelector('[data-act="open"][data-k="'+p[0]+'"][data-id="'+p.slice(1).join(':').replace(/"/g,'')+'"]');if(el&&el.offsetParent)el.focus();}}
 function list(k){return k==='today'?S.today.items:S.week.items;}
+/* ticking a plan item: the state changes at once, the card on screen animates (check draws, strike, tint, DONE tag) and the
+   re-render follows once that has played, so the card never vanishes under the finger */
 app.addEventListener('change',function(e){
-  var el=e.target;if(!el.matches('input[type=checkbox]'))return;
-  list(el.dataset.k).forEach(function(it){if(it.id===el.dataset.id){it.done=el.checked;tk_onItemDone(it);}});
-  render();queueSave();
+  var el=e.target;if(!el.matches('input[type=checkbox]'))return;var on=el.checked;
+  list(el.dataset.k).forEach(function(it){if(it.id===el.dataset.id){it.done=on;tk_onItemDone(it);}});
+  doneFx(el,on);queueSave();renderSoon(600);
 });
 app.addEventListener('input',function(e){var id=e.target.id;if(id==='ask'){ui.draft=e.target.value;LS.set('draft',ui.draft);}
   if(id==='cap'||id==='sheet-in'||id==='sd-note'){if(typeof ui.drafts!=='object'||!ui.drafts)ui.drafts={};ui.drafts[id]=e.target.value;LS.set('drafts',ui.drafts);}});
@@ -1992,7 +2082,7 @@ app.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]');if(!b||b.disabled)return;var a=b.dataset.act;if(tc_click(a,b,e)||tk_click(a,b,e)||wc_click(a,b,e))return;
   if(a==='info'){ui.info={k:b.dataset.v,from:b.id};render();return;}
   if(a==='infox'){closeInfo();return;}
-  if(a==='tab'){ui.tab=b.dataset.v;LS.set('tab',ui.tab);ui.sheet=false;render();window.scrollTo(0,0);return;}
+  if(a==='tab'){ui.tab=b.dataset.v;LS.set('tab',ui.tab);ui.sheet=false;tabFx();window.scrollTo(0,0);return;}
   if(a==='sheet'){ui.sheet=true;render();return;}
   if(a==='sheetx'){ui.sheet=false;render();return;}
   if(a==='open'){ui.detail={k:b.dataset.k,id:b.dataset.id};ui.confirm=false;ui.opener=b.dataset.k+':'+b.dataset.id;ui.focusDetail=true;render();return;}
@@ -2006,7 +2096,7 @@ app.addEventListener('click',function(e){
   if(a==='hpast'){ui.planPast=!hpShowPast();render();var he=document.getElementById('hearly');if(he)he.focus();return;}
   if(a==='hlog'){var hi=+b.dataset.i;ui.hlog=ui.hlog===hi?null:hi;render();var hs=document.querySelector('#hstrip .bc');if(hs&&ui.hlog!==null&&window.innerWidth>=1000)hs.focus({preventScroll:true});return;}
   if(a==='hbrush'){if(parseErr){queueSave();return;}var bi=+b.dataset.i,bv=b.dataset.v,bd=ops().date;if(!(bi>=0&&bi<LOGN)||(bv!=='.'&&!catOf(bv)))return;var BL=logOf(bd).split('');BL[bi]=bv;logCommit(bd,BL.join(''));
-    var bn=bi+1;ui.hlog=bn<LOGN&&slotWhen(bd,bn)==='past'&&BL[bn]==='.'?bn:null;render();if(ui.hlog===null){var hc=document.getElementById('hlog-'+bi);if(hc)hc.focus({preventScroll:true});}return;}
+    var bn=bi+1;ui.hlog=bn<LOGN&&slotWhen(bd,bn)==='past'&&BL[bn]==='.'?bn:null;render();var hc=document.getElementById('hlog-'+bi);if(hc){hc.classList.add('just');if(ui.hlog===null)hc.focus({preventScroll:true});}return;}
   if(a==='hadd'){if(parseErr)return;ui.pick={h:+b.dataset.h};render();var px=document.getElementById('hpk-x');if(px)px.focus();return;}
   if(a==='hpickx'){var ph=ui.pick&&ui.pick.h;ui.pick=null;render();var hb=document.getElementById('hadd-'+ph);if(hb)hb.focus();return;}
   if(a==='hpick'){var pk=ui.pick,t9=tk_find(b.dataset.id);if(!pk||!t9)return;var st9=hpPickStart(pk.h);ui.pick=null;if(st9===null){toast('That hour is full now');render();return;}
@@ -2031,12 +2121,13 @@ app.addEventListener('click',function(e){
       if(ds===o2.date){if(o2.min>=20*60)for(var j4=17;j4<LOGN;j4++){if(slotWhen(ds,j4)==='future'&&L[j4]==='.'){L[j4]='z';n++;}}}
       else for(var j3=LOGN-1;j3>=17;j3--){var w3=slotWhen(ds,j3);if(w3==='future')continue;if(w3!=='past'||L[j3]!=='.')break;L[j3]='z';n++;}toast(n?'Marked '+n+'H as sleep':'No unlogged night hours yet');}
     if(n)logCommit(ds,L.join(''));render();return;}
-  if(a==='view'){ui.view=['stats','tasks'].indexOf(b.dataset.v)>=0?b.dataset.v:'console';LS.set('view',ui.view);render();return;}
+  if(a==='view'){ui.view=['stats','tasks'].indexOf(b.dataset.v)>=0?b.dataset.v:'console';LS.set('view',ui.view);tabFx();return;}
   if(a==='pacc'||a==='pdec'||a==='pchg'){var p=findItem('proposal',b.dataset.id||(ui.detail&&ui.detail.id));if(!p)return;
     if(a==='pchg'){ui.editProp=p.id;ui.detail=null;render();var pe=document.getElementById('pe-d');if(pe)pe.focus();return;}
-    if(a==='pacc'){var msg;act('x',function(){msg=acceptProp(p);});ui.toast.msg=msg;render();return;}
-    if(p.task){act('Kept in Tasks for later',function(){S.proposals=S.proposals.filter(function(x){return x!==p;});});return;}
-    act('Declined',function(){S.proposals=S.proposals.filter(function(x){return x!==p;});S.dropped.push({t:p.t,d:p.d,g:p.g,date:ops().date});});return;}
+    var pdl=propFx(p.id);
+    if(a==='pacc'){var msg;act('x',function(){msg=acceptProp(p);},pdl,function(){ui.toast.msg=msg;render();});return;}
+    if(p.task){act('Kept in Tasks for later',function(){S.proposals=S.proposals.filter(function(x){return x!==p;});},pdl);return;}
+    act('Declined',function(){S.proposals=S.proposals.filter(function(x){return x!==p;});S.dropped.push({t:p.t,d:p.d,g:p.g,date:ops().date});},pdl);return;}
   if(a==='pchgx'){ui.editProp=null;render();return;}
   if(a==='pdo'&&ui.detail){var q=findItem('planned',ui.detail.id);if(!q)return;act(fresh()?'Pulled into today':'Will be in tomorrow\'s plan',function(){if(fresh()){S.planned=S.planned.filter(function(x){return x!==q;});var it={id:q.id,t:q.t,d:q.d,g:q.g,s:'',e:'',lbl:'',m:q.s?itemEnd(q)-mins(q.s):(q.m||30),done:false};if(q.task)it.task=q.task;S.today.items.push(it);}else{q.date=ops().date;}});return;}
   if(a==='pdrop'&&ui.detail){var q2=findItem('planned',ui.detail.id);if(!q2)return;if(!ui.confirm){ui.confirm=true;render();return;}act('Dropped',function(){S.planned=S.planned.filter(function(x){return x!==q2;});S.dropped.push({t:q2.t,d:q2.d,g:q2.g,date:ops().date});});return;}
@@ -2047,7 +2138,7 @@ app.addEventListener('click',function(e){
     if(a==='dropno'){ui.confirm=false;render();return;}
     if(a==='drop'){ui.confirm=true;render();return;}
     if(a==='setst'){it.st=b.dataset.v;render();queueSave();return;}
-    if(a==='dtoggle'){act(it.done?'Marked not done':'Marked done',function(){it.done=!it.done;tk_onItemDone(it);});return;}
+    if(a==='dtoggle'){var on9=!it.done;titleFx(on9);tagFx(document.querySelector('.dsheet .dm'),on9);act(on9?'Marked done':'Marked not done',function(){it.done=on9;tk_onItemDone(it);},fxDelay(600));return;}
     var L=D.k==='today'?S.today.items:S.week.items;
     if(a==='dropok'){act('Dropped',function(){L.splice(L.indexOf(it),1);S.dropped.push({t:it.t,d:it.d,g:it.g,date:ops().date});});return;}
     if(a==='tomorrow'){act('Moved to tomorrow',function(){L.splice(L.indexOf(it),1);S.bumped.push({t:it.t,d:it.d,g:it.g,date:ops().date});});return;}
@@ -2062,7 +2153,7 @@ app.addEventListener('click',function(e){
   if(a==='abort'||a==='clrburn'){ui.burnEnd=0;LS.set('burnEnd',0);render();return;}
   if(parseErr&&['light','hab','capdel','reopen'].indexOf(a)>=0){queueSave();return;}
   if(a==='light'){S.goals.forEach(function(x){if(x.id===b.dataset.g)x.st=NEXT[x.st]||'go';});render();queueSave();return;}
-  if(a==='hab'){var arr=S.habits[b.dataset.h],i=+b.dataset.i;if(!arr)return;arr[i]=!arr[i];render();queueSave();return;}
+  if(a==='hab'){var arr=S.habits[b.dataset.h],i=+b.dataset.i;if(!arr)return;arr[i]=!arr[i];b.classList.toggle('on',arr[i]);b.setAttribute('aria-pressed',arr[i]);b.classList.add('just');queueSave();renderSoon(300);return;}
   if(a==='capdel'){S.inbox=S.inbox.filter(function(c){return c.id!==b.dataset.id;});render();queueSave();return;}
   if(a==='energy'){ui.energy=+b.dataset.v;LS.set('energy',{date:ops().date,v:ui.energy});document.querySelectorAll('.eng button').forEach(function(x){var on=+x.dataset.v===ui.energy;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});return;}
   if(a==='reopen'){S.debrief=null;render();queueSave();return;}
@@ -2079,7 +2170,7 @@ app.addEventListener('submit',function(e){
     ui.catForm=false;ui.noKeep['cat-n']=1;
     act('Added '+nm+' · counts as '+baseCat(pp).n,function(){S.settings.cats=normCats(C.concat([{k:nk,n:nm,p:pp}]));ui.brush=nk;LS.set('brush',nk);});return;}
   if(f.id==='cap-f'||f.id==='sheet-f'){var inp=f.querySelector('input');var v=(inp.value||'').trim();if(!v)return;var mode=e.submitter&&e.submitter.dataset?e.submitter.dataset.mode:'sched';inp.value='';clearDraft(inp.id);ui.sheet=false;
-    if(mode==='cap'){addInbox(v);toast('Captured to inbox');render();queueSave();}else{if(busy){addInbox(v);toast('CAPCOM is busy, so it went to the inbox');render();queueSave();}else{if(ui.tab!=='today'&&window.innerWidth<1000){ui.tab='today';LS.set('tab','today');}proposeTask(v);}}
+    if(mode==='cap'){addInbox(v);toast('Captured to inbox');render();queueSave();}else{if(busy){addInbox(v);toast('Claude is busy, so it went to the inbox');render();queueSave();}else{if(ui.tab!=='today'&&window.innerWidth<1000){ui.tab='today';LS.set('tab','today');}proposeTask(v);}}
     var c=document.getElementById('cap');if(c&&f.id==='cap-f'&&c.offsetParent)c.focus();return;}
   if(f.classList.contains('pe')){var p=findItem('proposal',f.dataset.id);if(!p)return;var dv=document.getElementById('pe-d').value,sv=document.getElementById('pe-s').value,mv=Math.round(+document.getElementById('pe-m').value);
     if(!okDate(dv)||pd(dv)<ops().day){toast('Pick today or a later day');render();return;}
@@ -2118,7 +2209,7 @@ var TK_MAX=400;
 var TK_SORTS=[['urg','URGENCY'],['proj','PROJECT'],['due','DUE'],['goal','GOAL']],TK_FILTS=[['open','OPEN'],['done','DONE']];
 /* urgency (README rules): NOW → today's plan when there is room, THIS WEEK → a proposed slot this week, LATER → no slot. Rank 1 = due within 2 days. */
 var TK_URG=['now','week','later'],TK_ULBL={now:'NOW',week:'THIS WEEK',later:'LATER'},TK_UG=[[0,'Now'],[1,'Due within 2 days'],[2,'This week'],[3,'Later']],TK_PMAX=60;
-if(INFO.tasks)INFO.tasks.text+='\nURGENCY: NOW goes onto today’s plan; if that puts the day over its capacity you see the hours and choose. THIS WEEK gets a proposed slot in free time this week. LATER waits with no slot. Sorted by urgency: NOW, due within 2 days, THIS WEEK, then by due date, then LATER.\n⋯ on a project: rename it, move it up or down, merge it into another, make it one task with its tasks as subtasks, or delete it once nothing in it is open. + NEW PROJECT sits at the bottom of the list.';
+if(INFO.tasks)INFO.tasks.text+='\nURGENCY: NOW goes onto today’s plan; if that puts the day over its capacity you see the hours and choose. THIS WEEK gets a suggested slot in free time this week. LATER waits with no slot. Sorted by urgency: NOW, due within 2 days, THIS WEEK, then by due date, then LATER.\n⋯ on a project: rename it, move it up or down, merge it into another, make it one task with its tasks as subtasks, or delete it once nothing in it is open. + NEW PROJECT sits at the bottom of the list.';
 var TK_CHEV='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg>';
 var TK_DOW=['SUN','MON','TUE','WED','THU','FRI','SAT'];
 
@@ -2148,15 +2239,15 @@ function tk_new(t,proj,parent){return {id:tk_id(),t:str(t,200).replace(/\s+/g,' 
 function tk_mfmt(m){if(!(m>0))return '';if(m<60)return m+'M';var h=Math.round(m/6)/10;return (h%1?h.toFixed(1):String(h))+'H';}
 function tk_short(ds){if(!okDate(ds))return '';var d=pd(ds),n=daysBetween(ops().day,d);
   return (n>=0&&n<7?TK_DOW[d.getDay()]+' ':'')+['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()]+' '+d.getDate();}
-/* due marker: T−3D, amber at 2 days or less, red when overdue (T+nD); quiet once done */
+/* due marker: "3d", amber at 2 days or less, red when overdue ("2d ago"); quiet once done */
 function tk_due(t){if(!tk_date(t.due))return null;var n=daysBetween(ops().day,pd(t.due)),dn=t.status==='done';
-  return {n:n,txt:n<0?'T+'+(-n)+'D':n===0?'TODAY':'T−'+n+'D',cls:dn?'dn':n<0?'w':n<=2?'c':''};}
+  return {n:n,txt:n<0?(-n)+'d ago':n===0?'Today':n+'d',cls:dn?'dn':n<0?'w':n<=2?'c':''};}
 /* where a task sits in the plan: today item, planned item, pending proposal */
 function tk_links(id){var r={today:null,planned:null,prop:null};
   if(fresh())S.today.items.forEach(function(i){if(i.task===id&&!r.today)r.today=i;});
   (S.planned||[]).forEach(function(p){if(p.task===id&&!r.planned)r.planned=p;});
   (S.proposals||[]).forEach(function(p){if(p.task===id&&!r.prop)r.prop=p;});return r;}
-function tk_linkTxt(L){if(L.today)return L.today.done?'':'ON TODAY';if(L.planned)return 'ON '+tk_short(L.planned.date);if(L.prop)return 'PROPOSED';return '';}
+function tk_linkTxt(L){if(L.today)return L.today.done?'':'ON TODAY';if(L.planned)return 'ON '+tk_short(L.planned.date);if(L.prop)return 'SUGGESTED';return '';}
 function tk_unlinkSched(ids){S.proposals=S.proposals.filter(function(p){return !(p.task&&ids[p.task]);});S.planned=S.planned.filter(function(p){return !(p.task&&ids[p.task]);});}
 function tk_openCount(){return tk_list().filter(function(t){return t.status!=='done';}).length;}
 /* keep the backlog at TK_MAX: oldest finished tasks go first, open ones are never pruned here */
@@ -2166,11 +2257,11 @@ function tk_prune(){var L=tk_list();if(L.length<=TK_MAX)return;
   S.tasks.forEach(function(t){if(t.parent&&cut[t.parent])t.parent='';});}
 function tk_focus(id){var el=document.getElementById(id);if(el&&el.offsetParent)try{el.focus();}catch(e){}}
 function tk_reopen(id,form){var U=tk_ui();ui.detail={k:'task',id:id};U.det=ui.detail;U.form=form||'';U.conf='';render();}
-/* act() closes the detail sheet; tk_act keeps it open when the change belongs inside the sheet */
-function tk_act(msg,fn,keep){var D=ui.detail,ae=document.activeElement,fid=ae&&ae.id;act(msg,fn);
-  if(keep&&D){ui.detail=D;render();if(fid)tk_focus(fid);}}
+/* act() closes the detail sheet; tk_act keeps it open when the change belongs inside the sheet. delay (ms) lets a completion animation play first. */
+function tk_act(msg,fn,keep,delay){var D=ui.detail,ae=document.activeElement,fid=ae&&ae.id;
+  act(msg,fn,delay,keep&&D?function(){ui.detail=D;render();if(fid)tk_focus(fid);}:null);}
 
-/* ---------- public API: Claude / CAPCOM tools can add tasks through this ---------- */
+/* ---------- public API: Claude's tools can add tasks through this ---------- */
 function tk_add(o){o=o&&typeof o==='object'?o:{};var t=str(o.t,200).replace(/\s+/g,' ').trim();if(!t)throw new Error('task needs a title (t)');
   if(tk_openCount()>=TK_MAX)throw new Error('backlog is at '+TK_MAX+' open tasks; finish or drop some first');
   var par=o.parent?tk_find(str(o.parent,40)):null;if(par&&par.parent)par=tk_find(par.parent);
@@ -2266,7 +2357,7 @@ function tk_groups(U){
 
 /* ---------- render ---------- */
 function tk_cb(t,pfx){var on=t.status==='done';
-  return '<button type="button" class="tk-cb" id="'+pfx+'c-'+tk_did(t.id)+'" role="checkbox" aria-checked="'+on+'" data-act="tk-check" data-id="'+esc(t.id)+'" aria-label="Done: '+esc(t.t.slice(0,60))+'"><i></i></button>';}
+  return '<button type="button" class="tk-cb" id="'+pfx+'c-'+tk_did(t.id)+'" role="checkbox" aria-checked="'+on+'" data-act="tk-check" data-id="'+esc(t.id)+'" aria-label="Done: '+esc(t.t.slice(0,60))+'"><i>'+SVG_CK+'</i></button>';}
 function tk_row(t,o){
   o=o||{};var pfx=o.pfx||'tk',done=t.status==='done',du=tk_due(t),all=o.all||[],meta=[];
   if(!done&&!o.noUrg&&(t.urg==='now'||t.urg==='week'))meta.push('<span class="tag tk-ut'+(t.urg==='now'?' now':'')+'">'+TK_ULBL[t.urg]+'</span>');
@@ -2274,9 +2365,9 @@ function tk_row(t,o){
   if(o.showProj){var p=tk_proj(t.proj);if(p)meta.push('<span class="tk-pj">'+esc(p.name)+'</span>');}
   if(t.m>0)meta.push('<span>'+tk_mfmt(t.m)+'</span>');
   if(all.length){var kd=all.filter(tk_isDone).length;meta.push('<span class="tk-pg'+(kd===all.length?' ok':'')+'" aria-label="'+kd+' of '+all.length+' subtasks done">'+kd+'/'+all.length+'</span>');}
-  var lt=done?'':tk_linkTxt(tk_links(t.id));if(lt)meta.push('<span class="tk-on'+(lt==='PROPOSED'?' pr':'')+'">'+esc(lt)+'</span>');
+  var lt=done?'':tk_linkTxt(tk_links(t.id));if(lt)meta.push('<span class="tk-on'+(lt==='SUGGESTED'?' pr':'')+'">'+esc(lt)+'</span>');
   return '<li class="tk-r'+(o.sub?' sub':'')+(done?' done':'')+'">'+tk_cb(t,pfx)+
-    '<button type="button" class="tk-tb" id="'+pfx+'o-'+tk_did(t.id)+'" data-act="open" data-k="task" data-id="'+esc(t.id)+'"><span class="tk-tt">'+esc(t.t)+'</span>'+
+    '<button type="button" class="tk-tb" id="'+pfx+'o-'+tk_did(t.id)+'" data-act="open" data-k="task" data-id="'+esc(t.id)+'"><span class="tk-tt"><span class="stk">'+esc(t.t)+'</span></span>'+
     (meta.length?'<span class="tk-mt">'+meta.join('')+'</span>':'')+
     (du?'<span class="tk-du '+du.cls+'" title="Due '+esc(dayLbl(t.due))+'">'+du.txt+'</span>':'')+'</button></li>';
 }
@@ -2340,7 +2431,7 @@ function tk_detail(t){
   if(!t)return '';
   var done=t.status==='done',P=t.parent?tk_find(t.parent):null,pr=tk_proj(t.proj),g=tk_goal(t),du=tk_due(t),L=tk_links(t.id),kids=P?[]:tk_kids(t.id),kd=kids.filter(tk_isDone).length;
   var h='<div class="tk-d"><div class="tk-crumb"><span>'+esc(pr?pr.name:'No project')+'</span>'+(P?'<i aria-hidden="true">›</i><button type="button" class="tk-cr" id="tkd-par" data-act="open" data-k="task" data-id="'+esc(P.id)+'">'+esc(P.t)+'</button>':'')+'</div>';
-  h+='<h3 id="d-title"'+(done?' class="tk-x"':'')+'>'+esc(t.t)+'</h3>';
+  h+='<h3 id="d-title"'+(done?' class="tk-x"':'')+'><span class="stk">'+esc(t.t)+'</span></h3>';
   var m=[];
   if(done)m.push('<span class="tag t-done">DONE'+(t.doneOn?' '+esc(tk_short(t.doneOn)):'')+'</span>');
   if(du)m.push('<span class="tk-md '+du.cls+'"><b>DUE</b>'+esc(tk_short(t.due))+' · '+du.txt+'</span>');
@@ -2354,7 +2445,7 @@ function tk_detail(t){
   if(kids.length)h+='<div class="tk-sh"><span>SUBTASKS</span><b'+(kd===kids.length?' class="ok"':'')+'>'+kd+'/'+kids.length+'</b></div><ul class="tk-subs">'+kids.map(function(k){return tk_row(k,{pfx:'tkd'});}).join('')+'</ul>';
   if(U.sched===t.id)h+='<div class="tk-box"><div class="tk-bt">FINDING A SLOT…</div></div>';
   else if(!done&&L.prop){var q=L.prop;
-    h+='<div class="tk-box"><div class="tk-bt">PROPOSED SLOT</div><div class="tk-pm">'+esc(dayLbl(q.date))+(q.s?' · '+esc(q.s)+(q.e?'–'+esc(q.e):''):' · ANYTIME')+' · ~'+(q.m||itemMin(q))+' MIN</div>'+(q.why?'<div class="tk-pw">'+esc(q.why)+'</div>':'')+
+    h+='<div class="tk-box"><div class="tk-bt">SUGGESTED SLOT</div><div class="tk-pm">'+esc(dayLbl(q.date))+(q.s?' · '+esc(q.s)+(q.e?'–'+esc(q.e):''):' · ANYTIME')+' · ~'+(q.m||itemMin(q))+' MIN</div>'+(q.why?'<div class="tk-pw">'+esc(q.why)+'</div>':'')+
       '<div class="tk-ab"><button type="button" class="btn fill" id="tk-pacc" data-act="pacc" data-id="'+esc(q.id)+'">ACCEPT</button><button type="button" class="btn ghost" id="tk-pdec" data-act="tk-pdec" data-id="'+esc(q.id)+'">LATER</button></div></div>';}
   var openKids=kids.length-kd;
   if(U.conf==='drop')return h+'<div class="confirm tk-cf"><div>Drop this task for good?'+(kids.length?' Its '+kids.length+' subtask'+(kids.length===1?' goes':'s go')+' too.':'')+' It goes in the log.</div><div class="tk-ab"><button type="button" class="btn" id="tk-dropno" data-act="tk-confx">KEEP IT</button><button type="button" class="btn warn" id="tk-dropok" data-act="tk-dropok">DROP IT</button></div></div></div>';
@@ -2401,7 +2492,7 @@ function tk_local(t){
 function tk_fill(x,p){p.t=str(x.t,120);if(x.d)p.d=str(x.d,1200);var g=tk_goal(x);if(g)p.g=g;if(x.m>0)p.m=Math.min(480,x.m);if(!(p.m>0))p.m=30;
   p.e=p.s?m2h(Math.min(1439,mins(p.s)+p.m)):'';p.task=x.id;return p;}
 function tk_addProp(tid,p){var x=tk_find(tid);if(!x){render();return;}tk_fill(x,p);
-  tk_act('Proposed '+dayLbl(p.date)+(p.s?' '+p.s:''),function(){addProposal(p);},true);}
+  tk_act('Suggested '+dayLbl(p.date)+(p.s?' '+p.s:''),function(){addProposal(p);},true);}
 function tk_schedule(t){
   var U=tk_ui(),tid=t.id,L=tk_links(tid);if(U.sched||L.today||L.planned||L.prop)return;
   if(!sample){tk_addProp(tid,tk_local(t));return;}
@@ -2439,7 +2530,7 @@ function tk_applyUrg(t,v){
   if(v==='week'){if(t.status==='done'||L.today||L.planned||L.prop)return lbl;
     var o=ops(),m0=monday(o.day),end=iso(new Date(m0.getFullYear(),m0.getMonth(),m0.getDate()+6)),p=tk_local(t);
     if(!p.s||!tk_fits(p))return lbl+' · no free slot in the next 7 days';
-    tk_fill(t,p);addProposal(p);return lbl+' · proposed '+dayLbl(p.date)+' '+p.s+(p.date>end?' (this week is full)':'');}
+    tk_fill(t,p);addProposal(p);return lbl+' · suggested '+dayLbl(p.date)+' '+p.s+(p.date>end?' (this week is full)':'');}
   var n=S.proposals.length;S.proposals=S.proposals.filter(function(p){return p.task!==t.id;});
   return lbl+(S.proposals.length<n?' · proposal removed':'');
 }
@@ -2497,7 +2588,8 @@ function tk_click(a,b,e){
   if(a==='tk-urg'){tk_setUrg(t,v,inD);return true;}
   if(a==='tk-check'||a==='tk-done'){
     if(t.status!=='done'&&tk_kids(t.id).some(function(k){return k.status!=='done';})){U.ask=t.id;render();tk_focus('tk-ask-all');return true;}
-    var on=t.status!=='done';tk_act(on?'Marked done':'Marked not done',function(){tk_setDone(t,on,false);},a==='tk-check'&&inD);return true;}
+    var on=t.status!=='done';if(a==='tk-check')tkDoneFx(b,on);else titleFx(on);
+    tk_act(on?'Marked done':'Marked not done',function(){tk_setDone(t,on,false);},a==='tk-check'&&inD,fxDelay(600));return true;}
   if(a==='tk-finall'||a==='tk-finone'){var all=a==='tk-finall';U.ask='';act(all?'Done, with its subtasks':'Marked done',function(){tk_setDone(t,true,all);});return true;}
   if(a==='tk-sched'){U.conf='';tk_schedule(t);return true;}
   if(a==='tk-today'||a==='tk-today-ok'){U.conf='';tk_doToday(t,a==='tk-today-ok');return true;}
@@ -2548,7 +2640,7 @@ function tk_submit(f,e){
    container >=720px wide): 7-column time grid. Days run 04:00-04:00 like the rest of the app, so a 00:30 event
    sits at the bottom of the evening before. ES5 only. */
 var WC_SRV='Google Calendar',WC_TOOL='list_events',WC_PX=0.8,WC_N=7,WC_MINH=20;
-var WC_INFO={weekcal:'Your next 7 days in one place: Google Calendar events in grey, scheduled tasks in white, proposals waiting for your OK with a dashed cyan edge, deadlines on top. CLASH means a task overlaps a busy event. SYNCED is the morning snapshot; LIVE means the page just read Google Calendar itself. Tap it to refresh.'};
+var WC_INFO={weekcal:'Your next 7 days in one place: Google Calendar events in grey, scheduled tasks in white, suggested slots waiting for your OK with a dashed cyan edge, deadlines on top. CLASH means a task overlaps a busy event. SYNCED is the morning snapshot; LIVE means the page just read Google Calendar itself. Tap it to refresh.'};
 var WC={live:null,st:'idle',code:'',mcp:null,unsub:null,key:'',started:false,gen:0,fell:false,ev:null,opener:null,pid:'',pw:0,pn:'',pday:''};
 var WC_STOP={with:1,from:1,into:1,your:1,this:1,that:1,have:1,will:1,what:1,when:1,then:1,them:1,they:1,about:1,after:1,before:1};
 
@@ -2685,10 +2777,10 @@ function wc_kc(x){
   if(x.k==='today')c+=' tdy'+(x.done?' done':x.st==='late'?' late':'');
   return c+(x.on?' on':'')+(x.past&&!x.done?' past':'');
 }
-function wc_kind(x){return x.k==='ev'?'calendar event':x.k==='proposal'?'proposed task':x.k==='today'?'today’s plan':x.k==='planned'?'scheduled task':'date';}
+function wc_kind(x){return x.k==='ev'?'calendar event':x.k==='proposal'?'suggested task':x.k==='today'?'today’s plan':x.k==='planned'?'scheduled task':'date';}
 function wc_tags(x){var t='';
   if(x.k==='ev'&&x.free)t+='<span class="wc-tag">FREE</span>';
-  if(x.k==='proposal')t+='<span class="wc-tag cy">PROPOSED</span>';
+  if(x.k==='proposal')t+='<span class="wc-tag cy">SUGGESTED</span>';
   if(x.k==='today'){if(x.done)t+='<span class="wc-tag g">DONE</span>';else if(x.st==='active')t+='<span class="wc-tag m">ACTIVE</span>';else if(x.st==='late')t+='<span class="wc-tag c">LATE</span>';}
   if(x.clash)t+='<span class="wc-tag c">CLASH</span>';
   return t;}
@@ -2745,7 +2837,7 @@ function wc_grid(days,o){
     wc_lanes(D.T).forEach(function(x){
       var s=Math.max(x.s,H0*60),e=Math.min(x.e,H1*60),top=Math.round((s-H0*60)*WC_PX),ht=Math.max(WC_MINH,Math.round((e-s)*WC_PX)-2);
       /* sm: too short for two lines -> one line; nr: 3+ lanes -> no time line, title wraps by word */
-      ht=Math.max(12,Math.min(ht,HT-top));var one=ht<34,sm=one||x.N>=3,tm=m2h(x.s)+'–'+m2h(x.e),cl=(x.clash?' <em>CLASH</em>':'')+(x.k==='proposal'?' <i>PROPOSED</i>':'');
+      ht=Math.max(12,Math.min(ht,HT-top));var one=ht<34,sm=one||x.N>=3,tm=m2h(x.s)+'–'+m2h(x.e),cl=(x.clash?' <em>CLASH</em>':'')+(x.k==='proposal'?' <i>SUGGESTED</i>':'');
       h+='<button type="button" class="wc-b '+wc_kc(x)+(one?' sm':sm?' nr':'')+(x.clash?' cl':'')+'" '+wc_attr(x)+' id="'+wc_eid('wcg',x,D)+'" style="top:'+top+'px;height:'+ht+'px;left:calc('+x.L+' * 100% / '+x.N+' + 2px);width:calc(100% / '+x.N+' - 4px)" title="'+esc(x.t)+' · '+tm+'" aria-label="'+esc(x.t)+', '+tm+', '+wc_kind(x)+(x.clash?', clashes with an event':'')+'">'+
         (one?'<span class="wc-bx one"><b>'+m2h(x.s)+'</b>'+cl+' '+esc(x.t)+'</span>':sm?'<span class="wc-bx" style="-webkit-line-clamp:'+Math.max(1,Math.floor((ht-8)/16))+'">'+(x.clash?'<em>CLASH</em> ':'')+esc(x.t)+'</span>':'<span class="wc-bt">'+tm+cl+'</span><span class="wc-bx" style="-webkit-line-clamp:'+Math.max(1,Math.floor((ht-22)/16))+'">'+esc(x.t)+'</span>')+'</button>';});
     if(D.k===0&&n>=H0*60&&n<=H1*60)h+='<div class="wc-nl" style="top:'+Math.round((n-H0*60)*WC_PX)+'px"><span>'+m2h(n)+'</span></div>';
@@ -2892,7 +2984,7 @@ function wc_pStrip(p){var o=ops(),m0=wc_pMon(p),h='';
   h+='<div class="wc-ph"><span class="lbl">'+lbl+'</span>'+infoBtn('proposed','d')+'<button type="button" class="btn sm ghost" id="wc-pw" data-act="wc-pw" data-v="'+(WC.pw?0:1)+'">'+(WC.pw?'← THIS WEEK':'NEXT WEEK →')+'</button></div>';
   h+='<div class="wc-ps" role="group" aria-label="Move to a day">';
   for(var k=0;k<7;k++){var ds=wc_addD(m0,k),n=loadOn(ds),cp=capMin(pd(ds)),cur=ds===p.date,past=ds<o.date,full=n>=cp&&!cur;
-    h+='<button type="button" class="wc-pc'+(cur?' cur':'')+(ds===WC.pday&&!cur?' vw':'')+(ds===o.date?' td':'')+(full?' full':'')+'" id="wc-pc-'+ds+'" data-act="wc-pday" data-id="'+esc(p.id)+'" data-v="'+ds+'"'+(past?' disabled':'')+(cur?' aria-current="date"':'')+' aria-label="'+wc_pDow(ds)+' '+pd(ds).toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+hrs(n)+' of '+hrs(cp)+' hours'+(full?', at capacity':'')+(cur?', the proposed day':past?', past':'')+'"><b>'+wc_pDow(ds)+'</b><span>'+pd(ds).getDate()+'</span><i>'+hrs(n)+'H</i></button>';}
+    h+='<button type="button" class="wc-pc'+(cur?' cur':'')+(ds===WC.pday&&!cur?' vw':'')+(ds===o.date?' td':'')+(full?' full':'')+'" id="wc-pc-'+ds+'" data-act="wc-pday" data-id="'+esc(p.id)+'" data-v="'+ds+'"'+(past?' disabled':'')+(cur?' aria-current="date"':'')+' aria-label="'+wc_pDow(ds)+' '+pd(ds).toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+hrs(n)+' of '+hrs(cp)+' hours'+(full?', at capacity':'')+(cur?', the suggested day':past?', past':'')+'"><b>'+wc_pDow(ds)+'</b><span>'+pd(ds).getDate()+'</span><i>'+hrs(n)+'H</i></button>';}
   return h+'</div>';}
 /* that day's events, today items, planned and proposals in time order; the proposal itself is highlighted */
 function wc_pDay(p,ds){var o=ops(),rows=[];
@@ -2903,7 +2995,7 @@ function wc_pDay(p,ds){var o=ops(),rows=[];
   rows.sort(function(a,b){return ((a.s==null?-1:a.s)-(b.s==null?-1:b.s))||((a.k==='ev'?0:1)-(b.k==='ev'?0:1));});
   var h='<div class="wc-pd"><div class="wc-pdh"><b>'+(ds===o.date?'TODAY':wc_pDow(ds))+'</b><span>'+pd(ds).toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase()+' · '+loadTxt(ds).toUpperCase()+'</span></div>';
   if(!rows.length)return h+'<div class="wc-pr none">Nothing on this day</div></div>';
-  rows.forEach(function(r){h+='<div class="wc-pr '+r.k+(r.me?' me':'')+(r.free?' free':'')+(r.done?' done':'')+'"><span class="wc-pt">'+(r.s==null?esc(r.lbl):m2h(r.s)+'<i>'+m2h(r.e)+'</i>')+'</span><span class="wc-px">'+esc(r.t)+(r.k==='prop'?'<em>PROPOSED</em>':r.free?'<em class="d">FREE</em>':'')+'</span></div>';});
+  rows.forEach(function(r){h+='<div class="wc-pr '+r.k+(r.me?' me':'')+(r.free?' free':'')+(r.done?' done':'')+'"><span class="wc-pt">'+(r.s==null?esc(r.lbl):m2h(r.s)+'<i>'+m2h(r.e)+'</i>')+'</span><span class="wc-px">'+esc(r.t)+(r.k==='prop'?'<em>SUGGESTED</em>':r.free?'<em class="d">FREE</em>':'')+'</span></div>';});
   return h+'</div>';}
 /* the whole block for rDetail's proposal branch: strip, one-line note, day view */
 function wc_pPanel(p){if(WC.pid!==p.id){WC.pid=p.id;WC.pw=0;WC.pn='';WC.pday='';}
@@ -3121,7 +3213,7 @@ function tc_propose(inp){
   if(tk)p.task=tk.id;addProposal(p);
   if(tc_st.led)tc_st.led.props.push({id:p.id,when:tc_wd(p.date)+(p.s?' '+p.s:'')});
   tc_touch();return {proposal:p.id,date:p.date,s:p.s,e:p.e,replaced:old.length};}
-/* same rules as CAPCOM's set_today_items (no count cap, over capacity reported in note; keep ids -> keep done, unkept open items logged as dropped), plus task links */
+/* same rules as the page's set_today_items (no count cap, over capacity reported in note; keep ids -> keep done, unkept open items logged as dropped), plus task links */
 function tc_setToday(inp){
   var arr=inp.items;if(!Array.isArray(arr)||!arr.length)throw new Error('items must be a non-empty array');
   var o=ops(),old={},oldList=fresh()?S.today.items:[];oldList.forEach(function(i){old[i.id]=i;});
@@ -3154,7 +3246,7 @@ function tc_tools(){
     {type:'object',properties:{date:{type:'string',description:'YYYY-MM-DD; omit for the current working day'},entries:{type:'array',items:{type:'object',properties:{start:{type:'string',description:'HH:MM 24h'},end:{type:'string',description:'HH:MM 24h'},code:{type:'string',enum:allCats().map(function(c){return c.k;})},note:{type:'string',description:'What he did, in his words, max 60 chars'}},required:['start','end','code']}}},required:['entries']},tc_logTime),
    T('add_task','Add a task to Kevin\'s backlog and return its id. urg is required: now = the page puts it on today\'s plan (over capacity is reported in note, never refused), week = pass slot, a time inside this week (Mon-Sun) in free time that he can accept (the next 7 days are allowed only once this week is full), later = no slot. If the slot is refused, nothing is added and the error lists what is busy that day, so call again with another slot.',
     {type:'object',properties:{t:{type:'string',description:'Verb-first title, max 60 chars'},d:{type:'string',description:'1-2 sentences: what done looks like'},urg:{type:'string',enum:['now','week','later'],description:'now = today, week = this week with a slot, later = no slot'},proj:{type:'string',description:'Project id'},parent:{type:'string',description:'Parent task id, only for a step of an existing open task'},g:{type:'string',enum:G},due:{type:'string',description:'YYYY-MM-DD, only if he gave one'},m:{type:'number',description:'Minutes estimate'},slot:{type:'object',description:'Required when urg is week',properties:{date:{type:'string',description:'YYYY-MM-DD'},s:{type:'string',description:'Start HH:MM 24h'},why:{type:'string',description:'Why this slot, max 90 chars'}},required:['date','s']}},required:['t','m','urg']},tc_addTask),
-   T('update_task','Change an existing open task: only the fields passed change. urg now puts it on today\'s plan (over capacity is reported in note), week gives it a proposed slot in free time this week (next 7 days once the week is full), later withdraws its pending slot.',
+   T('update_task','Change an existing open task: only the fields passed change. urg now puts it on today\'s plan (over capacity is reported in note), week gives it a suggested slot in free time this week (next 7 days once the week is full), later withdraws its pending slot.',
     {type:'object',properties:{id:{type:'string',description:'Task id from OPEN TASKS'},t:{type:'string',description:'New title, max 60 chars'},d:{type:'string',description:'New notes'},urg:{type:'string',enum:['now','week','later']},due:{type:'string',description:'YYYY-MM-DD, or "" to clear'},m:{type:'number',description:'Minutes estimate'},proj:{type:'string',description:'Project id, or "" for none'}},required:['id']},tc_updateTask),
    T('add_project','Create a project for a new area of work. Returns its id (or the existing id if the name already exists).',
     {type:'object',properties:{name:{type:'string',description:'Short name, max 40 chars'},g:{type:'string',enum:G}},required:['name']},tc_addProject),
@@ -3224,7 +3316,7 @@ function tc_chips(L){var c=[],o=ops();if(!L)return c;
   if(L.ahead)c.push({t:L.ahead+'H ahead · not logged',k:'a'});
   L.projects.forEach(function(n){c.push({t:'Project added · '+tc_clip(n,30),k:'g'});});
   L.tasks.forEach(function(x){c.push({t:x,k:'g'});});
-  L.props.forEach(function(p){c.push({t:'Proposed '+p.when,k:'c',id:p.id});});
+  L.props.forEach(function(p){c.push({t:'Suggested '+p.when,k:'c',id:p.id});});
   L.today.forEach(function(x){c.push(x);});
   if(L.inbox)c.push({t:'Inbox +'+L.inbox,k:'d'});
   return c;}
@@ -3336,7 +3428,7 @@ app.addEventListener('keydown',function(e){var id=e.target&&e.target.id;
 app.addEventListener('input',function(e){var id=e.target&&e.target.id;if(id==='sheet-in'||id==='tc-bin'){tc_st.draft=e.target.value.slice(0,1000);LS.set('tcdraft',tc_st.draft);}});
 
 /* RUN light info sheet (masthead + phone bar chip): registered here because INFO is assigned above */
-INFO.runs={title:'Routine run',text:runInfo};
+INFO.runs={title:'Last sync',text:runInfo};
 normalize();render();setInterval(tick,1000);wc_live();
 var cl=window.claude&&typeof window.claude.use==='function'?window.claude:null;
 function use(n){try{return cl?Promise.resolve(cl.use(n)):Promise.resolve(null);}catch(e){return Promise.resolve(null);}}

@@ -1,4 +1,4 @@
-// UX restructure: Habits on TODAY, log chips + brush strip on the flight plan, Tell Claude bar folded by default,
+// UX restructure: Habits on TODAY, log chips + brush strip on the day plan, Tell Claude bar folded by default,
 // fewer ⓘ, 12px floor. Run: node tests/ux.js [path/to/page.html]   Clock: Thu 2026-10-29 14:30 Eastern.
 // Screenshots go to SHOT_DIR (default: tests/).
 const { chromium } = require('playwright');
@@ -40,24 +40,24 @@ async function run(vp) {
   // every element under the new UI renders at 12px or more
   const floor = (sels) => ev(sels => { const bad = []; sels.forEach(s => { [].forEach.call(document.querySelectorAll(s + ', ' + s + ' *'), e => { if (!e.getClientRects().length) return; const f = parseFloat(getComputedStyle(e).fontSize); if (f < 12) bad.push(s + ' > ' + e.tagName.toLowerCase() + '.' + e.className + ' ' + f); }); }); return bad; }, sels);
 
-  // ---- 1. Habits on TODAY, not on the Status board ----
+  // ---- 1. Habits on TODAY, not under Goals ----
   ok(await vis('.p.habp') && await ev(() => document.querySelector('.p.habp').dataset.tab === 'today'), 'Habits section renders on TODAY');
   ok(await txt('.p.habp h2') === 'Habits' && !(await has('#info-habits')) && !(await has('.p.habp .info')), 'titled Habits, no ⓘ');
   ok(await ev(() => [].map.call(document.querySelectorAll('.p.habp .hab h3'), x => x.textContent).join(',')) === 'PT,COMMS', 'one block per habit goal (PT, COMMS)');
   ok(await has('#h-pt-3') && await has('#h-comms-3') && await ev(() => document.querySelectorAll('.p.habp .tel').length === 2), 'tel rows keep their ids inside Habits');
   ok((await h('#h-pt-3')) >= hit, 'tel button height ' + Math.round(await h('#h-pt-3')) + 'px (>= ' + hit + ')');
-  ok(await ev(() => document.querySelectorAll('.p.stat .tel, .p.stat .pace').length === 0) && await ev(() => document.querySelectorAll('.p.stat .light').length === 6), 'Status board keeps the lights, no tel rows or pace lines');
+  ok(await ev(() => document.querySelectorAll('.p.stat .tel, .p.stat .pace').length === 0) && await ev(() => document.querySelectorAll('.p.stat .light').length === 6), 'Goals keeps the lights, no tel rows or pace lines');
   ok(/1\/3/.test(await txt('.p.habp .hab:first-child .pace')), 'pace line shows count/goal: ' + (await txt('.p.habp .hab:first-child .pace')));
-  await click('#h-pt-3');
+  await click('#h-pt-3'); await page.waitForTimeout(800);   // the button pops first, the pace line follows the delayed render
   ok(await ev(() => document.getElementById('h-pt-3').getAttribute('aria-pressed') === 'true') && /2\/3/.test(await txt('.p.habp .hab:first-child .pace')), 'tapping today marks the habit and updates the pace');
   if (phone) {
     const before = await ev(() => { const p = document.querySelector('.p.plan'), hb = document.querySelector('.p.habp'), pr = document.querySelector('.p.prop'); return [p.getBoundingClientRect().bottom <= hb.getBoundingClientRect().top + 1, hb.getBoundingClientRect().bottom <= pr.getBoundingClientRect().top + 1]; });
-    ok(before[0] && before[1], 'phone order: Flight plan, Habits, Proposed');
+    ok(before[0] && before[1], 'phone order: Today, Habits, Suggested');
   } else {
-    ok(await ev(() => { const a = document.querySelector('.col.a'); return a.children[0].classList.contains('plan') && a.children[1].classList.contains('habp'); }), 'desktop: Habits sits under the Flight plan in column a');
+    ok(await ev(() => { const a = document.querySelector('.col.a'); return a.children[0].classList.contains('plan') && a.children[1].classList.contains('habp'); }), 'desktop: Habits sits under Today in column a');
   }
 
-  // ---- 2. log chips on the flight plan ----
+  // ---- 2. log chips on the day plan ----
   ok(await has('#hearly') && /NOT LOGGED/i.test(await txt('#hearly')) && await ev(() => document.getElementById('hearly').getAttribute('aria-expanded') === 'true'), 'EARLIER auto-expanded (2 unlogged hours since noon), reads: ' + (await txt('#hearly')));
   ok(await has('#hlog-3') && (await txt('#hlog-3')) === 'SC' && /\bgoal\b/.test(await cls('#hlog-3')), '09:00 chip shows the logged category (SC, goal)');
   ok(await has('#hlog-1') && (await txt('#hlog-1')) === 'ZZ' && /\bsleep\b/.test(await cls('#hlog-1')) && await has('#hlog-2') && (await txt('#hlog-2')) === 'ES', 'collapsed free run 07–09 shows one chip per hour');
@@ -106,7 +106,7 @@ async function run(vp) {
   // ---- 4. fewer ⓘ ----
   for (const id of ['now', 'status', 'shutdown', 'capcom', 'objectives', 'upcoming', 'track', 'add', 'habits']) ok(!(await has('#info-' + id)), 'no #info-' + id);
   for (const id of ['plan', 'proposed', 'stats', 'timelog', 'tell', 'tasks']) ok(await has('#info-' + id), '#info-' + id + ' kept');
-  ok(/Sunday plan/.test(await ev(() => { const S0 = document.querySelector('.p.objp'); return S0 ? S0.textContent : ''; })) || await ev(() => document.querySelectorAll('.p.objp .row').length > 0), 'Objectives explain themselves in the empty state');
+  ok(/Sunday plan/.test(await ev(() => { const S0 = document.querySelector('.p.objp'); return S0 ? S0.textContent : ''; })) || await ev(() => document.querySelectorAll('.p.objp .row').length > 0), 'This week explains itself in the empty state');
 
   // ---- 5. 12px floor over the new elements ----
   const bad = await floor(['.p.habp', '.hlog', '.hstrip', '#hearly', '.tcbar', '.p.capp .capn', '.hrw .hh']);
