@@ -24,7 +24,7 @@ async function run(vp) {
   const ev = (fn, arg) => page.evaluate(fn, arg);
   const click = async (sel) => { await page.click(sel); await page.waitForTimeout(80); };
   const vis = (sel) => page.isVisible(sel);
-  const toast = () => ev(() => { const t = document.querySelector('.toast'); return t ? t.innerText.replace(/\s+/g, ' ').trim() : ''; });
+  const toast = () => ev(() => { const t = document.querySelector('.toast'); return t ? [].map.call(t.querySelectorAll('span,button'), c => c.textContent).join(' ').replace(/\s+/g, ' ').trim() : ''; });
   const hasUndo = () => ev(() => !!document.querySelector('.toast [data-act="undo"]'));
   const undo = () => click('.toast [data-act="undo"]');
   const rowIds = () => ev(() => [].map.call(document.querySelectorAll('.taskp .tk-rows .tk-r:not(.sub) .tk-tb'), b => b.dataset.id));
