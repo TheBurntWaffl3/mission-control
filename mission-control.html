@@ -33,6 +33,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 button.fresh.run{position:relative;background:none;cursor:pointer;white-space:nowrap}
 button.fresh.run::after{content:"";position:absolute;left:-4px;right:-4px;top:-8px;bottom:-8px}
 .mast .tcgo{min-height:40px;padding:8px 12px}
+.mast .vt button{min-height:38px}
 .clocks{display:grid;grid-template-columns:minmax(0,2.4fr) repeat(2,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
 .ro{background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;min-width:0}
 .ro i{font:400 .75rem/1 var(--mono);font-style:normal;letter-spacing:.18em;color:var(--dim)}
@@ -47,7 +48,7 @@ button.fresh.run::after{content:"";position:absolute;left:-4px;right:-4px;top:-8
 .pbar i{font:400 .75rem/1 var(--mono);font-style:normal;letter-spacing:.16em;color:var(--dim)}
 .pbar em{font:700 1rem/1 var(--mono);font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pbar .fresh{padding:4px 6px}
-@media (max-width:359px){.pbar b,.pbar i{display:none}.pbar em{font-size:.92rem}.track .ms span{letter-spacing:.04em}}
+@media (max-width:359px){.pbar b,.pbar i{display:none}.pbar em{font-size:.92rem}}
 .pbar button.fresh.run{letter-spacing:0;padding:4px 5px}
 .pbar button.fresh.run::after{top:-11px;bottom:-11px}
 .pbar b{white-space:nowrap}
@@ -151,9 +152,10 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .track .el{position:absolute;left:0;top:27px;height:6px;background:var(--faint)}
 .track .band{position:absolute;top:24px;height:12px;border:1px solid var(--faint);background:color-mix(in srgb,var(--dim) 22%,transparent)}
 .track .ms{position:absolute;top:21px;height:18px;border-left:1.5px solid var(--dim)}
-.track .ms span{position:absolute;left:0;transform:translateX(-50%);font:700 .62rem/1 var(--mono);letter-spacing:.12em;color:var(--dim);white-space:nowrap}
+.track .ms span{position:absolute;left:0;transform:translateX(-50%);font:700 .75rem/1 var(--mono);letter-spacing:.12em;color:var(--dim);white-space:nowrap}
 .track .ms.up span{bottom:22px}.track .ms.dn span{top:22px}
 .track .ms.l span{transform:none}.track .ms.r span{transform:translateX(-100%)}
+@media (max-width:999px){.track .ms span{letter-spacing:0}}
 .track .ms.key{border-left-color:var(--ink)}.track .ms.key span{color:var(--ink)}
 .track .td{position:absolute;top:14px;height:32px;border-left:2px solid var(--magenta)}
 .track .td::before{content:"";position:absolute;left:-5px;top:-4px;border:4px solid transparent;border-top:6px solid var(--magenta)}
@@ -219,6 +221,7 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .upc.prop .dt b{display:block;margin-top:4px;font:700 .75rem/1 var(--mono);letter-spacing:.08em;color:var(--cyan);text-align:right}
 .capf .acts .fill{order:2}
 .upc .ut{display:block;padding:0;grid-template-columns:none;line-height:1.4}
+@media (max-width:999px){.pc .pt{min-height:40px;padding:9px 0;margin:-9px 0}}
 input[type=date],input[type=number]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--rule);padding:8px;min-height:40px;border-radius:0;max-width:11em}
 input[type=number]{max-width:6em}
 /* detail card */
@@ -362,7 +365,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .seg2 button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .hgrid{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px 3px}
 .hcell{display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0}
-.hcell i{font:400 .62rem/1 var(--mono);font-style:normal;color:var(--dim);text-align:center;font-variant-numeric:tabular-nums}
+.hcell i{font:400 .75rem/1 var(--mono);font-style:normal;color:var(--dim);text-align:center;font-variant-numeric:tabular-nums}
 .hc{width:100%;height:40px;border:1px solid var(--rule);background:transparent;color:var(--dim);font:700 .75rem/1 var(--mono);letter-spacing:0;padding:0}
 .hc.goal{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .hc.life{background:color-mix(in srgb,var(--dim) 32%,transparent);border-color:var(--dim);color:var(--ink)}
@@ -451,7 +454,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 /* ---- modules: tell, tasks, weekcal ---- */
 /* TELL CLAUDE: one box for logs, tasks, replans and questions. Desktop bar (.tcbar) + phone overlay (.tc-sheet).
    Chips: green = applied, cyan = proposal to confirm (tappable), amber = not done / caution, dim = parked in inbox. */
-.tcbar .ph h2,.tc-hd h2{font:700 .78rem/1 var(--mono);letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin:0;white-space:nowrap}
+.tcbar .ph h2,.tc-hd h2{font:700 .75rem/1 var(--mono);letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin:0;white-space:nowrap}
 .tcbar .ph .tc-r{display:flex;align-items:center;gap:8px;font:inherit;letter-spacing:0;text-transform:none}
 .tcbar .body{display:flex;flex-direction:column;gap:12px}
 .tcbar .tc-s,.tc-sheet .tc-s{display:inline-block;font:700 .75rem/1 var(--mono);letter-spacing:.12em;padding:5px 7px;border:1px solid currentColor;white-space:nowrap}
@@ -544,6 +547,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .taskp .tk-mt .tk-ctx,.tk-d .tk-mt .tk-ctx{text-transform:none;letter-spacing:0;font-family:var(--sans);font-weight:400}
 .taskp .tk-mt .tk-pg.ok,.tk-d .tk-mt .tk-pg.ok{color:var(--green)}
 .taskp .tk-mt .tk-on,.tk-d .tk-mt .tk-on{color:var(--ink)}
+.taskp .tk-mt .tk-on.pr,.tk-d .tk-mt .tk-on.pr{color:var(--cyan)}
 .taskp .tk-du,.tk-d .tk-du{grid-column:2;grid-row:1 / span 2;font:700 .75rem/1.35 var(--mono);letter-spacing:.06em;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
 .taskp .tk-du.c,.tk-d .tk-du.c{color:var(--amber)}.taskp .tk-du.w,.tk-d .tk-du.w{color:var(--red)}.taskp .tk-du.dn,.tk-d .tk-du.dn{color:var(--faint)}
 .taskp .tk-r.done .tk-tt,.tk-d .tk-r.done .tk-tt{color:var(--dim);text-decoration:line-through}
@@ -585,6 +589,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .tk-d .tk-cf .tk-ab{margin-top:10px}
 .tk-d .tk-pri,.tk-d .tk-sec{display:grid;grid-template-columns:repeat(auto-fit,minmax(124px,1fr));gap:8px;margin-top:14px}
 .tk-d .tk-sec{margin-top:8px}
+.tk-d .tk-sec .btn{padding-left:8px;padding-right:8px}
 .tk-d .tk-sec .btn[aria-expanded="true"]{border-color:var(--cyan);color:var(--cyan)}
 .tk-d .tk-f{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}
 .tk-d .tk-f input[type=text]{flex:1 1 180px}
@@ -626,7 +631,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 
 /* WEEK CALENDAR module. Scoped under .wcalp (the section), .wc-tg (LIST | CALENDAR toggle, also placed in other
    headers) and .wc-scrim / .wc-evs (event sheet). Google events neutral grey, tasks ink, proposals dashed cyan,
-   now magenta, caution amber. Text 12px and up; only hour labels are smaller. */
+   now magenta, caution amber. Text 12px and up, hour labels included. */
 .wc-tg{display:inline-flex;border:1px solid var(--rule);flex:none}
 .wc-tg button{background:transparent;border:0;color:var(--cyan);font:700 .75rem/1 var(--mono);letter-spacing:.1em;padding:8px 10px;min-height:34px;cursor:pointer}
 .wc-tg button+button{border-left:1px solid var(--rule)}
@@ -644,7 +649,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .wcalp .wc-ns{padding:10px 12px;border-bottom:1px solid var(--rule);font:700 .75rem/1.5 var(--mono);letter-spacing:.08em;color:var(--amber)}
 .wcalp .wc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .wcalp .wc-tag{display:inline-block;font:700 .75rem/1 var(--mono);letter-spacing:.08em;padding:3px 5px;border:1px solid currentColor;color:var(--dim);white-space:nowrap}
-.wcalp .wc-tag.cy{color:var(--cyan)}.wcalp .wc-tag.c{color:var(--amber)}.wcalp .wc-tag.g{color:var(--green)}.wcalp .wc-tag.m{color:var(--magenta)}
+.wcalp .wc-tag.cy{color:var(--cyan);border-color:transparent;padding-left:0;padding-right:0}.wcalp .wc-tag.c{color:var(--amber)}.wcalp .wc-tag.g{color:var(--green)}.wcalp .wc-tag.m{color:var(--magenta)}
 
 /* agenda (phone, narrow containers) */
 .wcalp .wc-day{padding:0 12px 12px}
@@ -690,7 +695,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .wcalp .wc-gd.td{box-shadow:inset 0 -2px 0 var(--magenta)}
 .wcalp .wc-gd.td b{color:var(--magenta)}
 .wcalp .wc-ga{border-top:1px solid var(--rule)}
-.wcalp .wc-axl{padding:8px 6px 0 0;text-align:right;font:400 .7rem/1.2 var(--mono);color:var(--faint)}
+.wcalp .wc-axl{padding:8px 6px 0 0;text-align:right;font:400 .75rem/1.2 var(--mono);color:var(--faint)}
 .wcalp .wc-gc{display:flex;flex-direction:column;gap:3px;min-width:0;padding:4px;border-left:1px solid var(--rule)}
 .wcalp .wc-c{display:block;width:100%;min-width:0;margin:0;padding:4px 6px;text-align:left;border:1px solid color-mix(in srgb,var(--dim) 30%,transparent);background:color-mix(in srgb,var(--dim) 14%,var(--panel));color:var(--ink);font:400 .8rem/1.3 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wcalp button.wc-c{cursor:pointer}
@@ -704,7 +709,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .wcalp .wc-c.done{color:var(--dim);text-decoration:line-through;box-shadow:inset 3px 0 0 var(--green)}
 .wcalp .wc-gb{position:relative;margin-top:8px;border-bottom:1px solid var(--rule)}
 .wcalp .wc-ax{position:relative}
-.wcalp .wc-ax span{position:absolute;right:8px;transform:translateY(-50%);font:400 .7rem/1 var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
+.wcalp .wc-ax span{position:absolute;right:8px;transform:translateY(-50%);font:400 .75rem/1 var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
 .wcalp .wc-col{position:relative;min-width:0;border-left:1px solid var(--rule);background:linear-gradient(to bottom,var(--rule) 0,var(--rule) 1px,transparent 1px) 0 0/100% var(--wc-hh,48px) repeat-y}
 .wcalp .wc-col.td{background-color:color-mix(in srgb,var(--magenta) 4%,transparent)}
 .wcalp .wc-b{position:absolute;z-index:1;display:flex;flex-direction:column;gap:1px;min-width:0;margin:0;padding:3px 6px;overflow:hidden;text-align:left;border:1px solid color-mix(in srgb,var(--dim) 40%,transparent);background:color-mix(in srgb,var(--dim) 16%,var(--panel));color:var(--ink);font:inherit;cursor:pointer}
@@ -756,7 +761,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .wc-pdh{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;padding:4px 0 6px;font:700 .75rem/1.2 var(--mono);letter-spacing:.12em;color:var(--dim)}
 .wc-pdh b{color:var(--ink);letter-spacing:.16em}
 .wc-pr{display:grid;grid-template-columns:50px minmax(0,1fr);gap:10px;align-items:start;padding:6px 8px;border:1px solid color-mix(in srgb,var(--dim) 30%,transparent);background:color-mix(in srgb,var(--dim) 12%,var(--panel));font-size:.9rem;line-height:1.3}
-.wc-pt{display:flex;flex-direction:column;gap:1px;font:700 .75rem/1.3 var(--mono);font-variant-numeric:tabular-nums;color:var(--dim);white-space:nowrap}
+.wc-pt{display:flex;flex-direction:column;gap:1px;font:700 .75rem/1.3 var(--mono);font-variant-numeric:tabular-nums;color:var(--dim)}
 .wc-pt i{font-style:normal;font-weight:400;color:var(--faint)}
 .wc-px{min-width:0;overflow-wrap:anywhere;color:var(--dim)}
 .wc-px em{display:inline-block;margin-left:6px;font:700 .75rem/1 var(--mono);font-style:normal;letter-spacing:.08em;color:var(--cyan);vertical-align:1px}
@@ -859,7 +864,6 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .hcard.done .hcx{color:var(--dim);text-decoration:line-through}
 .hcard.late .hcm{color:var(--amber)}
 .hopen{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 12px;border:1px dashed var(--rule);background:transparent;color:var(--cyan);font:700 .75rem/1 var(--mono);letter-spacing:.1em;text-align:left;cursor:pointer}
-.hopen span{color:var(--faint);letter-spacing:.06em}
 .hopen:hover{border-color:var(--cyan)}
 .hrw.now .hopen{border-color:color-mix(in srgb,var(--magenta) 55%,transparent)}
 .hearly{width:100%;min-height:44px;padding:0 12px;border:0;border-bottom:1px solid var(--rule);background:transparent;color:var(--dim);font:700 .75rem/1 var(--mono);letter-spacing:.1em;text-align:left;cursor:pointer}
@@ -1980,7 +1984,7 @@ function tk_row(t,o){
   if(o.showProj){var p=tk_proj(t.proj);if(p)meta.push('<span class="tk-pj">'+esc(p.name)+'</span>');}
   if(t.m>0)meta.push('<span>'+tk_mfmt(t.m)+'</span>');
   if(all.length){var kd=all.filter(tk_isDone).length;meta.push('<span class="tk-pg'+(kd===all.length?' ok':'')+'" aria-label="'+kd+' of '+all.length+' subtasks done">'+kd+'/'+all.length+'</span>');}
-  var lt=done?'':tk_linkTxt(tk_links(t.id));if(lt)meta.push('<span class="tk-on">'+esc(lt)+'</span>');
+  var lt=done?'':tk_linkTxt(tk_links(t.id));if(lt)meta.push('<span class="tk-on'+(lt==='PROPOSED'?' pr':'')+'">'+esc(lt)+'</span>');
   return '<li class="tk-r'+(o.sub?' sub':'')+(done?' done':'')+'">'+tk_cb(t,pfx)+
     '<button type="button" class="tk-tb" id="'+pfx+'o-'+tk_did(t.id)+'" data-act="open" data-k="task" data-id="'+esc(t.id)+'"><span class="tk-tt">'+esc(t.t)+'</span>'+
     (meta.length?'<span class="tk-mt">'+meta.join('')+'</span>':'')+
