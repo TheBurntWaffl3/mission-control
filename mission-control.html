@@ -506,7 +506,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .taskp .tk-gt .tk-n{margin-left:auto;font:700 .75rem/1 var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
 .taskp .tk-gt:hover b{color:var(--cyan)}
 .taskp .tk-plus{flex:none;width:48px;border:0;border-left:1px solid var(--rule);background:none;color:var(--cyan);font:400 1.4rem/1 var(--mono);padding:0}
-.taskp .tk-addf{display:flex;gap:8px;align-items:center;padding:8px 8px 8px 12px;border-top:1px solid var(--rule)}
+.taskp .tk-addf{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 8px 8px 12px;border-top:1px solid var(--rule)}
 .taskp .tk-addf input{flex:1;min-width:0}
 .taskp .tk-addf .x{min-width:44px;min-height:44px;color:var(--dim)}
 
@@ -578,6 +578,36 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .tk-d select{width:100%;max-width:100%;min-height:40px;padding:8px;border:1px solid var(--rule);border-radius:0;background:var(--bg);color:var(--ink);font:16px/1.2 var(--sans)}
 .tk-d select:focus,.tk-d input[type=date]:focus{border-color:var(--cyan);outline:none}
 .tk-d select:disabled{opacity:.5}
+
+/* urgency: NOW / THIS WEEK / LATER chips in the add form and the detail sheet; rows show NOW as an ink tag, THIS WEEK dim, LATER nothing */
+.taskp .tk-ug,.tk-d .tk-ug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.taskp .tk-ug button,.tk-d .tk-ug button{min-height:40px;padding:0 12px;border:1px solid var(--rule);background:transparent;color:var(--dim);font:700 .75rem/1 var(--mono);letter-spacing:.1em;white-space:nowrap}
+.taskp .tk-ug button[aria-pressed="true"],.tk-d .tk-ug button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink)}
+.taskp .tk-ug button:hover,.tk-d .tk-ug button:hover{border-color:var(--cyan);color:var(--cyan)}
+.tk-d .tk-ug{margin-top:12px}
+.tk-d .tk-ul{font:700 .75rem/1 var(--mono);letter-spacing:.14em;color:var(--dim);margin-right:4px}
+.taskp .tk-addf .tk-ai{display:flex;flex:1 1 100%;gap:8px;align-items:center;min-width:0}
+.taskp .tk-mt .tk-ut,.tk-d .tk-mt .tk-ut{color:var(--dim);padding:2px 4px;letter-spacing:.08em}
+.taskp .tk-mt .tk-ut.now,.tk-d .tk-mt .tk-ut.now{color:var(--ink)}
+@media (max-width:999px){.taskp .tk-ug button,.tk-d .tk-ug button{min-height:44px}}
+
+/* projects: ⋯ on a group header opens the group's own panel (rename, move, merge, make it a task, delete); + NEW PROJECT closes the list */
+.taskp .tk-pmb{flex:none;width:44px;min-height:44px;border:0;border-left:1px solid var(--rule);background:none;color:var(--cyan);font:700 1.1rem/1 var(--mono);padding:0}
+.taskp .tk-pmb[aria-expanded="true"]{background:var(--cyan);color:var(--bg)}
+.taskp .tk-pp{display:flex;flex-direction:column;gap:10px;padding:10px 12px 12px;border-top:1px solid var(--rule)}
+.taskp .tk-pb{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.taskp .tk-pp .btn{min-height:44px;padding:8px 10px;white-space:normal;line-height:1.3;text-align:center}
+.taskp .tk-pp .btn[aria-expanded="true"]{border-color:var(--ink);color:var(--ink)}
+.taskp .tk-pp .confirm{margin-top:0}
+.taskp .tk-cf .tk-ab{margin-top:10px}
+.taskp .tk-f{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.taskp .tk-f input[type=text]{flex:1 1 160px}
+.taskp .tk-f label{display:flex;flex-direction:column;gap:5px;flex:1 1 160px;min-width:0;font:700 .75rem/1 var(--mono);letter-spacing:.14em;color:var(--dim)}
+.taskp .tk-f .x{min-width:44px;min-height:44px;color:var(--dim)}
+.taskp select{width:100%;min-height:40px;padding:8px;border:1px solid var(--rule);border-radius:0;background:var(--bg);color:var(--ink);font:16px/1.2 var(--sans)}
+.taskp select:focus{border-color:var(--cyan);outline:none}
+.taskp .tk-pn{padding:10px 12px 12px;border-top:1px solid var(--rule)}
+.taskp .tk-pn .tk-f{max-width:640px}
 
 /* WEEK CALENDAR module. Scoped under .wcalp (the section), .wc-tg (LIST | CALENDAR toggle, also placed in other
    headers) and .wc-scrim / .wc-evs (event sheet). Google events neutral grey, tasks ink, proposals dashed cyan,
@@ -1719,14 +1749,17 @@ document.addEventListener('keydown',function(e){if(wc_key(e))return;if(e.key==='
    validProp, addProposal, schedContext, normalize, sample, busy, pending, parseErr.
    UI state lives in ui.tk; sort, filter and collapsed groups are remembered per viewer in LS. */
 var TK_MAX=400;
-var TK_SORTS=[['proj','PROJECT'],['due','DUE'],['goal','GOAL']],TK_FILTS=[['open','OPEN'],['done','DONE']];
+var TK_SORTS=[['urg','URGENCY'],['proj','PROJECT'],['due','DUE'],['goal','GOAL']],TK_FILTS=[['open','OPEN'],['done','DONE']];
+/* urgency (README rules): NOW → today's plan when there is room, THIS WEEK → a proposed slot this week, LATER → no slot. Rank 1 = due within 2 days. */
+var TK_URG=['now','week','later'],TK_ULBL={now:'NOW',week:'THIS WEEK',later:'LATER'},TK_UG=[[0,'Now'],[1,'Due within 2 days'],[2,'This week'],[3,'Later']],TK_PMAX=60;
+if(INFO.tasks)INFO.tasks.text+='\nURGENCY: NOW goes onto today’s plan when there is room (3 items), otherwise it tops Tasks. THIS WEEK gets a proposed slot in free time this week. LATER waits with no slot. Sorted by urgency: NOW, due within 2 days, THIS WEEK, then by due date, then LATER.\n⋯ on a project: rename it, move it up or down, merge it into another, make it one task with its tasks as subtasks, or delete it once nothing in it is open. + NEW PROJECT sits at the bottom of the list.';
 var TK_CHEV='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg>';
 var TK_DOW=['SUN','MON','TUE','WED','THU','FRI','SAT'];
 
 function tk_ui(){
   if(!ui.tk){var f=LS.get('tk.fold',{});
-    ui.tk={sort:LS.get('tk.sort','proj'),filt:LS.get('tk.filt','open'),fold:(f&&typeof f==='object'&&!Array.isArray(f))?f:{},add:null,det:null,form:'',conf:'',ask:'',sched:''};
-    if(['proj','due','goal'].indexOf(ui.tk.sort)<0)ui.tk.sort='proj';if(ui.tk.filt!=='done')ui.tk.filt='open';}
+    ui.tk={sort:LS.get('tk.sort','urg'),filt:LS.get('tk.filt','open'),fold:(f&&typeof f==='object'&&!Array.isArray(f))?f:{},add:null,det:null,form:'',conf:'',ask:'',sched:'',addUrg:'later',pm:null,pf:'',pc:null,pnew:false};
+    if(['urg','proj','due','goal'].indexOf(ui.tk.sort)<0)ui.tk.sort='urg';if(ui.tk.filt!=='done')ui.tk.filt='open';}
   return ui.tk;
 }
 function tk_list(){if(!Array.isArray(S.tasks))S.tasks=[];return S.tasks;}
@@ -1739,9 +1772,13 @@ function tk_kids(id){return tk_list().filter(function(t){return t.parent===id;})
 function tk_isDone(t){return t.status==='done';}
 function tk_goal(t){if(t.g)return t.g;var p=tk_proj(t.proj);return p&&p.g?p.g:'';}
 function tk_date(v){var x=normD(v);return x&&iso(pd(x))===x?x:'';}
+/* urgency field: keep a valid value; otherwise derive it from the due date (within 7 days → week, else later) */
+function tk_urgOf(v,due){var u=typeof v==='string'?v.trim().toLowerCase():'';if(TK_URG.indexOf(u)>=0)return u;return due&&daysBetween(ops().day,pd(due))<=7?'week':'later';}
+function tk_urank(t){if(t.urg==='now')return 0;var du=tk_due(t);if(du&&du.n<=2)return 1;return t.urg==='week'?2:3;}
+function tk_pid(name){var id=String(name).toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24)||'p'+Date.now().toString(36),base=id,n=2;while(tk_proj(id))id=base+'_'+(n++);return id;}
 function tk_did(s){return String(s).replace(/[^A-Za-z0-9_-]/g,'_');}
 function tk_id(){var id;do{id='k'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);}while(tk_find(id));return id;}
-function tk_new(t,proj,parent){return {id:tk_id(),t:str(t,200).replace(/\s+/g,' ').trim(),d:'',proj:proj||'',parent:parent||'',g:'',due:'',m:0,status:'open',created:ops().date,doneOn:''};}
+function tk_new(t,proj,parent){return {id:tk_id(),t:str(t,200).replace(/\s+/g,' ').trim(),d:'',proj:proj||'',parent:parent||'',g:'',due:'',m:0,status:'open',created:ops().date,doneOn:'',urg:'later'};}
 function tk_mfmt(m){if(!(m>0))return '';if(m<60)return m+'M';var h=Math.round(m/6)/10;return (h%1?h.toFixed(1):String(h))+'H';}
 function tk_short(ds){if(!okDate(ds))return '';var d=pd(ds),n=daysBetween(ops().day,d);
   return (n>=0&&n<7?TK_DOW[d.getDay()]+' ':'')+['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()]+' '+d.getDate();}
@@ -1795,10 +1832,10 @@ function tk_normalize(St){
     var id=(typeof x.id==='string'||typeof x.id==='number')?String(x.id).trim().slice(0,40):'';if(!id)id='k'+k;
     var base=id,n=2;while(seen[id])id=base+'_'+(n++);seen[id]=1;
     var st=typeof x.status==='string'?x.status.trim().toLowerCase():'',dn=/^(done|complete|completed|closed|finished)$/.test(st)||(!st&&bool(x.done));
-    var m=Math.round(+x.m),par=x.parent!=null?x.parent:x.parentId;
+    var m=Math.round(+x.m),par=x.parent!=null?x.parent:x.parentId,due=tk_date(x.due);
     var o=Object.assign({},x,{id:id,t:t,d:str(x.d!=null?x.d:x.notes,2000),proj:tk_projOf(x.proj!=null?x.proj:x.project,projects),
-      parent:(typeof par==='string'||typeof par==='number')?String(par).trim().slice(0,40):'',g:normG(x.g),due:tk_date(x.due),
-      m:(m>0&&m<=1440)?m:0,status:dn?'done':'open',created:tk_date(x.created),doneOn:dn?tk_date(x.doneOn):''});
+      parent:(typeof par==='string'||typeof par==='number')?String(par).trim().slice(0,40):'',g:normG(x.g),due:due,
+      m:(m>0&&m<=1440)?m:0,status:dn?'done':'open',created:tk_date(x.created),doneOn:dn?tk_date(x.doneOn):'',urg:tk_urgOf(x.urg,due)});
     delete o.done;tasks.push(o);});
   /* parents: must exist and not be itself; break cycles; flatten to one level; subtasks share the parent's project */
   var by={};tasks.forEach(function(t){by[t.id]=t;});
@@ -1840,7 +1877,8 @@ function tk_units(filt){
   T.forEach(function(t,i){if(t.status!==filt)return;var P=t.parent?by[t.parent]:null;if(P&&P.status===filt)return;
     var ks=(!t.parent&&kids[t.id]?kids[t.id]:[]).filter(function(k){return k.status===filt;}),eff=t.due||'';
     ks.forEach(function(k){if(k.due&&(!eff||k.due<eff))eff=k.due;});
-    units.push({t:t,i:i,kids:ks,all:kids[t.id]||[],ctx:P||null,eff:eff});});
+    var rk=tk_urank(t);ks.forEach(function(k){rk=Math.min(rk,tk_urank(k));});
+    units.push({t:t,i:i,kids:ks,all:kids[t.id]||[],ctx:P||null,eff:eff,rk:rk});});
   return units;
 }
 function tk_groups(U){
@@ -1850,10 +1888,11 @@ function tk_groups(U){
     grp('p:','No project',U.filt==='open'?'':null);units.forEach(function(u){(gm['p:'+u.t.proj]||gm['p:']).units.push(u);});}
   else if(U.sort==='goal'){(S.goals||[]).forEach(function(g){grp('g:'+g.id,g.call||g.id,null);});grp('g:','No goal',null);
     units.forEach(function(u){(gm['g:'+tk_goal(u.t)]||gm['g:']).units.push(u);});}
+  else if(U.sort==='urg'){TK_UG.forEach(function(x){grp('u:'+x[0],x[1],null);});units.forEach(function(u){gm['u:'+u.rk].units.push(u);});}
   else{grp('d:late','Overdue',null);grp('d:wk','Next 7 days',null);grp('d:later','Later',null);grp('d:none','No due date',null);
     units.forEach(function(u){var k='d:none';if(u.eff&&okDate(u.eff)){var n=daysBetween(o.day,pd(u.eff));k=n<0?'d:late':n<=7?'d:wk':'d:later';}gm[k].units.push(u);});}
   var cmp=U.filt==='done'?function(a,b){var x=a.t.doneOn||'',y=b.t.doneOn||'';return x!==y?(x<y?1:-1):b.i-a.i;}
-    :function(a,b){if(a.eff!==b.eff){if(!a.eff)return 1;if(!b.eff)return -1;return a.eff<b.eff?-1:1;}return a.i-b.i;};
+    :function(a,b){if(a.rk!==b.rk)return a.rk-b.rk;if(a.eff!==b.eff){if(!a.eff)return 1;if(!b.eff)return -1;return a.eff<b.eff?-1:1;}return a.i-b.i;};
   G.forEach(function(g){g.units.sort(cmp);});
   /* empty project groups stay in OPEN·PROJECT so their + is reachable; everything else hides when empty */
   return G.filter(function(g){return g.units.length||(U.sort==='proj'&&U.filt==='open'&&g.key!=='p:');});
@@ -1864,6 +1903,7 @@ function tk_cb(t,pfx){var on=t.status==='done';
   return '<button type="button" class="tk-cb" id="'+pfx+'c-'+tk_did(t.id)+'" role="checkbox" aria-checked="'+on+'" data-act="tk-check" data-id="'+esc(t.id)+'" aria-label="Done: '+esc(t.t.slice(0,60))+'"><i></i></button>';}
 function tk_row(t,o){
   o=o||{};var pfx=o.pfx||'tk',done=t.status==='done',du=tk_due(t),all=o.all||[],meta=[];
+  if(!done&&!o.noUrg&&(t.urg==='now'||t.urg==='week'))meta.push('<span class="tag tk-ut'+(t.urg==='now'?' now':'')+'">'+TK_ULBL[t.urg]+'</span>');
   if(o.ctx)meta.push('<span class="tk-ctx">↳ '+esc(o.ctx.t)+'</span>');
   if(o.showProj){var p=tk_proj(t.proj);if(p)meta.push('<span class="tk-pj">'+esc(p.name)+'</span>');}
   if(t.m>0)meta.push('<span>'+tk_mfmt(t.m)+'</span>');
@@ -1880,14 +1920,41 @@ function tk_askHTML(t,li){var n=tk_kids(t.id).filter(function(k){return k.status
     :'<div class="tk-box c"><div class="tk-bt">'+n+' SUBTASK'+(n===1?'':'S')+' STILL OPEN</div><div class="tk-ab">'+b+'</div></div>';}
 function tk_seg(label,act,pfx,opts,cur){
   return '<div class="tk-seg" role="group" aria-label="'+label+'">'+opts.map(function(x){return '<button type="button" id="'+pfx+'-'+x[0]+'" data-act="'+act+'" data-v="'+x[0]+'" aria-pressed="'+(cur===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function tk_ugSeg(pfx,act,cur,label){
+  return '<div class="tk-ug" role="group" aria-label="Urgency">'+(label?'<span class="tk-ul">URGENCY</span>':'')+TK_URG.map(function(u){return '<button type="button" id="'+pfx+'-'+u+'" data-act="'+act+'" data-v="'+u+'" aria-pressed="'+(cur===u)+'">'+TK_ULBL[u]+'</button>';}).join('')+'</div>';}
+function tk_goalOpts(cur){return '<option value=""'+(cur?'':' selected')+'>No goal</option>'+(S.goals||[]).map(function(g){return '<option value="'+esc(g.id)+'"'+(g.id===cur?' selected':'')+'>'+esc(g.call||g.id)+'</option>';}).join('');}
+function tk_projOpts(ex,cur){return (S.projects||[]).filter(function(p){return p.id!==ex;}).map(function(p){return '<option value="'+esc(p.id)+'"'+(p.id===cur?' selected':'')+'>'+esc(p.name)+'</option>';}).join('');}
+/* project panel under a group header: ui.tk.pm = project id, pf = open sub-form (ren | merge | conv | del), pc = pending confirm {k, to} */
+function tk_pmenu(P){
+  var U=tk_ui(),L=S.projects||[],i=L.indexOf(P),T=tk_list().filter(function(t){return t.proj===P.id;}),nOpen=T.filter(function(t){return t.status!=='done';}).length,others=L.length>1;
+  var h='<div class="tk-pp" id="tk-pp" role="group" aria-label="Options for '+esc(P.name)+'">';
+  if(U.pc){var c=U.pc,to=c.to?tk_proj(c.to):null,n=T.length,s=n===1?'':'s',msg,ok;
+    if(c.k==='del'){msg='Delete '+P.name+'?'+(n?' Its '+n+' finished task'+s+' stay'+(n===1?'s':'')+' in Tasks with no project.':'');ok='<button type="button" class="btn warn" id="tk-delok" data-act="tk-delok">DELETE IT</button>';}
+    else if(c.k==='merge'){msg='Move '+n+' task'+s+' into '+(to?to.name:'?')+' and remove '+P.name+'?';ok='<button type="button" class="btn fill" id="tk-mergeok" data-act="tk-mergeok">MERGE</button>';}
+    else{msg='Make '+P.name+' one task under '+(to?to.name:'?')+'? Its '+n+' task'+s+' become its subtasks; subtasks of those get their parent’s name in front.';ok='<button type="button" class="btn fill" id="tk-convok" data-act="tk-convok">MAKE IT A TASK</button>';}
+    return h+'<div class="confirm tk-cf"><div>'+esc(msg)+'</div><div class="tk-ab"><button type="button" class="btn" id="tk-pcx" data-act="tk-pcx">CANCEL</button>'+ok+'</div></div></div>';}
+  function fb(k,lbl,dis,title){return '<button type="button" class="btn ghost" id="tk-pf-'+k+'" data-act="tk-pf" data-v="'+k+'" aria-expanded="'+(U.pf===k)+'"'+(dis?' disabled':'')+(title?' title="'+esc(title)+'"':'')+'>'+lbl+'</button>';}
+  h+='<div class="tk-pb">'+fb('ren','RENAME')+'<button type="button" class="btn ghost" id="tk-pup" data-act="tk-pup"'+(i<=0?' disabled':'')+'>MOVE UP</button><button type="button" class="btn ghost" id="tk-pdn" data-act="tk-pdn"'+(i>=L.length-1?' disabled':'')+'>MOVE DOWN</button>'+
+    fb('merge','MERGE INTO…',!others,others?'':'No other project yet')+fb('conv','MAKE IT A TASK UNDER…',!others,others?'':'No other project yet')+fb('del','DELETE',nOpen>0,nOpen?'Finish or drop its '+nOpen+' open task'+(nOpen===1?'':'s')+' first':'')+'</div>';
+  if(U.pf==='ren')h+='<form id="tk-ren-f" class="tk-f"><input type="text" id="tk-ren-in" maxlength="60" value="'+esc(P.name)+'" autocomplete="off" aria-label="Project name"><button type="submit" class="btn sm fill" id="tk-ren-go">RENAME</button></form>';
+  if(U.pf==='merge'&&others)h+='<form id="tk-merge-f" class="tk-f"><label>INTO<select id="tk-merge-p">'+tk_projOpts(P.id,'')+'</select></label><button type="submit" class="btn sm fill" id="tk-merge-go">MERGE…</button></form>';
+  if(U.pf==='conv'&&others)h+='<form id="tk-conv-f" class="tk-f"><label>UNDER<select id="tk-conv-p">'+tk_projOpts(P.id,'')+'</select></label><button type="submit" class="btn sm fill" id="tk-conv-go">NEXT</button></form>';
+  return h+'</div>';
+}
+function tk_pnew(U){var h='<div class="tk-pn">';
+  if(!U.pnew)return h+'<button type="button" class="btn ghost" id="tk-pnew" data-act="tk-pnew">+ NEW PROJECT</button></div>';
+  return h+'<form id="tk-pnew-f" class="tk-f"><input type="text" id="tk-pnew-in" maxlength="60" placeholder="Project name" autocomplete="off" aria-label="Project name"><label>GOAL<select id="tk-pnew-g">'+tk_goalOpts('')+'</select></label><button type="submit" class="btn sm fill" id="tk-pnew-go">ADD</button><button type="button" class="x" id="tk-pnew-x" data-act="tk-pnewx" aria-label="Close">✕</button></form></div>';}
 function tk_group(g,U){
   var fold=!!U.fold[g.key],gid=tk_did(g.key),n=0;g.units.forEach(function(u){n+=1+u.kids.length;});
+  var pid=g.key.indexOf('p:')===0?g.key.slice(2):'',P=pid?tk_proj(pid):null,showP=!!(P&&U.filt==='open');
   var h='<div class="tk-g'+(fold?' fold':'')+'"><div class="tk-gh"><button type="button" class="tk-gt" id="tkg-'+gid+'" data-act="tk-fold" data-v="'+esc(g.key)+'" aria-expanded="'+(!fold)+'">'+TK_CHEV+'<b>'+esc(g.name)+'</b><span class="tk-n">'+n+'</span></button>';
+  if(showP)h+='<button type="button" class="tk-pmb" id="tkpm-'+gid+'" data-act="tk-pm" data-v="'+esc(P.id)+'" aria-expanded="'+(U.pm===P.id)+'" aria-label="Options for '+esc(P.name)+'">⋯</button>';
   if(g.add!=null)h+='<button type="button" class="tk-plus" id="tka-'+gid+'" data-act="tk-add" data-v="'+esc(g.add)+'" aria-label="Add a task to '+esc(g.name)+'">+</button>';
   h+='</div>';
-  if(!fold&&U.add!=null&&U.add===g.add)h+='<form id="tk-add-f" class="tk-addf" data-proj="'+esc(g.add)+'"><input type="text" id="tk-add-in" maxlength="200" placeholder="New task" autocomplete="off" aria-label="New task in '+esc(g.name)+'"><button type="submit" class="btn sm fill" id="tk-add-go">ADD</button><button type="button" class="x" id="tk-add-x" data-act="tk-addx" aria-label="Close">✕</button></form>';
+  if(!fold&&showP&&U.pm===P.id)h+=tk_pmenu(P);
+  if(!fold&&U.add!=null&&U.add===g.add)h+='<form id="tk-add-f" class="tk-addf" data-proj="'+esc(g.add)+'"><div class="tk-ai"><input type="text" id="tk-add-in" maxlength="200" placeholder="New task" autocomplete="off" aria-label="New task in '+esc(g.name)+'"><button type="submit" class="btn sm fill" id="tk-add-go">ADD</button><button type="button" class="x" id="tk-add-x" data-act="tk-addx" aria-label="Close">✕</button></div>'+tk_ugSeg('tka','tk-augc',U.addUrg,false)+'</form>';
   if(!fold&&g.units.length){h+='<ul class="tk-rows">'+g.units.map(function(u){
-    var r=tk_row(u.t,{ctx:u.ctx,showProj:U.sort!=='proj',all:u.all});if(U.ask===u.t.id&&!ui.detail)r+=tk_askHTML(u.t,true);
+    var r=tk_row(u.t,{ctx:u.ctx,showProj:U.sort!=='proj',all:u.all,noUrg:g.key==='u:0'||g.key==='u:2'});if(U.ask===u.t.id&&!ui.detail)r+=tk_askHTML(u.t,true);
     u.kids.forEach(function(k){r+=tk_row(k,{sub:true});});return r;}).join('')+'</ul>';}
   return h+'</div>';
 }
@@ -1896,8 +1963,9 @@ function tk_render(){
   var h='<section class="p taskp" data-tab="tasks">'+phd('Tasks','tasks');
   h+='<div class="tk-ctl">'+tk_seg('Sort by','tk-sort','tks',TK_SORTS,U.sort)+tk_seg('Show','tk-filt','tkf',TK_FILTS,U.filt)+'</div>';
   var G=tk_groups(U);
-  if(!G.length)return h+'<div class="tk-empty">'+(U.filt==='done'?'Nothing finished yet.':'No open tasks.')+'</div></section>';
-  return h+'<div class="tk-gs">'+G.map(function(g){return tk_group(g,U);}).join('')+'</div></section>';
+  var np=U.filt==='open'?tk_pnew(U):'';
+  if(!G.length)return h+'<div class="tk-empty">'+(U.filt==='done'?'Nothing finished yet.':'No open tasks.')+'</div>'+np+'</section>';
+  return h+'<div class="tk-gs">'+G.map(function(g){return tk_group(g,U);}).join('')+'</div>'+np+'</section>';
 }
 
 /* ---------- detail sheet (coordinator routes ui.detail {k:'task', id}) ---------- */
@@ -1915,6 +1983,7 @@ function tk_detail(t){
   if(!done&&L.today)m.push('<span class="tk-on">ON TODAY’S PLAN'+(L.today.s?' '+esc(L.today.s):'')+(L.today.done?' · DONE':'')+'</span>');
   else if(!done&&L.planned)m.push('<span class="tk-on">PLANNED '+esc(tk_short(L.planned.date))+(L.planned.s?' '+esc(L.planned.s):'')+'</span>');
   if(m.length)h+='<div class="tk-meta">'+m.join('')+'</div>';
+  if(!done)h+=tk_ugSeg('tku','tk-urg',t.urg,true);
   h+=t.d?'<p class="tk-dd">'+esc(t.d)+'</p>':'<p class="tk-dd tk-nd">No notes yet.</p>';
   if(kids.length)h+='<div class="tk-sh"><span>SUBTASKS</span><b'+(kd===kids.length?' class="ok"':'')+'>'+kd+'/'+kids.length+'</b></div><ul class="tk-subs">'+kids.map(function(k){return tk_row(k,{pfx:'tkd'});}).join('')+'</ul>';
   if(U.sched===t.id)h+='<div class="tk-box"><div class="tk-bt">FINDING A SLOT…</div></div>';
@@ -1962,9 +2031,10 @@ function tk_local(t){
   var tm=new Date(o.day.getFullYear(),o.day.getMonth(),o.day.getDate()+1);
   return {t:'',d:'',g:'',m:m,date:iso(tm),s:'',e:'',why:'Your week is full, so this has no set time yet.'};
 }
-function tk_addProp(tid,p){var x=tk_find(tid);if(!x){render();return;}
-  p.t=str(x.t,120);if(x.d)p.d=str(x.d,1200);var g=tk_goal(x);if(g)p.g=g;if(x.m>0)p.m=Math.min(480,x.m);if(!(p.m>0))p.m=30;
-  p.e=p.s?m2h(Math.min(1439,mins(p.s)+p.m)):'';p.task=tid;
+/* fill a slot with the task's title, notes, goal, estimate and link */
+function tk_fill(x,p){p.t=str(x.t,120);if(x.d)p.d=str(x.d,1200);var g=tk_goal(x);if(g)p.g=g;if(x.m>0)p.m=Math.min(480,x.m);if(!(p.m>0))p.m=30;
+  p.e=p.s?m2h(Math.min(1439,mins(p.s)+p.m)):'';p.task=x.id;return p;}
+function tk_addProp(tid,p){var x=tk_find(tid);if(!x){render();return;}tk_fill(x,p);
   tk_act('Proposed '+dayLbl(p.date)+(p.s?' '+p.s:''),function(){addProposal(p);},true);}
 function tk_schedule(t){
   var U=tk_ui(),tid=t.id,L=tk_links(tid);if(U.sched||L.today||L.planned||L.prop)return;
@@ -1981,14 +2051,44 @@ function tk_schedule(t){
   }).then(function(p){U.sched='';ui.proposing=false;busy=false;var x=tk_find(tid);
     if(x&&!tk_links(tid).prop)tk_addProp(tid,p||tk_local(x));else render();if(pending){pending=false;queueSave();}});
 }
+/* put a task on today's plan (or in planned for today when the plan hasn't rolled yet); drops its pending slot. Returns the toast text. */
+function tk_pushToday(t){var o=ops(),ids={};ids[t.id]=1;var base={t:str(t.t,120),d:str(t.d,1200),g:tk_goal(t),task:t.id};tk_unlinkSched(ids);
+  if(!fresh()){S.planned.push(Object.assign({id:'p'+Date.now().toString(36)+Math.floor(Math.random()*1e3),date:o.date,s:'',e:'',m:t.m>0?t.m:30},base));return 'Will be in today’s plan';}
+  S.today.items.push(Object.assign({id:'t'+Date.now().toString(36)+Math.floor(Math.random()*1e3),s:'',e:'',lbl:t.due&&t.due<=o.date?'DUE':'',m:t.m>0?t.m:30,done:false},base));return 'Added to today';}
 function tk_doToday(t,force){
-  var U=tk_ui(),o=ops(),L=tk_links(t.id),ids={};ids[t.id]=1;if(L.today)return;
-  var base={t:str(t.t,120),d:str(t.d,1200),g:tk_goal(t),task:t.id};
-  if(!fresh()){act('Will be in today’s plan',function(){tk_unlinkSched(ids);S.planned.push(Object.assign({id:'p'+Date.now().toString(36)+Math.floor(Math.random()*1e3),date:o.date,s:'',e:'',m:t.m>0?t.m:30},base));});return;}
+  var U=tk_ui(),L=tk_links(t.id);if(L.today)return;
+  if(!fresh()){act('Will be in today’s plan',function(){tk_pushToday(t);});return;}
   var open=S.today.items.filter(function(i){return !i.done;}).length;
   if(open>=3&&!force){U.conf='today';render();tk_focus('tk-today-sch');return;}
-  act('Added to today',function(){tk_unlinkSched(ids);S.today.items.push(Object.assign({id:'t'+Date.now().toString(36)+Math.floor(Math.random()*1e3),s:'',e:'',lbl:t.due&&t.due<=o.date?'DUE':'',m:t.m>0?t.m:30,done:false},base));});
+  act('Added to today',function(){tk_pushToday(t);});
 }
+/* ---------- urgency (public: Tell Claude and routines call tk_applyUrg inside their own undo envelope) ----------
+   Mutates S and returns the toast text. NOW: onto today's plan when it has fewer than 3 open items, else it just tops Tasks.
+   THIS WEEK: a local proposal inside the current week (Mon–Sun) in free time, if one fits. LATER: drops the task's pending proposal. */
+function tk_applyUrg(t,v){
+  if(TK_URG.indexOf(v)<0)v='later';t.urg=v;var lbl=TK_ULBL[v],L=tk_links(t.id);
+  if(v==='now'){if(t.status==='done')return lbl;if(L.today)return lbl+' · already on today’s plan';
+    var open=fresh()?S.today.items.filter(function(i){return !i.done;}).length:0;
+    if(open>=3)return lbl+' · today is full, so it tops Tasks';
+    return lbl+(tk_pushToday(t)==='Added to today'?' · on today’s plan':' · will be in today’s plan');}
+  if(v==='week'){if(t.status==='done'||L.today||L.planned||L.prop)return lbl;
+    var o=ops(),m0=monday(o.day),end=iso(new Date(m0.getFullYear(),m0.getMonth(),m0.getDate()+6)),p=tk_local(t);
+    if(!p.s||p.date>end||!tk_fits(p))return lbl+' · no free slot left this week';
+    tk_fill(t,p);addProposal(p);return lbl+' · proposed '+dayLbl(p.date)+' '+p.s;}
+  var n=S.proposals.length;S.proposals=S.proposals.filter(function(p){return p.task!==t.id;});
+  return lbl+(S.proposals.length<n?' · proposal removed':'');
+}
+function tk_setUrg(t,v,keep){var msg='';tk_act('',function(){msg=tk_applyUrg(t,v);},keep);if(ui.toast)ui.toast.msg=msg;render();}
+/* ---------- projects ---------- */
+function tk_merge(P,to){tk_list().forEach(function(t){if(t.proj===P.id)t.proj=to.id;});S.projects=S.projects.filter(function(q){return q!==P;});}
+/* the project becomes one task under the project "to"; its tasks become subtasks; a task that had subtasks is flattened (its subtasks become siblings, titled "Parent: Child") */
+function tk_convert(P,to){var T=tk_list(),x=tk_new(P.name,to.id,''),first=-1,by={},inP={};x.g=P.g||'';
+  T.forEach(function(t){by[t.id]=t;if(t.proj===P.id)inP[t.id]=1;});
+  T.forEach(function(t,i){if(!inP[t.id])return;if(first<0)first=i;
+    if(t.status!=='done'){if(TK_URG.indexOf(t.urg)<TK_URG.indexOf(x.urg))x.urg=t.urg;if(t.due&&(!x.due||t.due<x.due))x.due=t.due;}
+    if(t.parent&&inP[t.parent])t.t=str(by[t.parent].t+': '+t.t,200);t.parent=x.id;t.proj=to.id;});
+  if(first<0)T.push(x);else T.splice(first,0,x);
+  S.projects=S.projects.filter(function(q){return q!==P;});tk_prune();}
 function tk_drop(t){
   var gone={},ds=ops().date;gone[t.id]=1;tk_kids(t.id).forEach(function(k){gone[k.id]=1;});
   tk_list().forEach(function(x){if(gone[x.id]&&(x===t||x.status!=='done'))S.dropped.push({t:x.t,d:x.d,g:tk_goal(x),date:ds});});
@@ -2001,8 +2101,14 @@ function tk_click(a,b,e){
   if(typeof a!=='string'||a.indexOf('tk-')!==0)return false;
   var U=tk_ui(),v=b.getAttribute('data-v'),bid=b.getAttribute('data-id'),inD=!!(b.closest&&b.closest('.dsheet'));
   var t=bid?tk_find(bid):(ui.detail&&ui.detail.k==='task'?tk_find(ui.detail.id):null);
-  if(a==='tk-sort'){if(TK_SORTS.some(function(x){return x[0]===v;})){U.sort=v;LS.set('tk.sort',v);U.add=null;U.ask='';}render();return true;}
-  if(a==='tk-filt'){U.filt=v==='done'?'done':'open';LS.set('tk.filt',U.filt);U.add=null;U.ask='';render();return true;}
+  if(a==='tk-sort'){if(TK_SORTS.some(function(x){return x[0]===v;})){U.sort=v;LS.set('tk.sort',v);U.add=null;U.ask='';U.pm=null;}render();return true;}
+  if(a==='tk-filt'){U.filt=v==='done'?'done':'open';LS.set('tk.filt',U.filt);U.add=null;U.ask='';U.pm=null;render();return true;}
+  if(a==='tk-augc'){U.addUrg=TK_URG.indexOf(v)>=0?v:'later';render();return true;}
+  if(a==='tk-pm'){U.pm=U.pm===v?null:v;U.pf='';U.pc=null;U.add=null;if(U.pm&&U.fold['p:'+v]){delete U.fold['p:'+v];LS.set('tk.fold',U.fold);}render();if(U.pm)tk_focus('tk-pf-ren');return true;}
+  if(a==='tk-pcx'){U.pc=null;if(U.pf==='del')U.pf='';render();tk_focus('tk-pf-'+(U.pf||'del'));return true;}
+  if(a==='tk-pf'){U.pf=U.pf===v?'':v;U.pc=U.pf==='del'?{k:'del'}:null;render();tk_focus(U.pf==='ren'?'tk-ren-in':U.pf==='merge'?'tk-merge-p':U.pf==='conv'?'tk-conv-p':U.pf==='del'?'tk-pcx':'tk-pf-'+v);return true;}
+  if(a==='tk-pnew'){U.pnew=true;render();tk_focus('tk-pnew-in');return true;}
+  if(a==='tk-pnewx'){U.pnew=false;render();tk_focus('tk-pnew');return true;}
   if(a==='tk-fold'){if(U.fold[v])delete U.fold[v];else U.fold[v]=1;LS.set('tk.fold',U.fold);render();return true;}
   if(a==='tk-add'){U.add=v||'';if(U.fold['p:'+U.add]){delete U.fold['p:'+U.add];LS.set('tk.fold',U.fold);}render();tk_focus('tk-add-in');return true;}
   if(a==='tk-addx'){var ad=U.add;U.add=null;render();tk_focus('tka-'+tk_did('p:'+(ad||'')));return true;}
@@ -2012,7 +2118,18 @@ function tk_click(a,b,e){
   if(a==='tk-drop'){U.conf='drop';U.form='';render();tk_focus('tk-dropno');return true;}
   if(parseErr){queueSave();return true;}
   if(a==='tk-pdec'){var qid=bid;tk_act('Kept in Tasks for later',function(){S.proposals=S.proposals.filter(function(x){return x.id!==qid;});},true);return true;}
+  var P=U.pm?tk_proj(U.pm):null;
+  if(a==='tk-pup'||a==='tk-pdn'){if(!P){render();return true;}var pi=S.projects.indexOf(P),pj=a==='tk-pup'?pi-1:pi+1;if(pj<0||pj>=S.projects.length){render();return true;}
+    act(a==='tk-pup'?'Moved '+P.name+' up':'Moved '+P.name+' down',function(){var L=S.projects,x=L[pi];L[pi]=L[pj];L[pj]=x;});return true;}
+  if(a==='tk-delok'||a==='tk-mergeok'||a==='tk-convok'){if(!P||!U.pc){U.pc=null;render();return true;}var to=U.pc.to?tk_proj(U.pc.to):null,pn=P.name;U.pm=null;U.pf='';U.pc=null;
+    if(a==='tk-delok'){if(tk_list().some(function(x){return x.proj===P.id&&x.status!=='done';})){toast('Finish or drop its open tasks first');render();return true;}
+      act('Deleted project '+pn,function(){tk_list().forEach(function(x){if(x.proj===P.id)x.proj='';});S.projects=S.projects.filter(function(q){return q!==P;});});return true;}
+    if(!to||to===P){render();return true;}
+    if(a==='tk-mergeok'){act('Merged '+pn+' into '+to.name,function(){tk_merge(P,to);});return true;}
+    if(tk_openCount()>=TK_MAX){toast('Backlog is at '+TK_MAX+' open tasks. Finish or drop some first.');render();return true;}
+    act(pn+' is now a task under '+to.name,function(){tk_convert(P,to);});return true;}
   if(!t){render();return true;}
+  if(a==='tk-urg'){tk_setUrg(t,v,inD);return true;}
   if(a==='tk-check'||a==='tk-done'){
     if(t.status!=='done'&&tk_kids(t.id).some(function(k){return k.status!=='done';})){U.ask=t.id;render();tk_focus('tk-ask-all');return true;}
     var on=t.status!=='done';tk_act(on?'Marked done':'Marked not done',function(){tk_setDone(t,on,false);},a==='tk-check'&&inD);return true;}
@@ -2024,14 +2141,27 @@ function tk_click(a,b,e){
   return true;
 }
 function tk_submit(f,e){
-  var fid=f&&f.id;if(['tk-add-f','tk-sub-f','tk-move-f','tk-due-f'].indexOf(fid)<0)return false;
+  var fid=f&&f.id;if(['tk-add-f','tk-sub-f','tk-move-f','tk-due-f','tk-ren-f','tk-merge-f','tk-conv-f','tk-pnew-f'].indexOf(fid)<0)return false;
   if(parseErr){queueSave();return true;}
   var U=tk_ui();
   function val(id){var el=document.getElementById(id);return el?String(el.value||''):'';}
   if(fid==='tk-add-f'){var v=val('tk-add-in').replace(/\s+/g,' ').trim();if(!v)return true;
     if(tk_openCount()>=TK_MAX){toast('Backlog is at '+TK_MAX+' open tasks. Finish or drop some first.');render();return true;}
     var pid=tk_proj(f.getAttribute('data-proj'))?f.getAttribute('data-proj'):'',p=tk_proj(pid);
-    ui.noKeep['tk-add-in']=1;act('Added to '+(p?p.name:'tasks'),function(){tk_list().push(tk_new(v,pid,''));tk_prune();});tk_focus('tk-add-in');return true;}
+    var ug=U.addUrg,nx=tk_new(v,pid,''),xm='';ui.noKeep['tk-add-in']=1;U.addUrg='later';
+    act('Added to '+(p?p.name:'tasks'),function(){tk_list().push(nx);tk_prune();if(ug!=='later')xm=tk_applyUrg(nx,ug);});
+    if(xm&&ui.toast){ui.toast.msg='Added to '+(p?p.name:'tasks')+' · '+xm;render();}tk_focus('tk-add-in');return true;}
+  if(fid==='tk-pnew-f'){var nm=val('tk-pnew-in').replace(/\s+/g,' ').trim().slice(0,60),gg=normG(val('tk-pnew-g'));if(!nm)return true;
+    if((S.projects||[]).length>=TK_PMAX){toast(TK_PMAX+' projects is the max');render();return true;}
+    if(S.projects.some(function(q){return q.name.toLowerCase()===nm.toLowerCase();})){toast(nm+' already exists');render();return true;}
+    var nid=tk_pid(nm);U.pnew=false;ui.noKeep['tk-pnew-in']=1;if(U.sort!=='proj'){U.sort='proj';LS.set('tk.sort','proj');}
+    act('Added project '+nm,function(){S.projects.push({id:nid,name:nm,g:gg});});tk_focus('tkpm-'+tk_did('p:'+nid));return true;}
+  var P=U.pm?tk_proj(U.pm):null;
+  if(fid==='tk-ren-f'){var rn=val('tk-ren-in').replace(/\s+/g,' ').trim().slice(0,60);if(!P||!rn)return true;if(rn===P.name){U.pf='';render();return true;}
+    if(S.projects.some(function(q){return q!==P&&q.name.toLowerCase()===rn.toLowerCase();})){toast(rn+' already exists');render();return true;}
+    var on=P.name;U.pf='';ui.noKeep['tk-ren-in']=1;act('Renamed '+on+' to '+rn,function(){P.name=rn;});return true;}
+  if(fid==='tk-merge-f'||fid==='tk-conv-f'){var tv=val(fid==='tk-merge-f'?'tk-merge-p':'tk-conv-p'),tp=tk_proj(tv);if(!P||!tp||tp===P){render();return true;}
+    U.pc={k:fid==='tk-merge-f'?'merge':'conv',to:tp.id};render();tk_focus(fid==='tk-merge-f'?'tk-mergeok':'tk-convok');return true;}
   var t=ui.detail&&ui.detail.k==='task'?tk_find(ui.detail.id):null;if(!t){render();return true;}
   if(fid==='tk-sub-f'){var sv=val('tk-sub-in').replace(/\s+/g,' ').trim();if(!sv||t.parent)return true;
     if(tk_openCount()>=TK_MAX){toast('Backlog is at '+TK_MAX+' open tasks. Finish or drop some first.');render();return true;}
