@@ -3,7 +3,9 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612:wght@400;700&family=B612+Mono:wght@400;700&display=swap">
 <style id="css">
-/* Layout: flight-deck console. Computer: clock strip over three consoles (day timeline | now + CAPCOM | status board).
+/* Layout: flight-deck console. Computer: masthead (date + clocks), Tell Claude bar, three consoles
+   (flight plan | week + senior year | proposed, objectives, status board); STATS view = time log | stats.
+   Sections are separated by one hairline each; only tappable things (cards, buttons, chips, inputs) carry a border.
    Phone: sticky clock bar, one console per tab, bottom tab bar with a center capture key.
    Color follows glass-cockpit convention: white = values, green = complete, magenta = active leg,
    amber = caution, red = warning, cyan = controls you can press. Nothing else gets color. Single dark theme by design. */
@@ -23,8 +25,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .lbl{font:700 .75rem/1 var(--mono);letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
 
 /* masthead + clocks (computer) */
-.mast{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:10px}
-.mast b{font:700 .82rem/1 var(--mono);letter-spacing:.24em}
+.mast{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding:0 12px 12px}
+.mast b{font:700 .75rem/1 var(--mono);letter-spacing:.24em}
+.mast .mdt{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 18px;min-width:0}
+.mast .mck{font:400 .75rem/1 var(--mono);letter-spacing:.14em;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
 .fresh{font:700 .75rem/1 var(--mono);letter-spacing:.12em;padding:6px 9px;border:1px solid var(--rule);color:var(--dim)}
 .fresh.ok{color:var(--green);border-color:color-mix(in srgb,var(--green) 45%,transparent)}
 .fresh.exp{color:var(--amber);border-color:var(--amber)}
@@ -34,12 +38,6 @@ button.fresh.run{position:relative;background:none;cursor:pointer;white-space:no
 button.fresh.run::after{content:"";position:absolute;left:-4px;right:-4px;top:-8px;bottom:-8px}
 .mast .tcgo{min-height:40px;padding:8px 12px}
 .mast .vt button{min-height:38px}
-.clocks{display:grid;grid-template-columns:minmax(0,2.4fr) repeat(2,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
-.ro{background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;min-width:0}
-.ro i{font:400 .75rem/1 var(--mono);font-style:normal;letter-spacing:.18em;color:var(--dim)}
-.ro em{font:700 1.55rem/1 var(--mono);font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap}
-.ro.t em{font-size:clamp(1.7rem,3.1vw,2.8rem);letter-spacing:.01em}
-.ro em{font-size:clamp(1.1rem,1.7vw,1.55rem)}
 
 /* phone clock bar */
 .pbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0 10px;border-bottom:1px solid var(--rule)}
@@ -50,6 +48,11 @@ button.fresh.run::after{content:"";position:absolute;left:-4px;right:-4px;top:-8
 .pbar .fresh{padding:4px 6px}
 @media (max-width:359px){.pbar b,.pbar i{display:none}.pbar em{font-size:.92rem}}
 .pbar button.fresh.run{letter-spacing:0;padding:4px 5px}
+/* phone: one-line PROPOSED strip under the bar (TODAY tab only); tapping it opens the WEEK tab */
+.pstrip{display:flex}
+.pstrip button{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:0 12px;border:0;border-bottom:1px solid var(--rule);background:transparent;color:var(--cyan);font:700 .75rem/1 var(--mono);letter-spacing:.14em;text-align:left;cursor:pointer}
+.pstrip button span{font-size:1rem;line-height:1}
+#app:not([data-tab="today"]) .pstrip{display:none}
 .pbar button.fresh.run::after{top:-11px;bottom:-11px}
 .pbar b{white-space:nowrap}
 /* the RUN chip takes the room the bar's labels used on phones (the T− prefix still names the countdown); the 359px rule above drops more */
@@ -59,8 +62,8 @@ button.fresh.run::after{content:"";position:absolute;left:-4px;right:-4px;top:-8
 /* consoles */
 .grid{display:flex;flex-direction:column;gap:12px}
 .col{display:contents}
-.p{border:1px solid var(--rule);background:var(--panel);min-width:0}
-.ph{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;padding:9px 12px;border-bottom:1px solid var(--rule)}
+.p{border:0;border-top:1px solid var(--rule);background:transparent;min-width:0}
+.ph{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;padding:12px 12px 8px}
 .ph h2{margin:0;white-space:nowrap;font:700 .75rem/1 var(--mono);letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
 .ph>span{font:400 .75rem/1 var(--mono);letter-spacing:.1em;color:var(--dim);text-transform:uppercase;text-align:right}
 .ph>span.c{color:var(--amber)}
@@ -169,11 +172,12 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .upc .dt{font:400 .75rem/1 var(--mono);letter-spacing:.08em;color:var(--faint);white-space:nowrap}
 
 /* status board */
-.poll{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule)}
-.stn{background:var(--panel);padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.poll{display:flex;flex-direction:column}
+.stn{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;min-width:0;border-top:1px solid var(--rule)}
+.stn:first-child{border-top:0}
 .stn-h{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:left;min-height:36px}
 .stn-h:hover h3{color:var(--cyan)}
-.stn h3{margin:0;font:700 .92rem/1 var(--mono);letter-spacing:.16em}
+.stn h3{margin:0;font:700 .75rem/1 var(--mono);letter-spacing:.18em}
 .light{display:inline-flex;align-items:center;gap:7px;font:700 .75rem/1 var(--mono);letter-spacing:.12em;padding:7px 9px;border:1px solid currentColor;background:transparent;min-width:84px;justify-content:center}
 .light::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
 .light.go{color:var(--green)}.light.hold{color:var(--amber)}.light.nogo{color:var(--red)}
@@ -212,7 +216,7 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .vt button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .pc{padding:12px;border-top:1px solid var(--rule);display:flex;flex-direction:column;gap:6px}
 .pc:first-of-type{border-top:0}
-.pc .pt{display:block;padding:0;font-size:1.02rem;font-weight:700;line-height:1.35}
+.pc .pt{display:block;padding:0;font-size:.95rem;font-weight:700;line-height:1.35}
 .pm{font:700 .75rem/1.5 var(--mono);letter-spacing:.1em;color:var(--ink)}
 .pc .dacts{margin-top:4px}
 /* where a proposal lands: dashed cyan edge like its calendar block; also the proposal rows in Upcoming */
@@ -263,7 +267,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
    status --green/--amber/--red (always next to a word). Square corners, mono labels, like the rest of the console. */
 .statp .body{padding:0;container:st/inline-size}
 .statp .st-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:1px;background:var(--rule)}
-.statp .st-sec{background:var(--panel);padding:14px 12px 16px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.statp .st-sec{background:var(--bg);padding:14px 12px 16px;min-width:0;display:flex;flex-direction:column;gap:12px}
 .statp .st-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 /* section head: name left, verdict right */
@@ -295,7 +299,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .statp .st-bar{position:absolute;left:0;top:0;bottom:0;background:var(--dim)}
 .statp .st-day.c .st-bar{background:var(--amber)}
 .statp .st-day.w .st-bar{background:var(--red)}
-.statp .st-tick{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink);box-shadow:0 0 0 1px var(--panel)}
+.statp .st-tick{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink);box-shadow:0 0 0 1px var(--bg)}
 .statp .st-dv{display:flex;align-items:center;justify-content:flex-end;gap:6px;font:700 .76rem/1 var(--mono);color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
 .statp .st-dv s{text-decoration:none;color:var(--faint);font-weight:400}
 .statp .st-dv em{font:700 .75rem/1 var(--mono);font-style:normal;letter-spacing:.04em;padding:3px 4px;border:1px solid currentColor}
@@ -335,13 +339,13 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .statp .st-cols span:hover i{background:var(--ink)}
 .statp .st-en svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .statp .st-en polyline{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
-.statp .st-dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--panel);transform:translate(-50%,-50%)}
+.statp .st-dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--bg);transform:translate(-50%,-50%)}
 .statp .st-xl{display:flex;justify-content:space-between;font:400 .58rem/1 var(--mono);letter-spacing:.1em;color:var(--faint);padding-top:2px}
 
 /* 4. queue */
 .statp .st-q{gap:10px}
-.statp .st-qs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin:0;background:var(--rule);border:1px solid var(--rule)}
-.statp .st-qs div{background:var(--panel);padding:9px 8px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.statp .st-qs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin:0;background:var(--rule)}
+.statp .st-qs div{background:var(--bg);padding:9px 8px;display:flex;flex-direction:column;gap:7px;min-width:0}
 .statp .st-qs dt{font:400 .75rem/1 var(--mono);letter-spacing:.04em;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .statp .st-qs dd{margin:0;font:700 1.05rem/1 var(--mono);color:var(--ink)}
 .statp .st-qs dd.z{color:var(--faint)}
@@ -379,7 +383,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .bc[aria-pressed="true"]{border-color:var(--cyan);color:var(--ink);box-shadow:inset 0 0 0 1px var(--cyan)}
 .sw{width:10px;height:10px;border:1px solid var(--dim);flex:none}
 .sw.goal{background:var(--ink);border-color:var(--ink)}.sw.life{background:color-mix(in srgb,var(--dim) 32%,transparent)}.sw.sleep{background:var(--panel2)}.sw.rot{background:var(--red);border-color:var(--red)}
-.tsplit{display:flex;height:12px;border:1px solid var(--rule);overflow:hidden}
+.tsplit{display:flex;height:12px;overflow:hidden}
 .ts.goal{background:var(--ink)}.ts.life{background:color-mix(in srgb,var(--dim) 45%,transparent)}.ts.sleep{background:var(--panel2)}.ts.rot{background:var(--red)}.ts.miss{background:repeating-linear-gradient(45deg,transparent 0 3px,color-mix(in srgb,var(--amber) 55%,transparent) 3px 5px)}
 .tleg{display:flex;flex-wrap:wrap;gap:4px 14px;font:400 .75rem/1.4 var(--mono);letter-spacing:.08em;color:var(--dim)}
 .tleg b{color:var(--ink)}.tleg .r,.tleg .r b{color:var(--red)}
@@ -391,7 +395,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .gp .fill{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
 .gp .tick{position:absolute;top:-4px;bottom:-4px;border-left:1.5px solid var(--dim)}
 .gp .v{white-space:nowrap}.gp .v.c{color:var(--amber)}.gp .v.g{color:var(--green)}
-.lognudge{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 6px 6px 10px;border:1px dashed var(--amber);color:var(--amber);font:700 .75rem/1 var(--mono);letter-spacing:.1em}
+.lognudge{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0;color:var(--amber);font:700 .75rem/1 var(--mono);letter-spacing:.1em}
 /* footer */
 .loop{border:1px solid var(--red);color:var(--red);padding:9px 12px;font:700 .75rem/1.4 var(--mono);letter-spacing:.08em}
 .loop[hidden]{display:none}
@@ -428,8 +432,9 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 /* breakpoints */
 @media (max-width:999px){
   #app{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));gap:12px}
-  .mast,.clocks,.only-desk{display:none!important}
-  .p.prop{order:0}.p.now{order:1}.p.plan{order:2}.p.objp{order:4}.p.upcp{order:5}.p.timep{order:6}.p.statp{order:7}.p.stat{order:8}.p.ccp{order:9}.p.capp{order:10}.p.shut{order:11}
+  .mast,.only-desk{display:none!important}
+  .statw{display:contents}
+  .p.now{order:1}.p.plan{order:2}.p.prop{order:3}.p.objp{order:4}.p.upcp{order:5}.p.wcalp{order:5}.p.timep{order:6}.p.statp{order:7}.p.stat{order:8}.p.ccp{order:9}.p.capp{order:10}.p.shut{order:11}
   #app[data-tab="today"] .p:not([data-tab~="today"]),
   #app[data-tab="week"] .p:not([data-tab~="week"]),
   #app[data-tab="stats"] .p:not([data-tab~="stats"]),
@@ -438,15 +443,13 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 @media (min-width:640px) and (max-width:999px){#app{max-width:720px}}
 @media (min-width:1000px){
   body{font-size:16px}
-  .pbar,.tabbar,.sheet,.scrim,.only-phone{display:none!important}
-  .grid{display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,1.25fr) minmax(300px,1fr);gap:16px;align-items:start}
+  .pbar,.tabbar,.sheet,.scrim,.only-phone,.pstrip{display:none!important}
+  .grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,2.4fr) minmax(280px,1fr);gap:16px;align-items:start}
   .col{display:flex;flex-direction:column;gap:16px;min-width:0}
-  #app[data-view="console"] .statp{display:none}
-  #app[data-view="stats"] .grid{grid-template-columns:minmax(0,1fr)}
-  #app[data-view="stats"] .col.a,#app[data-view="stats"] .col.b{display:none}
-  #app[data-view="stats"] .col.c{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:16px;align-items:start}
-  #app[data-view="stats"] .timep,#app[data-view="stats"] .statp{grid-column:1}
-  #app[data-view="stats"] .stat{grid-column:2;grid-row:1 / span 2}
+  /* TODAY (console): flight plan | week + senior year | proposed, objectives, status board. STATS: time log | stats. */
+  #app[data-view="console"] .statw{display:none}
+  #app[data-view="stats"] .col.a,#app[data-view="stats"] .col.b,#app[data-view="stats"] .col.c{display:none}
+  #app[data-view="stats"] .statw{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 }
 .hc,.bc,.gp,.tleg,.lognudge,.timep .lbl,.timep .seg2 button,.timep .btn.sm{font-size:.75rem}.timep .seg2 button{min-height:40px}.rotl{font-size:.8rem}
 @media (max-width:999px){.hgrid{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 4px}.hc{height:44px}}
@@ -497,6 +500,11 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 @media (min-width:1000px){
   .tc-sheet{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(620px,92vw);max-height:80vh;border:1px solid var(--rule);border-top:2px solid var(--cyan);padding:16px 22px 20px}
   .tcbar .tc-last{max-height:320px;overflow:auto}
+  .tcbar{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;column-gap:8px;border-top:0}
+  .tcbar .ph{padding:14px 12px 12px;min-height:60px}
+  .tcbar .body{padding:8px 12px 12px 0}
+  .tcbar .tc-f,.tcbar .tc-last{max-width:760px}
+  #app[data-view="tasks"] .tcbar,#app[data-view="stats"] .tcbar{display:none}
 }
 
 /* TASKS module. Selectors scoped under .taskp (section) and .tk-d (detail sheet content). Tokens only.
@@ -520,7 +528,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .taskp .tk-gt{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;background:none;border:0;text-align:left;color:var(--ink)}
 .taskp .tk-gt svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--dim);stroke-width:2;transition:transform .15s}
 .taskp .tk-gt[aria-expanded="false"] svg{transform:rotate(-90deg)}
-.taskp .tk-gt b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 .78rem/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.taskp .tk-gt b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 .75rem/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .taskp .tk-gt .tk-n{margin-left:auto;font:700 .75rem/1 var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
 .taskp .tk-gt:hover b{color:var(--cyan)}
 .taskp .tk-plus{flex:none;width:48px;border:0;border-left:1px solid var(--rule);background:none;color:var(--cyan);font:400 1.4rem/1 var(--mono);padding:0}
@@ -578,9 +586,9 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .tk-d .tk-nd{color:var(--dim)}
 .tk-d .tk-sh{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font:700 .75rem/1 var(--mono);letter-spacing:.16em;color:var(--dim)}
 .tk-d .tk-sh b{color:var(--ink)}.tk-d .tk-sh b.ok{color:var(--green)}
-.tk-d .tk-subs{list-style:none;margin:8px 0 0;padding:0;border:1px solid var(--rule);border-top:0}
+.tk-d .tk-subs{list-style:none;margin:8px 0 0;padding:0}
 .tk-d .tk-subs .tk-r:first-child{border-top:1px solid var(--rule)}
-.tk-d .tk-box{margin-top:14px;padding:12px;border:1px solid var(--rule);display:flex;flex-direction:column;gap:8px}
+.tk-d .tk-box{margin-top:14px;padding:12px 0 0;border-top:1px solid var(--rule);display:flex;flex-direction:column;gap:8px}
 .tk-d .tk-box.c{border-color:var(--amber)}
 .tk-d .tk-bt{font:700 .75rem/1.4 var(--mono);letter-spacing:.14em;color:var(--dim)}
 .tk-d .tk-box.c .tk-bt{color:var(--amber)}
@@ -654,8 +662,8 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 /* agenda (phone, narrow containers) */
 .wcalp .wc-day{padding:0 12px 12px}
 .wcalp .wc-day+.wc-day{border-top:1px solid var(--rule)}
-.wcalp .wc-dh{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin:0;padding:14px 0 8px;font:700 .8rem/1.2 var(--mono);letter-spacing:.12em;color:var(--dim)}
-.wcalp .wc-dh b{color:var(--ink);font-size:.86rem;letter-spacing:.16em}
+.wcalp .wc-dh{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin:0;padding:14px 0 8px;font:700 .75rem/1.2 var(--mono);letter-spacing:.12em;color:var(--dim)}
+.wcalp .wc-dh b{color:var(--ink);font-size:.75rem;letter-spacing:.16em}
 .wcalp .wc-day.td .wc-dh b{color:var(--magenta)}
 .wcalp .wc-dh em,.wcalp .wc-gd em{font:700 .75rem/1.2 var(--mono);font-style:normal;letter-spacing:.1em;color:var(--amber)}
 .wcalp .wc-rs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
@@ -688,11 +696,12 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 
 /* 7-column time grid (computer, container 720px+) */
 .wcalp .wc-g{display:none;padding:0 12px 16px 0}
-@media (min-width:1000px){@container wcal (min-width:720px){.wcalp .wc-g{display:block}.wcalp .wc-ag{display:none}}}
+@media (min-width:1000px){@container wcal (min-width:600px){.wcalp .wc-g{display:block}.wcalp .wc-ag{display:none}}}
 .wcalp .wc-gr{display:grid;grid-template-columns:52px repeat(7,minmax(0,1fr))}
 .wcalp .wc-gd{display:flex;flex-direction:column;gap:3px;min-width:0;padding:10px 8px 8px;border-left:1px solid var(--rule);font:700 .75rem/1.25 var(--mono);letter-spacing:.08em;color:var(--dim)}
-.wcalp .wc-gd b{color:var(--ink);font-size:.82rem;letter-spacing:.14em}
+.wcalp .wc-gd b{color:var(--ink);font-size:.75rem;letter-spacing:.14em}
 .wcalp .wc-gd.td{box-shadow:inset 0 -2px 0 var(--magenta)}
+@container wcal (max-width:900px){.wcalp .wc-gd{padding:10px 6px 8px;letter-spacing:.02em}.wcalp .wc-gd b{letter-spacing:.06em}}
 .wcalp .wc-gd.td b{color:var(--magenta)}
 .wcalp .wc-ga{border-top:1px solid var(--rule)}
 .wcalp .wc-axl{padding:8px 6px 0 0;text-align:right;font:400 .75rem/1.2 var(--mono);color:var(--faint)}
@@ -756,7 +765,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .wc-pc.cur{border:1.5px dashed var(--cyan);background:color-mix(in srgb,var(--cyan) 10%,var(--panel))}
 .wc-pc.vw{border-color:var(--amber)}
 .wc-pc:disabled{opacity:.4;cursor:default;border-color:var(--rule)}
-.wc-pn{margin-top:8px;padding:8px 10px;border:1px solid var(--amber);color:var(--amber);font:700 .75rem/1.4 var(--mono);letter-spacing:.06em}
+.wc-pn{margin-top:8px;padding:4px 0;color:var(--amber);font:700 .75rem/1.4 var(--mono);letter-spacing:.06em}
 .wc-pd{margin-top:10px;display:flex;flex-direction:column;gap:3px}
 .wc-pdh{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;padding:4px 0 6px;font:700 .75rem/1.2 var(--mono);letter-spacing:.12em;color:var(--dim)}
 .wc-pdh b{color:var(--ink);letter-spacing:.16em}
@@ -810,14 +819,14 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .nxl .rt.nxt{display:inline;width:auto;padding:0;font:700 .95rem/1.4 var(--sans);color:var(--ink)}
 @media (max-width:999px){.nxl .rt.nxt{min-height:40px}}
 .bc.nw{color:var(--cyan);border-style:dashed;border-color:var(--cyan)}
-.catf{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;padding:10px;border:1px solid var(--rule)}
+.catf{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;padding:10px 0 0;border-top:1px solid var(--rule)}
 .catf input[type=text]{flex:1 1 140px;min-height:40px}
 .catf .catp{display:flex;flex-direction:column;gap:4px;font:700 .75rem/1 var(--mono);letter-spacing:.14em;color:var(--dim)}
 .catf select{min-height:40px;padding:6px 8px;border:1px solid var(--rule);border-radius:0;background:var(--bg);color:var(--ink);font:700 .8rem/1.2 var(--mono)}
 .catf .catb{display:flex;gap:8px}
 .catl{display:flex;align-items:center;justify-content:space-between;gap:10px;font:700 .75rem/1.3 var(--mono);letter-spacing:.08em;color:var(--dim)}
 .gp.sub span:first-child{padding-left:12px;color:var(--faint)}
-.timep .tellnudge{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:8px 10px;border:1px dashed color-mix(in srgb,var(--amber) 70%,transparent);color:var(--amber);font:700 .8rem/1.2 var(--mono);letter-spacing:.06em}
+.timep .tellnudge{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:0;color:var(--amber);font:700 .8rem/1.2 var(--mono);letter-spacing:.06em}
 @media (max-width:999px){
   #app[data-tab="tasks"] .p:not([data-tab~="tasks"]){display:none}
   .tl-ad button{min-height:40px}
@@ -825,9 +834,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 }
 @media (min-width:1000px){
   #app:not([data-view="tasks"]) .taskp{display:none}
-  #app[data-view="tasks"] .grid,#app[data-view="tasks"] .trkw,#app[data-view="tasks"] .wcw{display:none}
-  #app[data-view="stats"] .wcw{display:none}
-  .wcw{margin-top:16px}
+  #app[data-view="tasks"] .grid{display:none}
   #app[data-view="tasks"] .taskp{width:100%}
 }
 
@@ -841,11 +848,13 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .hgrp{border-bottom:1px solid var(--rule)}
 .hgrp>.lbl{padding:10px 12px 0}
 .hrs{list-style:none;margin:0;padding:0}
-.hrw{display:grid;grid-template-columns:58px minmax(0,1fr);border-top:1px solid var(--rule);min-height:52px}
-.hrs>.hrw:first-child{border-top:0}
-.hrw .hh{padding:14px 0 0 12px;display:flex;flex-direction:column;gap:6px;font:700 .75rem/1 var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
+.hrw{display:grid;grid-template-columns:58px minmax(0,1fr);min-height:52px}
+.hrw.free{grid-template-columns:minmax(0,1fr);min-height:44px}
+.hfr{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:0 4px 0 12px}
+.hfl{font:400 .75rem/1 var(--mono);letter-spacing:.1em;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrw .hh{padding:16px 0 0 12px;display:flex;flex-direction:column;gap:6px;font:700 .75rem/1 var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
 .hrw .hh b{font-size:.75rem;letter-spacing:.1em;color:var(--magenta)}
-.hrw .hb{display:flex;flex-direction:column;gap:6px;padding:6px 8px 6px 0;min-width:0}
+.hrw .hb{display:flex;flex-direction:column;gap:6px;padding:8px 8px 8px 0;min-width:0}
 .hrw.past .hh{opacity:.7}
 .hrw.now{box-shadow:inset 3px 0 0 var(--magenta);background:color-mix(in srgb,var(--magenta) 7%,transparent)}
 .hrw.now .hh{color:var(--magenta)}
@@ -863,9 +872,10 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .hcard.act .hcx{color:var(--ink)}
 .hcard.done .hcx{color:var(--dim);text-decoration:line-through}
 .hcard.late .hcm{color:var(--amber)}
-.hopen{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 12px;border:1px dashed var(--rule);background:transparent;color:var(--cyan);font:700 .75rem/1 var(--mono);letter-spacing:.1em;text-align:left;cursor:pointer}
-.hopen:hover{border-color:var(--cyan)}
-.hrw.now .hopen{border-color:color-mix(in srgb,var(--magenta) 55%,transparent)}
+.hcard.lead .hcx{font:700 1.25rem/1.3 var(--sans)}
+.hopen{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 10px;border:0;background:transparent;color:var(--cyan);font:700 .75rem/1 var(--mono);letter-spacing:.1em;text-align:left;cursor:pointer}
+.hopen:hover{color:var(--ink)}
+.hfr .hopen{width:auto;flex:none;justify-content:flex-end;padding:0 8px 0 10px}
 .hearly{width:100%;min-height:44px;padding:0 12px;border:0;border-bottom:1px solid var(--rule);background:transparent;color:var(--dim);font:700 .75rem/1 var(--mono);letter-spacing:.1em;text-align:left;cursor:pointer}
 .hburn{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .hburn .clock{font:700 1.5rem/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--magenta)}
@@ -965,6 +975,8 @@ function unloggedNow(){var o=ops();var L=logOf(o.date),n=0;for(var i=0;i<LOGN;i+
 function weekGoalHours(){var o=ops(),m=monday(o.day),h={};GIDS.forEach(function(g){h[g]=0;});for(var d=0;d<7;d++){var dt=new Date(m.getFullYear(),m.getMonth(),m.getDate()+d);if(dt>o.day)break;var L=logOf(iso(dt));for(var i=0;i<LOGN;i++){var c=catOf(L.charAt(i));if(c&&c.g)h[c.g]++;}}return h;}
 function hrs(n){return (Math.round(n*10)/10)+'H';}
 function tminus(){var ms=LAUNCH-new Date();if(ms<=0)return 'T+ LIVE';var s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;return 'T−'+p2(d)+':'+p2(Math.floor(s/3600))+':'+p2(Math.floor(s%3600/60))+':'+p2(s%60);}
+/* masthead form: days and hours:minutes only */
+function tminusD(){var ms=LAUNCH-new Date();if(ms<=0)return 'T+ LIVE';var s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;return 'T−'+d+'D '+p2(Math.floor(s/3600))+':'+p2(Math.floor(s%3600/60));}
 function str(v,max){return v==null?'':String(v).slice(0,max||400);}
 function bool(v){return v===true||v===1||(typeof v==='string'&&/^(true|yes|y|1|done)$/i.test(v.trim()));}
 function normT(v){if(typeof v==='number'&&isFinite(v))v=String(Math.round(v));if(typeof v!=='string')return '';v=v.trim().toLowerCase().replace(/\./g,'');if(!v)return '';var ap=null,am=v.match(/(am|pm)$/);if(am){ap=am[1];v=v.slice(0,-2).trim();}var h,m,a=v.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/),b=v.match(/^(\d{1,2})(\d{2})$/),c=v.match(/^(\d{1,2})$/);if(a){h=+a[1];m=+a[2];}else if(b){h=+b[1];m=+b[2];}else if(c&&ap){h=+c[1];m=0;}else return '';if(ap){if(h<1||h>12)return '';if(ap==='pm'&&h<12)h+=12;if(ap==='am'&&h===12)h=0;}if(h>23||m>59)return '';return p2(h)+':'+p2(m);}
@@ -1047,13 +1059,11 @@ function runInfo(){
   return L.join('\n');}
 function rMast(){
   var n=new Date(),f=fresh();
-  var vt='<div class="vt" role="group" aria-label="View"><button type="button" id="vw-console" data-act="view" data-v="console" aria-pressed="'+(ui.view==='console')+'">CONSOLE</button><button type="button" id="vw-tasks" data-act="view" data-v="tasks" aria-pressed="'+(ui.view==='tasks')+'">TASKS</button><button type="button" id="vw-stats" data-act="view" data-v="stats" aria-pressed="'+(ui.view==='stats')+'">STATS</button></div>';
+  var vt='<div class="vt" role="group" aria-label="View"><button type="button" id="vw-console" data-act="view" data-v="console" aria-pressed="'+(ui.view==='console')+'">TODAY</button><button type="button" id="vw-tasks" data-act="view" data-v="tasks" aria-pressed="'+(ui.view==='tasks')+'">TASKS</button><button type="button" id="vw-stats" data-act="view" data-v="stats" aria-pressed="'+(ui.view==='stats')+'">STATS</button></div>';
   var tg='<button type="button" class="btn tcgo" id="tc-go" data-act="tcgo">TELL CLAUDE</button>';
-  var h='<header class="mast"><b>'+esc(n.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}).toUpperCase())+'</b><div class="mr">'+vt+tg+rRun('run-m')+(parseErr||f?'':'<span class="fresh exp">PLAN EXPIRED</span>')+'</div></header>';
-  h+='<div class="clocks"><div class="ro t"><i>SPOTTER LAUNCH</i><em id="ck-t">'+tminus()+'</em></div>'+
-    '<div class="ro"><i>'+esc(tzName(n))+'</i><em id="ck-l">'+hhmm(n)+':'+p2(n.getSeconds())+'</em></div>'+
-    '<div class="ro"><i>GRAD</i><em>'+Math.max(0,daysBetween(n,GRAD))+'D</em></div></div>';
+  var h='<header class="mast"><div class="mdt"><b>'+esc(n.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}).toUpperCase())+'</b><span class="mck"><span id="ck-t">'+tminusD()+'</span> · '+esc(tzName(n))+' <span id="ck-l">'+hhmm(n)+'</span> · GRAD '+Math.max(0,daysBetween(n,GRAD))+'D</span></div><div class="mr">'+vt+tg+rRun('run-m')+(parseErr||f?'':'<span class="fresh exp">PLAN EXPIRED</span>')+'</div></header>';
   h+='<div class="pbar"><span><b>'+esc(n.toLocaleDateString('en-US',{weekday:'short',day:'numeric'}).toUpperCase())+'</b><em id="ck-l2">'+hhmm(n)+'</em></span>'+rRun('run-p')+'<span><i>LAUNCH</i><em id="ck-t2">'+tminus()+'</em></span></div>';
+  if(S.proposals.length)h+='<div class="pstrip"><button type="button" id="pstrip" data-act="tab" data-v="week">'+S.proposals.length+' PROPOSED<span aria-hidden="true">›</span></button></div>';
   if(parseErr)h+='<div class="err">COULD NOT READ SAVED STATE, SO SAVING IS LOCKED. TELL CLAUDE “MISSION CONTROL STATE ERROR”.</div>';
   return h;
 }
@@ -1119,17 +1129,17 @@ function hpBurn(){var be=ui.burnEnd,nw=Date.now();
   if(be&&be>nw)return '<div class="hburn"><span class="clock" id="burn">'+mmss(be-nw)+'</span><button type="button" id="burn-x" class="btn sm" data-act="abort">STOP</button></div>';
   if(be&&nw-be<15*60000)return '<div class="hburn"><span class="clock done">FOCUS DONE · TAKE 5</span><button type="button" id="burn-clr" class="btn sm" data-act="clrburn">CLEAR</button></div>';
   return '<div class="hburn"><button type="button" id="burn-25" class="btn sm" data-act="burn" data-v="25">FOCUS 25</button><button type="button" id="burn-50" class="btn sm" data-act="burn" data-v="50">FOCUS 50</button></div>';}
-function hpCard(x,n,isNext){var on=x.s<=n&&x.e>n,tg='';
+function hpCard(x,n,isNext,lead){var on=x.s<=n&&x.e>n,tg='',ld=lead?' lead':'';
   if(x.k==='ev'){var e=x.ev;
     if(on&&!x.free)tg='<span class="tag t-act">NOW · '+dur((x.e-n)*60000)+' LEFT</span>';else if(isNext)tg='<span class="tag t-next">IN '+dur((x.s-n)*60000)+'</span>';
-    return '<div class="hcard ev'+(x.free?' free':'')+(on&&!x.free?' act':'')+'"><button type="button" class="rt hct" id="hp-ev-'+esc(e.id)+'" data-act="wc-ev" data-id="'+esc(e.id)+'"><span class="hcm">'+esc(e.s)+'–'+esc(e.e)+tg+'</span><span class="hcx">'+esc(e.t)+'</span></button></div>';}
+    return '<div class="hcard ev'+(x.free?' free':'')+(on&&!x.free?' act':'')+ld+'"><button type="button" class="rt hct" id="hp-ev-'+esc(e.id)+'" data-act="wc-ev" data-id="'+esc(e.id)+'"><span class="hcm">'+esc(e.s)+'–'+esc(e.e)+tg+'</span><span class="hcx">'+esc(e.t)+'</span></button></div>';}
   var it=x.it,st=x.k==='today'?itemState(it):'plan',live=x.k==='today'&&st==='active';
   if(live)tg='<span class="tag t-act">NOW · '+dur((x.e-n)*60000)+' LEFT</span>';
   else if(st==='late')tg='<span class="tag t-late">LATE</span>';
   else if(st==='done')tg='<span class="tag t-done">DONE</span>';
   else if(x.k==='planned')tg='<span class="tag t-next">SCHEDULED</span>';
   else if(isNext)tg='<span class="tag t-next">IN '+dur((x.s-n)*60000)+'</span>';
-  return '<div class="hcard '+(x.k==='today'?'it '+st:'pl')+(live?' act':'')+'"><button type="button" class="rt hct" data-act="open" data-k="'+x.k+'" data-id="'+esc(it.id)+'"><span class="hcm">'+esc(it.s)+'–'+m2h(x.e)+tg+'</span><span class="hcx">'+esc(it.t)+'</span></button>'+(x.k==='today'?ck('today',it,'h'):'')+'</div>';}
+  return '<div class="hcard '+(x.k==='today'?'it '+st:'pl')+(live?' act':'')+ld+'"><button type="button" class="rt hct" data-act="open" data-k="'+x.k+'" data-id="'+esc(it.id)+'"><span class="hcm">'+esc(it.s)+'–'+m2h(x.e)+tg+'</span><span class="hcx">'+esc(it.t)+'</span></button>'+(x.k==='today'?ck('today',it,'h'):'')+'</div>';}
 function rPlan(){
   var o=ops(),f=fresh(),ds=o.date,n=o.min,its=f?S.today.items:[],bl=hpBlocks(ds);
   var h='<section class="p plan" data-tab="today">'+phd('Flight plan','plan','<button type="button" id="breathe" class="btn sm" data-act="breathe">BREATHE</button>')+'<div class="hp">';
@@ -1145,16 +1155,21 @@ function rPlan(){
   if(n>=H1-30)H1=Math.min(28*60,(Math.floor(n/60)+2)*60);
   if(n<H0&&n>=5*60)H0=Math.floor(n/60)*60;
   var live=null,nxt=null;bl.forEach(function(x){if(!live&&!x.free&&x.s<=n&&x.e>n&&!(x.k==='today'&&x.it.done))live=x;if(!nxt&&x.s>n&&!(x.k==='today'&&x.it.done))nxt=x;});
-  var rows='',pastN=0,hasPast=false,done={};
+  var rows='',pastN=0,hasPast=false,done={},run=null;
+  /* consecutive hours with no cards (and not the current hour) collapse into one FREE row; + ADD keeps the first hour */
+  function flush(){if(!run)return;rows+='<li class="hrw free'+(run.past?' past':'')+'"><div class="hfr"><span class="hfl">'+m2h(run.a)+'–'+m2h(run.b)+' · FREE</span>'+run.add+'</div></li>';run=null;}
   for(var a=H0;a<H1;a+=60){var b=a+60,past=b<=n,isNow=n>=a&&n<b;
     var st=bl.filter(function(x){var k=hpKey(x);if(done[k])return false;return x.s<b&&(x.s>=a||a===H0);});
     st.forEach(function(x){done[hpKey(x)]=1;});
     var free=hpFreeMin(bl,a,b);if(past&&st.some(function(x){return x.e>n;}))past=false;
-    if(!st.length&&free<30&&!(isNow&&!live))continue;
-    if(past){hasPast=true;if(!showPast){pastN++;continue;}}
-    var cards='';st.forEach(function(x){cards+=hpCard(x,n,x===nxt);});
+    if(!st.length&&free<30&&!(isNow&&!live)){flush();continue;}
+    if(past){hasPast=true;if(!showPast){pastN++;flush();continue;}}
     var open='';if(b>n&&free>=30){var fs=hpFreeStart(bl,isNow?Math.max(a,hpNowStart()):a,b);if(fs!==null&&b-fs>=15)open='<button type="button" class="hopen" id="hadd-'+a+'" data-act="hadd" data-h="'+a+'">＋ ADD</button>';}
+    if(!st.length&&!isNow){if(run&&run.b===a&&run.past===past)run.b=b;else{flush();run={a:a,b:b,past:past,add:open};}continue;}
+    flush();
+    var cards='';st.forEach(function(x){cards+=hpCard(x,n,x===nxt,x===live||(!live&&x===nxt));});
     rows+='<li class="hrw'+(isNow?' now':'')+(past?' past':'')+'"><div class="hh">'+m2h(a)+(isNow?'<b>NOW</b>':'')+'</div><div class="hb">'+cards+open+'</div></li>';}
+  flush();
   if(pastN)h+='<button type="button" class="hearly" id="hearly" data-act="hpast" aria-expanded="false">EARLIER · '+pastN+'H<span aria-hidden="true"> ›</span></button>';
   else if(showPast&&hasPast)h+='<button type="button" class="hearly" id="hearly" data-act="hpast" aria-expanded="true">HIDE EARLIER</button>';
   h+='<ul class="hrs">'+rows+'</ul>';
@@ -1499,7 +1514,7 @@ var INFO={
  proposed:{title:'Proposed',text:'Slots Claude picked for tasks you added. ACCEPT puts it on that day, CHANGE lets you set the day, start and minutes, LATER keeps the task in Tasks with no time. DECLINE (on one-offs) drops it.\nTap the title to see why that slot, and the week strip under it: one chip per day with its load (items of 3). Tap a day to move the proposal there, same start if it is free, else the nearest free slot; the list under the strip shows what sits around it.'},
  objectives:{title:'Objectives',text:'This week’s outcomes, set in the Sunday plan. Tick one when it’s done; tap it for details.'},
  upcoming:{title:'Upcoming',text:'Deadlines, scheduled tasks and proposals waiting for your OK, soonest first. T−3D = in 3 days.\nBright = hard deadline, dim = soft. {amber:Amber} = hard deadline within 2 days. PROPOSED in {cyan:cyan} = a slot Claude suggested; tap it to accept or move it.\nTap a scheduled task to move it, drop it or do it today.'},
- track:{title:'Senior year',text:function(){return 'Aug 31 to commencement, May 24. The {magenta:magenta} marker is today; grey bands are Thanksgiving, finals and spring break.\n'+trackLine()+'\nThe big clock counts days:hours:minutes:seconds to the Spotter launch, Nov 22.';}},
+ track:{title:'Senior year',text:function(){return 'Aug 31 to commencement, May 24. The {magenta:magenta} marker is today; grey bands are Thanksgiving, finals and spring break.\n'+trackLine()+'\nSpotter launch, Nov 22: '+tminus()+' (days:hours:minutes:seconds).';}},
  status:{title:'Status board',text:'One light per goal: {green:GO} on track, {amber:HOLD} needs attention, {red:NO-GO} off track. Tap a goal to change its light or see its next step.\nHabits: tap a day when you hit it. {amber:DON’T MISS TWICE} = you missed last night. {amber:NO SLACK} = every day left counts. {red:BEHIND} = the weekly target is out of reach.\nColors everywhere: {magenta:magenta} now, {green:green} done or good, {amber:amber} caution, {red:red} warning, {cyan:cyan} tappable.'},
  stats:{title:'Stats',text:'LOAD: hours committed per day for the next 7 days. The white tick is your focus capacity; OVER = past it.\nBALANCE: the last 7 days, work (career, launch, academics) vs life (gym, phone, family).\nFOLLOW-THROUGH: share of planned items done over the last 14 days, from your shutdowns. Energy appears after 3 ratings. BUMPED = moved to tomorrow in the last 7 days.\nQUEUE: what’s waiting in the inbox, proposals, planned and bumped.'},
  timelog:{title:'Time log',text:function(){return 'Pick a category, then tap hours to paint them; tap a painted hour again to clear it. Later hours today can be logged ahead. Dashed {amber:amber} = a past hour not logged.\n＋ NEW adds your own category, like HYPERSONICS, and picks what it counts as, so its hours still feed that goal. Tap your category to see or remove it; removing turns its hours into the category it counted as.\nREST is downtime you chose. ROT is time that vanished: scrolling, unplanned couch. More than '+hrs(S.settings.rotBudget/60)+' of rot a day turns {red:red}.\nWEEK: hours per goal vs your weekly target. The tick marks where you should be after the days already finished; {amber:BEHIND} = under 80% of that.\nFILL FROM PLAN logs finished timed items. NIGHT = SLEEP marks unlogged hours before 08:00; after 20:00 it also logs tonight, 23:00 to 03:00, ahead.';}},
@@ -1580,9 +1595,8 @@ function render(){
   var vals={};[].forEach.call(app.querySelectorAll('input[id]:not([type=checkbox]),textarea[id]'),function(el){vals[el.id]=el.value;});
   var h=rMast();
   h+='<div class="loop" id="loop" role="status"'+(loopWarn?'':' hidden')+'>'+esc(loopT)+'</div>';
-  h+='<div class="trkw">'+rTrack()+'</div>';
-  h+='<div class="grid"><div class="col a">'+rPlan()+(wc_on()?'':rUpc())+'</div><div class="col b">'+tc_bar()+rProps()+rShutdown()+rObj()+'</div><div class="col c">'+rTime()+rStats()+rStatus()+'</div></div>';
-  if(wc_on())h+='<div class="wcw">'+wc_render()+'</div>';
+  h+=tc_bar();
+  h+='<div class="grid"><div class="col a">'+rPlan()+'</div><div class="col b">'+(wc_on()?wc_render():rUpc())+rTrack()+'</div><div class="col c">'+rProps()+rShutdown()+rObj()+rStatus()+'</div><div class="statw">'+rTime()+rStats()+'</div></div>';
   h+=tk_render();
   h+=rTabs()+rToast()+rDetail()+wc_sheet()+rPick()+rBreathe()+rInfo();
   app.dataset.tab=ui.tab;app.dataset.view=ui.view;app.innerHTML=h;
@@ -1603,8 +1617,9 @@ function setLoop(t,warn){loopT=t||'';loopWarn=!!(warn&&loopT);var el=document.ge
 var lastMin=-1;
 function tick(){
   var n=new Date(),t=tminus(),l=hhmm(n);
-  ['ck-t','ck-t2'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;});
-  var a=document.getElementById('ck-l');if(a)a.textContent=l+':'+p2(n.getSeconds());
+  var e1=document.getElementById('ck-t');if(e1)e1.textContent=tminusD();
+  var e2=document.getElementById('ck-t2');if(e2)e2.textContent=t;
+  var a=document.getElementById('ck-l');if(a)a.textContent=l;
   var b=document.getElementById('ck-l2');if(b)b.textContent=l;
   if(ui.burnEnd){var r=ui.burnEnd-Date.now(),bu=document.getElementById('burn');
     if(r>0){if(bu)bu.textContent=mmss(r);document.title=mmss(r)+' · FOCUS';}
@@ -3002,7 +3017,7 @@ function tc_form(fid,tid,pre){
   return '<form id="'+fid+'" class="tc-f"><textarea id="'+tid+'" rows="'+(pre==='s'?2:1)+'" maxlength="1000" enterkeyhint="send" autocomplete="off" placeholder="Log hours, add a task…" aria-label="Tell Claude">'+esc(tc_st.draft)+'</textarea>'+
     (tc_st.busy?'<button type="button" class="btn" id="'+pre+'-stop" data-act="tcstop">STOP</button>':'<button type="submit" class="btn fill" id="'+pre+'-send">SEND</button>')+'</form>';}
 function tc_infoB(id){return infoBtn('tell',id==='info-tell'?'':id.replace('info-tell-',''));}
-/* desktop: persistent bar at the top of the middle column (phone: shows in the CAPCOM tab) */
+/* desktop: persistent full-width bar under the masthead, TODAY view only (phone: the center + tab opens the sheet) */
 function tc_bar(){
   var h='<section class="p tcbar" data-tab="capcom">'+phd('Tell Claude','tell','<span class="tc-r">'+tc_stat()+'</span>')+'<div class="body">'+tc_form('tc-bf','tc-bin','b');
   var xs=tc_xs('b',1);if(xs)h+='<div class="tc-last" aria-live="polite">'+xs+'</div>';
