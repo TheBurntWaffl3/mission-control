@@ -1181,10 +1181,36 @@ input[type=text]:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 
 .evp .dacts{margin-top:2px;gap:8px}
 .evp .dacts .btn{min-height:40px}
 @media (max-width:999px){.p.evp{order:2}.evp .dacts .btn,.evp .ev-ca .btn,.ev-ca input[type=time]{min-height:44px}}
-/* an event item on the plan: a fixed block like a calendar event, in ink, with no checkbox */
+/* an event item on the plan: a fixed block like a calendar event, in ink; its checkbox ticks it like any item */
 .hcard.evi{border-color:color-mix(in srgb,var(--ink) 40%,transparent);background:transparent}
 .hcard.evi .hcx{color:var(--ink)}
 .hcard.evi .hcl{display:block;font:400 .8rem/1.3 var(--sans);color:var(--dim)}
+/* ---- drag: press-and-hold (touch) or 6px (mouse) lifts a plan card, a week block or an agenda row (dg_) ----
+   .dragging follows the pointer through an inline transform; the target under it gets .dropok (cyan) or .dropno; the week grid
+   shows a dashed .dg-slot at the landing time. touch-action: pan-y keeps scrolling alive until the hold timer fires. */
+.p.plan .hcard,.wcalp .wc-b,.wcalp .wc-r{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.dragging{position:relative;z-index:30;pointer-events:none;scale:1.02;opacity:.9;box-shadow:0 10px 28px rgba(0,0,0,.55);transition:scale .15s ease-out,box-shadow .15s ease-out,opacity .15s ease-out;will-change:transform}
+.wcalp .wc-b.dragging{position:absolute}
+html.dg-on,html.dg-on *{cursor:grabbing!important;touch-action:none}
+.hrw.dropok{background:color-mix(in srgb,var(--cyan) 12%,transparent);box-shadow:inset 0 0 0 1.5px var(--cyan);border-radius:8px}
+.hrw.dropno{background:color-mix(in srgb,var(--red) 8%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--red) 55%,transparent);border-radius:8px}
+.wcalp .wc-col.dropok{background-color:color-mix(in srgb,var(--cyan) 9%,transparent)}
+.wcalp .wc-col.dropno{background-color:color-mix(in srgb,var(--red) 7%,transparent)}
+.wcalp .wc-dh.dropok{color:var(--cyan);box-shadow:inset 0 -2px 0 var(--cyan)}
+.wcalp .wc-dh.dropok b{color:var(--cyan)}
+.wcalp .wc-dh.dropno{opacity:.45}
+.dg-slot{position:absolute;left:2px;right:2px;z-index:2;border:1.5px dashed var(--cyan);border-radius:8px;background:color-mix(in srgb,var(--cyan) 12%,transparent);pointer-events:none}
+.dg-slot span{position:absolute;left:-1px;top:-12px;padding:3px 6px;border-radius:5px;background:var(--cyan);color:var(--bg);font:600 .8rem/1 var(--sans);letter-spacing:0;white-space:nowrap;font-variant-numeric:tabular-nums}
+.toast .tn{color:var(--amber);font-style:normal}
+/* the event sheet's Attended / Postpone row and Move form; the day plan's Move form */
+.wc-evs .dacts{margin-top:14px;gap:8px}
+.wc-evs .dacts .btn,.dtime .btn.sm{min-height:40px}
+.wc-evs .btn[aria-pressed=true]{border-color:var(--green);color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--panel))}
+.wc-evs .dtime{margin-top:12px}
+.dtime input[type=date]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--rule);padding:8px;min-height:40px;border-radius:8px;max-width:11em}
+.wc-evs .ev-n{margin-top:8px}
+@media (max-width:999px){.wc-evs .dacts .btn,.dsheet .dacts .btn,.dtime .btn.sm,.dtime input[type=date],.dtime input[type=time]{min-height:44px}}
+@media (prefers-reduced-motion:reduce){.dragging{scale:none;transition:none}}
 /* ---- motion ----
    Rules: render() rebuilds #app, so things that appear get a keyframe on a class (.in, added once by render() to elements that
    were not there before; .just, added by the handler that changed them), and things that change get a transition on the live
@@ -1349,6 +1375,8 @@ function normalize(){
   var tg=SE.tgtH&&typeof SE.tgtH==='object'?SE.tgtH:{},tgo={};Object.keys(TGT0).forEach(function(g){var v=+tg[g];tgo[g]=(v>=0&&v<=80)?v:TGT0[g];});
   S.settings={capWeekday:(+SE.capWeekday>=60&&+SE.capWeekday<=900)?+SE.capWeekday:360,capWeekend:(+SE.capWeekend>=0&&+SE.capWeekend<=900)?+SE.capWeekend:180,rotBudget:(+SE.rotBudget>=0&&+SE.rotBudget<=600)?+SE.rotBudget:90,tgtH:tgo,cats:normCats(SE.cats)};
   var LG=S.log&&typeof S.log==='object'&&!Array.isArray(S.log)?S.log:{},lg={};Object.keys(LG).filter(okDate).sort().slice(-42).forEach(function(k){var v=typeof LG[k]==='string'?LG[k]:'',o2='';for(var i=0;i<LOGN;i++){var ch=v.charAt(i);o2+=catOf(ch)?ch:'.';}lg[k]=o2;});S.log=lg;
+  /* evdone: {date: [calendar event ids ticked that day]}, ok dates only, 42 days, strings */
+  var ED=S.evdone&&typeof S.evdone==='object'&&!Array.isArray(S.evdone)?S.evdone:{},ed={};Object.keys(ED).filter(okDate).sort().slice(-42).forEach(function(k){var a=[];(Array.isArray(ED[k])?ED[k]:[]).forEach(function(x){if(typeof x==='string'&&x.trim()&&a.indexOf(x)<0&&a.length<200)a.push(str(x,120));});if(a.length)ed[k]=a;});S.evdone=ed;
   S.updated=typeof S.updated==='string'?S.updated.slice(0,16):'';
   /* routine run log: {at 'YYYY-MM-DDTHH:MM', k morning|sunday, ok, fail [step names]}, oldest first, newest last, max 14; bad rows dropped */
   S.runs=(Array.isArray(S.runs)?S.runs:[]).filter(function(r){return r&&typeof r==='object'&&typeof r.at==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(r.at)&&okDate(r.at.slice(0,10))&&mins(r.at.slice(11))!==null&&(r.k==='morning'||r.k==='sunday');})
@@ -1443,6 +1471,10 @@ function mmss(ms){var s=Math.max(0,Math.ceil(ms/1000));return p2(Math.floor(s/60
 /* the check glyph: an inline SVG whose stroke draws in (stroke-dashoffset); shared by plan items and tasks */
 var SVG_CK='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function ck(k,it,pfx){return '<label class="cb" for="'+pfx+'-'+esc(it.id)+'"><input type="checkbox" id="'+pfx+'-'+esc(it.id)+'" data-k="'+k+'" data-id="'+esc(it.id)+'"'+(it.done?' checked':'')+' aria-label="Done: '+esc(it.t.slice(0,60))+'"><span class="ckb" aria-hidden="true">'+SVG_CK+'</span></label>';}
+/* the checkbox on a calendar event card: ticks into S.evdone[ds] (data-act evtick) */
+function evck(ds,e,dn){var id='hev-'+esc(e.id);return '<label class="cb" for="'+id+'"><input type="checkbox" id="'+id+'" data-act="evtick" data-id="'+esc(e.id)+'" data-ds="'+esc(ds)+'"'+(dn?' checked':'')+' aria-label="Attended: '+esc(e.t.slice(0,60))+'"><span class="ckb" aria-hidden="true">'+SVG_CK+'</span></label>';}
+function ev_done(ds,id){var a=S.evdone&&S.evdone[ds];return !!(a&&a.indexOf(id)>=0);}
+function ev_setDone(ds,id,on){if(!okDate(ds)||!id)return;var a=(S.evdone[ds]||[]).filter(function(x){return x!==id;});if(on)a.push(id);if(a.length)S.evdone[ds]=a;else delete S.evdone[ds];}
 function rowHTML(it,pfx,nx){var st=itemState(it);
   return '<li class="row '+st+'"><button type="button" class="rt" data-act="open" data-k="today" data-id="'+esc(it.id)+'"><span class="tm">'+timeTxt(it)+tagFor(st,nx===it)+'</span><span class="tx"><span class="stk">'+esc(it.t)+'</span></span></button>'+ck('today',it,pfx)+'</li>';}
 /* ---------- TODAY: the day by the hour ----------
@@ -1451,7 +1483,7 @@ function rowHTML(it,pfx,nx){var st=itemState(it);
 function hpBlocks(ds){var out=[],f=fresh()&&ds===S.today.date;
   if(f)S.today.items.forEach(function(it){var s=tS(it);if(s===null)return;out.push({k:'today',it:it,s:s,e:itemEnd(it)});});
   S.planned.forEach(function(p){if(p.date!==ds)return;if(f&&S.today.items.some(function(i){return i.id===p.id;}))return;var s=tS(p);if(s===null)return;out.push({k:'planned',it:p,s:s,e:itemEnd(p)});});
-  wc_eventsOn(ds).forEach(function(x){if(x.allDay||x.sm===null)return;out.push({k:'ev',ev:x,s:x.sm,e:x.em,free:!!x.free});});
+  wc_eventsOn(ds).forEach(function(x){if(x.allDay||x.sm===null)return;out.push({k:'ev',ev:x,s:x.sm,e:x.em,free:!!x.free,ds:ds});});
   return out.sort(function(a,b){return (a.s-b.s)||((a.k==='ev'?1:0)-(b.k==='ev'?1:0));});}
 function hpBusy(bl,t){for(var i=0;i<bl.length;i++){var x=bl[i];if(!x.free&&x.s<=t&&x.e>t)return x;}return null;}
 function hpFreeMin(bl,a,b){var m=0;for(var t=a;t<b;t+=5)if(!hpBusy(bl,t))m+=5;return m;}
@@ -1464,12 +1496,12 @@ function hpBurn(){var be=ui.burnEnd,nw=Date.now();
   if(be&&nw-be<15*60000)return '<div class="hburn"><span class="clock done">FOCUS DONE · TAKE 5</span><button type="button" id="burn-clr" class="btn sm" data-act="clrburn">CLEAR</button></div>';
   return '<div class="hburn"><button type="button" id="burn-25" class="btn sm" data-act="burn" data-v="25">FOCUS 25</button><button type="button" id="burn-50" class="btn sm" data-act="burn" data-v="50">FOCUS 50</button></div>';}
 function hpCard(x,n,isNext,lead){var on=x.s<=n&&x.e>n,tg='',ld=lead?' lead':'';
-  if(x.k==='ev'){var e=x.ev;
-    if(on&&!x.free)tg='<span class="tag t-act">NOW · '+dur((x.e-n)*60000)+' LEFT</span>';else if(isNext)tg='<span class="tag t-next">IN '+dur((x.s-n)*60000)+'</span>';
-    return '<div class="hcard ev'+(x.free?' free':'')+(on&&!x.free?' act':'')+ld+'"><button type="button" class="rt hct" id="hp-ev-'+esc(e.id)+'" data-act="wc-ev" data-id="'+esc(e.id)+'"><span class="hcm">'+esc(e.s)+'–'+esc(e.e)+tg+'</span><span class="hcx">'+esc(e.t)+'</span></button></div>';}
+  if(x.k==='ev'){var e=x.ev,dn=!x.free&&ev_done(x.ds,e.id);
+    if(dn)tg='<span class="tag t-done">DONE</span>';else if(on&&!x.free)tg='<span class="tag t-act">NOW · '+dur((x.e-n)*60000)+' LEFT</span>';else if(isNext)tg='<span class="tag t-next">IN '+dur((x.s-n)*60000)+'</span>';
+    return '<div class="hcard ev'+(x.free?' free':'')+(dn?' done':'')+(on&&!x.free&&!dn?' act':'')+ld+'"><button type="button" class="rt hct" id="hp-ev-'+esc(e.id)+'" data-act="wc-ev" data-id="'+esc(e.id)+'"><span class="hcm">'+esc(e.s)+'–'+esc(e.e)+tg+'</span><span class="hcx"><span class="stk">'+esc(e.t)+'</span></span></button>'+(x.free?'':evck(x.ds,e,dn))+'</div>';}
   var it=x.it;
-  if(it.kind==='event'){if(on)tg='<span class="tag t-act">NOW · '+dur((x.e-n)*60000)+' LEFT</span>';else if(isNext)tg='<span class="tag t-next">IN '+dur((x.s-n)*60000)+'</span>';
-    return '<div class="hcard ev evi'+(on?' act':'')+ld+'"><button type="button" class="rt hct" id="hp-evi-'+esc(it.id)+'" data-act="open" data-k="'+x.k+'" data-id="'+esc(it.id)+'"><span class="hcm">'+esc(it.s)+'–'+m2h(x.e)+tg+'</span><span class="hcx">'+esc(it.t)+(it.loc?'<small class="hcl">'+esc(it.loc)+'</small>':'')+'</span></button></div>';}
+  if(it.kind==='event'){if(it.done)tg='<span class="tag t-done">DONE</span>';else if(on)tg='<span class="tag t-act">NOW · '+dur((x.e-n)*60000)+' LEFT</span>';else if(isNext)tg='<span class="tag t-next">IN '+dur((x.s-n)*60000)+'</span>';
+    return '<div class="hcard ev evi'+(it.done?' done':'')+(on&&!it.done?' act':'')+ld+'"><button type="button" class="rt hct" id="hp-evi-'+esc(it.id)+'" data-act="open" data-k="'+x.k+'" data-id="'+esc(it.id)+'"><span class="hcm">'+esc(it.s)+'–'+m2h(x.e)+tg+'</span><span class="hcx"><span class="stk">'+esc(it.t)+'</span>'+(it.loc?'<small class="hcl">'+esc(it.loc)+'</small>':'')+'</span></button>'+(x.k==='today'?ck('today',it,'h'):'')+'</div>';}
   var st=x.k==='today'?itemState(it):'plan',live=x.k==='today'&&st==='active';
   if(live)tg='<span class="tag t-act">NOW · '+dur((x.e-n)*60000)+' LEFT</span>';
   else if(st==='late')tg='<span class="tag t-late">LATE</span>';
@@ -1495,7 +1527,7 @@ function rPlan(){
   var H0=7*60,H1=24*60;bl.forEach(function(x){if(x.s<H0&&x.s>=5*60)H0=Math.floor(x.s/60)*60;if(x.e>H1)H1=Math.min(28*60,Math.ceil(x.e/60)*60);});
   if(n>=H1-30)H1=Math.min(28*60,(Math.floor(n/60)+2)*60);
   if(n<H0&&n>=5*60)H0=Math.floor(n/60)*60;
-  var live=null,nxt=null;bl.forEach(function(x){if(!live&&!x.free&&x.s<=n&&x.e>n&&!(x.k==='today'&&x.it.done))live=x;if(!nxt&&x.s>n&&!(x.k==='today'&&x.it.done))nxt=x;});
+  var live=null,nxt=null;bl.forEach(function(x){var dn=x.k==='today'?x.it.done:x.k==='ev'?ev_done(ds,x.ev.id):false;if(!live&&!x.free&&x.s<=n&&x.e>n&&!dn)live=x;if(!nxt&&x.s>n&&!dn)nxt=x;});
   var L=logOf(ds),rowsA=[],pastN=0,pastUn=0,missN=0,hasPast=false,done={},run=null;
   /* log chips: slot index for an hour that is past or current (the Time log covers 06:00 to 03:00) */
   function hIdx(a){var i=a/60-LOG0;return i>=0&&i<LOGN&&slotWhen(ds,i)!=='future'?i:-1;}
@@ -1523,8 +1555,8 @@ function rPlan(){
   function strip(hrsIn){var i=ui.hlog;if(i===null||i===undefined)return '';var a=(LOG0+i)*60;if(hrsIn.indexOf(a)<0)return '';var cur=L.charAt(i);
     return '<li class="hstrip" id="hstrip" data-i="'+i+'"><div class="hsh"><span class="lbl">'+m2h(a)+'–'+m2h(a+60)+' · LOG AS</span></div><div class="hbr" role="group" aria-label="Category for '+m2h(a)+'">'+allCats().map(function(c){return '<button type="button" id="hb-'+(c.cust?'u':'')+c.k+'" class="bc'+(c.cust?' cu':'')+'" data-act="hbrush" data-i="'+i+'" data-v="'+c.k+'" aria-pressed="'+(cur===c.k)+'"><span class="sw '+c.grp+'"></span>'+esc(c.n)+'</button>';}).join('')+'<button type="button" id="hb-clear" class="bc" data-act="hbrush" data-i="'+i+'" data-v="."'+(cur==='.'?' disabled':'')+'>CLEAR</button></div></li>';}
   var rows=rowsA.map(function(r){var ch=r.hrs.map(chip).join('');
-    if(r.free)return '<li class="hrw free'+(r.past?' past':'')+'"><div class="hfr"><span class="hfl">'+m2h(r.a)+'–'+m2h(r.b)+' · FREE</span>'+(ch?'<span class="hlogs">'+ch+'</span>':'')+r.add+'</div></li>'+strip(r.hrs);
-    return '<li class="hrw'+(r.isNow?' now':'')+(r.past?' past':'')+'"><div class="hh">'+m2h(r.a)+(r.isNow?'<b>NOW</b>':'')+(ch?'<span class="hlogs">'+ch+'</span>':'')+'</div><div class="hb">'+r.cards+r.add+'</div></li>'+strip(r.hrs);}).join('');
+    if(r.free)return '<li class="hrw free'+(r.past?' past':'')+'" data-h="'+r.a+'" data-h2="'+r.b+'"><div class="hfr"><span class="hfl">'+m2h(r.a)+'–'+m2h(r.b)+' · FREE</span>'+(ch?'<span class="hlogs">'+ch+'</span>':'')+r.add+'</div></li>'+strip(r.hrs);
+    return '<li class="hrw'+(r.isNow?' now':'')+(r.past?' past':'')+'" data-h="'+r.a+'"><div class="hh">'+m2h(r.a)+(r.isNow?'<b>NOW</b>':'')+(ch?'<span class="hlogs">'+ch+'</span>':'')+'</div><div class="hb">'+r.cards+r.add+'</div></li>'+strip(r.hrs);}).join('');
   var anyt=its.filter(function(it){return tS(it)===null||lateL[it.id];});
   if(anyt.length)h+='<div class="hgrp"><div class="lbl">Anytime</div><ul class="rows">'+anyt.map(function(it){return rowHTML(it,'a',null);}).join('')+'</ul></div>';
   if(pastN)h+='<button type="button" class="hearly'+(pastUn?' c':'')+'" id="hearly" data-act="hpast" aria-expanded="false">EARLIER · '+pastN+'H'+(pastUn?' · '+pastUn+'H NOT LOGGED':'')+'<span aria-hidden="true"> ›</span></button>';
@@ -1938,15 +1970,16 @@ function rDetail(){
   h+='<h3 id="d-title"'+(it.done?' class="done"':'')+'><span class="stk">'+esc(it.t)+'</span></h3><div class="dm">'+(it.kind==='event'?'EVENT · ':'')+(D.k==='today'?(it.s?esc(it.s)+'–'+m2h(itemEnd(it)):esc(it.lbl||'ANYTIME')):'THIS WEEK')+(it.loc?' · '+esc(it.loc):'')+(it.g?' · '+esc(call(it.g)):'')+' '+tagFor(st,false)+'</div>';
   if(it.d)h+='<p class="dd">'+esc(it.d)+'</p>';
   if(ui.confirm){return h+'<div class="confirm"><div>Drop this for good?</div><div class="dacts"><button type="button" class="btn" data-act="dropno">KEEP IT</button><button type="button" class="btn warn" data-act="dropok">DROP IT</button></div></div></div>';}
-  h+='<div class="dacts">'+(it.kind==='event'?'':'<button type="button" class="btn fill" data-act="dtoggle">'+(it.done?'NOT DONE':'DONE')+'</button>');
-  if(D.k==='today'&&!it.done&&it.kind!=='event'){h+=(mins(it.s)!==null?'<button type="button" class="btn" data-act="donext">START NOW</button>':'<button type="button" class="btn" data-act="donext">DO NEXT</button>')+'<button type="button" class="btn" data-act="tomorrow">TOMORROW</button>';}
+  h+='<div class="dacts"><button type="button" class="btn fill" data-act="dtoggle">'+(it.done?'NOT DONE':'DONE')+'</button>';
+  if(D.k==='today'&&!it.done){if(it.kind!=='event')h+=(mins(it.s)!==null?'<button type="button" class="btn" data-act="donext">START NOW</button>':'<button type="button" class="btn" data-act="donext">DO NEXT</button>');h+='<button type="button" class="btn" id="d-tmrw" data-act="tomorrow">TOMORROW</button>';}
   h+='<button type="button" class="btn ghost" data-act="drop">DROP</button></div>';
-  if(D.k==='today'&&!it.done)h+='<form id="time-f" class="dtime"><label>START<input type="time" id="dt-s" value="'+esc(it.s)+'"></label><label>END<input type="time" id="dt-e" value="'+esc(it.e)+'"></label><button type="submit" class="btn sm">SET TIME</button>'+(it.s?'<button type="button" class="btn sm ghost" data-act="untime">NO TIME</button>':'')+'</form>';
+  /* Move: the same day sets the time; a later day sends the item to the plan for that day (mv_out), a calId item also on Google Calendar */
+  if(D.k==='today'&&!it.done)h+='<form id="time-f" class="dtime"><label>DAY<input type="date" id="dt-d" value="'+ops().date+'" min="'+ops().date+'"></label><label>START<input type="time" id="dt-s" value="'+esc(it.s)+'"></label><label>END<input type="time" id="dt-e" value="'+esc(it.e)+'"></label><button type="submit" class="btn sm" id="dt-go">Move</button>'+(it.s?'<button type="button" class="btn sm ghost" data-act="untime">NO TIME</button>':'')+'</form>';
   return h+'</div>';
 }
-function rToast(){return ui.toast?'<div class="toast" role="status"><span>'+esc(ui.toast.msg)+'</span>'+(ui.toast.undo?'<button type="button" class="btn sm" data-act="undo">UNDO</button>':'')+'</div>':'';}
+function rToast(){return ui.toast?'<div class="toast" role="status"><span>'+esc(ui.toast.msg)+(ui.toast.note?' <em class="tn">'+esc(ui.toast.note)+'</em>':'')+'</span>'+(ui.toast.undo?'<button type="button" class="btn sm" data-act="undo">UNDO</button>':'')+'</div>':'';}
 var toastT=null;
-function toast(msg,undo){ui.toast={msg:msg,undo:undo||null};clearTimeout(toastT);toastT=setTimeout(function(){ui.toast=null;var t=document.querySelector('.toast');if(t)t.parentNode.removeChild(t);},6000);}
+function toast(msg,undo,note){ui.toast={msg:msg,undo:undo||null,note:note||''};clearTimeout(toastT);toastT=setTimeout(function(){ui.toast=null;var t=document.querySelector('.toast');if(t)t.parentNode.removeChild(t);},6000);}
 function snapshot(){return JSON.stringify(S);}
 /* one undoable change: snapshot, apply, close the detail, toast with UNDO, render, save. With delay (ms) the close, toast and render
    wait so a completion animation on the live DOM can play first; after() runs once that is done (tk_act uses it to keep the sheet). */
@@ -2017,7 +2050,7 @@ function tick(){
     else if(bu){chime();safeRender(true);}}
   var m=n.getHours()*60+n.getMinutes();if(m!==lastMin){if(lastMin!==-1){wc_live();safeRender();}lastMin=m;}
 }
-function safeRender(force){var ae=document.activeElement;if(!force&&(ui.ev||ui.info||ui.detail||ui.sheet||ui.editProp||ui.pick||ui.breathe||(ae&&((ae.tagName==='INPUT'&&ae.type!=='checkbox')||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT'))))return;render();}
+function safeRender(force){if(DG.on||DG.t){DG.dirty=true;return;}var ae=document.activeElement;if(!force&&(ui.ev||ui.info||ui.detail||ui.sheet||ui.editProp||ui.pick||ui.breathe||(ae&&((ae.tagName==='INPUT'&&ae.type!=='checkbox')||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT'))))return;render();}
 function chime(){try{if(!audio)return;var t=audio.currentTime;[0,0.35,0.7].forEach(function(dt){var o=audio.createOscillator(),g=audio.createGain();o.frequency.value=880;g.gain.setValueAtTime(0.0001,t+dt);g.gain.exponentialRampToValueAtTime(0.25,t+dt+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+dt+0.25);o.connect(g);g.connect(audio.destination);o.start(t+dt);o.stop(t+dt+0.3);});}catch(e){}}
 
 /* ---------- saving ---------- */
@@ -2104,6 +2137,7 @@ function list(k){return k==='today'?S.today.items:S.week.items;}
    re-render follows once that has played, so the card never vanishes under the finger */
 app.addEventListener('change',function(e){
   var el=e.target;if(!el.matches('input[type=checkbox]'))return;var on=el.checked;
+  if(el.dataset.act==='evtick'){ev_setDone(el.dataset.ds,el.dataset.id,on);doneFx(el,on);queueSave();renderSoon(600);return;}
   list(el.dataset.k).forEach(function(it){if(it.id===el.dataset.id){it.done=on;tk_onItemDone(it);}});
   doneFx(el,on);queueSave();renderSoon(600);
 });
@@ -2173,7 +2207,9 @@ app.addEventListener('click',function(e){
     if(a==='dtoggle'){var on9=!it.done;titleFx(on9);tagFx(document.querySelector('.dsheet .dm'),on9);act(on9?'Marked done':'Marked not done',function(){it.done=on9;tk_onItemDone(it);},fxDelay(600));return;}
     var L=D.k==='today'?S.today.items:S.week.items;
     if(a==='dropok'){act('Dropped',function(){L.splice(L.indexOf(it),1);S.dropped.push({t:it.t,d:it.d,g:it.g,date:ops().date});});return;}
-    if(a==='tomorrow'){act('Moved to tomorrow',function(){L.splice(L.indexOf(it),1);S.bumped.push({t:it.t,d:it.d,g:it.g,date:ops().date});});return;}
+    if(a==='tomorrow'){if(D.k==='today'&&mins(it.s)!==null){var tm=wc_addD(ops().date,1),ln=itemMin(it),s0=it.s,e0=m2h(itemEnd(it)),cid=it.calId||'';
+        act('Moved to '+dayLbl(tm)+' '+s0,function(){mv_out(it,tm,s0,e0,ln);});if(cid)mv_itemCal(cid,tm+'T'+s0,wc_addM(tm+'T'+s0,ln));return;}
+      act('Moved to tomorrow',function(){L.splice(L.indexOf(it),1);S.bumped.push({t:it.t,d:it.d,g:it.g,date:ops().date});});return;}
     if(a==='untime'){act('Time cleared',function(){it.s='';it.e='';});return;}
     if(a==='donext'){act(mins(it.s)!==null?'Starts now':'Moved to the top',function(){
       if(mins(it.s)!==null){var len=itemEnd(it)-tS(it),n=Math.floor(nowMin()/5)*5;it.s=m2h(n);it.e=m2h(n+len);}
@@ -2209,10 +2245,16 @@ app.addEventListener('submit',function(e){
     if(!(mv>=5&&mv<=480))mv=p.m||30;p.date=dv;p.m=mv;p.s=mins(sv)!==null?sv:'';p.e=p.s?m2h(Math.min(1439,mins(p.s)+mv)):'';ui.editProp=null;var msg;act('x',function(){msg=acceptProp(p);});ui.toast.msg=msg;render();return;}
   if(f.id==='pmove-f'&&ui.detail){var q=findItem('planned',ui.detail.id);if(!q)return;var d2=document.getElementById('pm-d').value,s2=document.getElementById('pm-s').value;if(!okDate(d2)||pd(d2)<ops().day){toast('Pick today or a later day');render();return;}
     act('Moved to '+dayLbl(d2)+(s2?' '+s2:''),function(){var len=q.s?itemEnd(q)-mins(q.s):(q.m||30);q.date=d2;q.s=mins(s2)!==null?s2:'';q.e=q.s?m2h(Math.min(1439,mins(q.s)+len)):'';if(!q.s)q.m=len;if(d2===ops().date&&fresh()){S.planned=S.planned.filter(function(x){return x!==q;});delete q.date;S.today.items.push(q);}});return;}
-  if(f.id==='time-f'&&ui.detail){var it=findItem(ui.detail.k,ui.detail.id);if(!it)return;var sv=document.getElementById('dt-s').value,ev=document.getElementById('dt-e').value;
-    if(mins(sv)===null){toast('Pick a start time first');render();return;}
-    if(ev&&mins(ev)!==null){var span=(mins(ev)-mins(sv)+1440)%1440;if(span===0||span>720){toast('End must be after start, within 12 hours');render();return;}}
-    act('Time set to '+sv+(ev?'–'+ev:''),function(){it.s=sv;it.e=mins(ev)!==null?ev:'';});return;}
+  if(f.id==='time-f'&&ui.detail){var it=findItem(ui.detail.k,ui.detail.id);if(!it)return;var dd=document.getElementById('dt-d'),dv=dd?dd.value:'',sv=document.getElementById('dt-s').value,ev=document.getElementById('dt-e').value,o7=ops();
+    if(!dv)dv=o7.date;if(!okDate(dv)||pd(dv)<o7.day){toast('Pick today or a later day');render();return;}
+    var later=dv!==o7.date;
+    if(mins(sv)===null&&!later){toast('Pick a start time first');render();return;}
+    if(ev&&mins(ev)!==null&&mins(sv)!==null){var span=(mins(ev)-mins(sv)+1440)%1440;if(span===0||span>720){toast('End must be after start, within 12 hours');render();return;}}
+    if(!later){act('Time set to '+sv+(ev?'–'+ev:''),function(){it.s=sv;it.e=mins(ev)!==null?ev:'';});return;}
+    var s7=mins(sv)!==null?sv:'',ln7=s7&&mins(ev)!==null?(mins(ev)-mins(sv)+1440)%1440:itemMin(it),e7=s7?(mins(ev)!==null?ev:m2h(mins(s7)+ln7)):'',cid7=it.calId||'';
+    act('Moved to '+dayLbl(dv)+(s7?' '+s7:''),function(){mv_out(it,dv,s7,e7,ln7);});
+    if(cid7&&s7)mv_itemCal(cid7,dv+'T'+s7,wc_addM(dv+'T'+s7,ln7));return;}
+  if(f.id==='wc-mv-f'&&WC.ev){var ev9=wc_find(WC.ev.id);if(!ev9)return;mv_sheetGo(ev9,document.getElementById('wc-mv-d').value,document.getElementById('wc-mv-s').value);return;}
   if(f.id==='ask-f'){var t=(document.getElementById('ask').value||'').trim();if(t)ask(t);return;}
   if(f.id==='sd-f'){var o=ops();S.debrief={date:o.date,at:hhmm(o.n),energy:ui.energy||null,note:(clearDraft('sd-note'),str((document.getElementById('sd-note').value||'').trim(),300)),open:fresh()?S.today.items.filter(function(i){return !i.done;}).map(function(i){return i.t;}):[]};upsertHistory();ui.energy=0;render();queueSave();return;}
 });
@@ -2676,7 +2718,7 @@ function tk_submit(f,e){
    its prep block, and a moved calendar event). */
 var WC_SRV='Google Calendar',WC_TOOL='list_events',WC_PX=0.8,WC_N=7,WC_MINH=20;
 var WC_INFO={weekcal:'Your next 7 days in one place: Google Calendar events in grey, scheduled tasks in white, suggested slots waiting for your OK with a dashed cyan edge, deadlines on top. CLASH means a task overlaps a busy event. SYNCED is the morning snapshot; LIVE means the page just read Google Calendar itself. Tap it to refresh.'};
-var WC={live:null,st:'idle',code:'',mcp:null,unsub:null,key:'',started:false,gen:0,fell:false,ev:null,opener:null,pid:'',pw:0,pn:'',pday:''};
+var WC={live:null,st:'idle',code:'',mcp:null,unsub:null,key:'',started:false,gen:0,fell:false,ev:null,opener:null,pid:'',pw:0,pn:'',pday:'',mvBusy:false,mvNote:''};
 var WC_STOP={with:1,from:1,into:1,your:1,this:1,that:1,have:1,will:1,what:1,when:1,then:1,them:1,they:1,about:1,after:1,before:1};
 
 /* ---- view mode ---- */
@@ -2777,7 +2819,7 @@ function wc_build(o,f,src){
   for(var k=0;k<WC_N;k++)map[wc_addD(o.date,k)]={T:[],A:[]};
   src.events.forEach(function(ev){
     if(ev.allDay){for(var d=ev.start,c=0;d<ev.end&&c<40;d=wc_addD(d,1),c++)if(map[d])map[d].A.push({k:'ev',id:ev.id,t:ev.t,loc:ev.loc,free:ev.free,ad:true});return;}
-    wc_segs(ev).forEach(function(g){if(map[g.ds])map[g.ds].T.push({k:'ev',id:ev.id,t:ev.t,loc:ev.loc,free:ev.free,s:g.s,e:g.e});});});
+    wc_segs(ev).forEach(function(g){if(map[g.ds])map[g.ds].T.push({k:'ev',id:ev.id,t:ev.t,loc:ev.loc,free:ev.free,s:g.s,e:g.e,done:!ev.free&&ev_done(g.ds,ev.id)});});});
   Object.keys(map).sort().forEach(function(ds,k){
     var M=map[ds],T=M.T,A=M.A,dd=pd(ds),dues=[];
     if(f&&ds===S.today.date)S.today.items.forEach(function(it){var s=tS(it),st=itemState(it);
@@ -2795,7 +2837,7 @@ function wc_build(o,f,src){
     A=dls.concat(A);
     var blk=T.filter(function(x){return x.k==='ev'&&!x.free;});
     T.forEach(function(x){
-      if(k===0){x.past=x.e<=n;x.on=!x.done&&x.s<=n&&n<x.e;}
+      if(k===0){x.past=x.e<=n&&!x.done;x.on=!x.done&&x.s<=n&&n<x.e;}
       if(x.k!=='ev'&&!x.done)x.clash=blk.some(function(b){return x.s<b.e&&x.e>b.s;});});
     T.sort(function(a,b){return (a.s-b.s)||((a.k==='ev'?0:1)-(b.k==='ev'?0:1))||(b.e-a.e);});
     var srcCov=src.kind==='live'||(src.kind==='snap'&&(!src.from||(ds>=src.from&&ds<src.to)));
@@ -2809,7 +2851,7 @@ function wc_sid(s){return String(s).replace(/[^A-Za-z0-9_-]/g,'_').slice(0,60);}
 function wc_eid(p,x,D){return p+'-'+({ev:'e',planned:'p',proposal:'q',today:'t'}[x.k]||'x')+'-'+wc_sid(x.id)+(x.k==='ev'?'-'+D.ds.slice(5).replace('-',''):'');}
 function wc_attr(x){return x.k==='ev'?'data-act="wc-ev" data-id="'+esc(x.id)+'"':'data-act="open" data-k="'+x.k+'" data-id="'+esc(x.id)+'"';}
 function wc_kc(x){
-  if(x.k==='ev')return 'ev'+(x.free?' free':'')+(x.on?' on':'')+(x.past?' past':'');
+  if(x.k==='ev')return 'ev'+(x.free?' free':'')+(x.done?' done':'')+(x.on?' on':'')+(x.past?' past':'');
   var c=x.k==='proposal'?'prop':'task';
   if(x.k==='today')c+=' tdy'+(x.done?' done':x.st==='late'?' late':'');
   return c+(x.on?' on':'')+(x.past&&!x.done?' past':'');
@@ -2817,6 +2859,7 @@ function wc_kc(x){
 function wc_kind(x){return x.k==='ev'?'calendar event':x.k==='proposal'?'suggested task':x.k==='today'?'today’s plan':x.k==='planned'?'scheduled task':'date';}
 function wc_tags(x){var t='';
   if(x.k==='ev'&&x.free)t+='<span class="wc-tag">FREE</span>';
+  if(x.k==='ev'&&x.done)t+='<span class="wc-tag g">DONE</span>';
   if(x.k==='proposal')t+='<span class="wc-tag cy">SUGGESTED</span>';
   if(x.k==='today'){if(x.done)t+='<span class="wc-tag g">DONE</span>';else if(x.st==='active')t+='<span class="wc-tag m">ACTIVE</span>';else if(x.st==='late')t+='<span class="wc-tag c">LATE</span>';}
   if(x.clash)t+='<span class="wc-tag c">CLASH</span>';
@@ -2837,7 +2880,7 @@ function wc_agenda(days,o){
     D.T.forEach(function(x){if(!put&&x.s>n){rows+=wc_now(n);put=true;}rows+=wc_arow(x,D);});
     if(!D.A.length&&!D.T.length)rows+='<li><div class="wc-r none">Nothing scheduled</div></li>';
     if(!put)rows+=wc_now(n);
-    h+='<div class="wc-day'+(td?' td':'')+'"><h3 class="wc-dh"><b>'+(td?'TODAY':D.wd)+'</b><span>'+(td?D.wd+' ':'')+D.md+'</span>'+(D.cov?'':'<em>NO CALENDAR</em>')+'</h3><ul class="wc-rs">'+rows+'</ul></div>';
+    h+='<div class="wc-day'+(td?' td':'')+'" data-ds="'+D.ds+'"><h3 class="wc-dh" data-ds="'+D.ds+'"><b>'+(td?'TODAY':D.wd)+'</b><span>'+(td?D.wd+' ':'')+D.md+'</span>'+(D.cov?'':'<em>NO CALENDAR</em>')+'</h3><ul class="wc-rs">'+rows+'</ul></div>';
   });
   return h+'</div>';
 }
@@ -2866,11 +2909,11 @@ function wc_grid(days,o){
   days.forEach(function(D){h+='<div class="wc-gd'+(D.k===0?' td':'')+'"><b>'+(D.k===0?'TODAY':D.wd)+'</b><span>'+(D.k===0?D.wd+' ':'')+D.md+'</span>'+(D.cov?'':'<em>NO CALENDAR</em>')+'</div>';});
   h+='</div>';
   if(anyA){h+='<div class="wc-gr wc-ga"><div class="wc-axl">ALL DAY</div>';days.forEach(function(D){h+='<div class="wc-gc'+(D.k===0?' td':'')+'">'+D.A.map(function(x){return wc_chip(x,D);}).join('')+'</div>';});h+='</div>';}
-  h+='<div class="wc-gr wc-gb" style="height:'+HT+'px;--wc-hh:'+hh+'px"><div class="wc-ax" aria-hidden="true">';
+  h+='<div class="wc-gr wc-gb" data-h0="'+(H0*60)+'" style="height:'+HT+'px;--wc-hh:'+hh+'px"><div class="wc-ax" aria-hidden="true">';
   for(var hr=H0;hr<=H1;hr++)h+='<span style="top:'+Math.round((hr-H0)*hh)+'px">'+p2(hr%24)+':00</span>';
   h+='</div>';
   days.forEach(function(D){
-    h+='<div class="wc-col'+(D.k===0?' td':'')+(D.cov?'':' nc')+'">';
+    h+='<div class="wc-col'+(D.k===0?' td':'')+(D.cov?'':' nc')+'" data-ds="'+D.ds+'">';
     wc_lanes(D.T).forEach(function(x){
       var s=Math.max(x.s,H0*60),e=Math.min(x.e,H1*60),top=Math.round((s-H0*60)*WC_PX),ht=Math.max(WC_MINH,Math.round((e-s)*WC_PX)-2);
       /* sm: too short for two lines -> one line; nr: 3+ lanes -> no time line, title wraps by word */
@@ -2900,6 +2943,10 @@ function wc_sheet(){
   h+='<h3 id="wc-ev-t">'+esc(ev.t)+'</h3><div class="wc-ew">'+esc(when)+'</div>';
   if(ev.loc)h+='<p class="wc-ed"><b>WHERE</b> '+esc(ev.loc)+'</p>';
   if(ev.free)h+='<p class="wc-ed"><b>FREE</b> Marked free in Google Calendar, so planning can use this time.</p>';
+  if(!ev.allDay){var eds=wc_wd(ev.start,false).ds,dn=!ev.free&&ev_done(eds,ev.id),bz=WC.mvBusy?' disabled':'';
+    h+='<div class="dacts">'+(ev.free?'':'<button type="button" class="btn'+(dn?' fill':'')+'" id="wc-ev-done" data-act="evtick" data-id="'+esc(ev.id)+'" data-ds="'+eds+'" aria-pressed="'+dn+'">'+(dn?'Attended':'Not attended')+'</button>')+'<button type="button" class="btn" id="wc-mv-tmrw" data-act="wc-mv-tmrw" data-id="'+esc(ev.id)+'"'+bz+'>Postpone to tomorrow</button></div>';
+    h+='<form id="wc-mv-f" class="dtime"><label>DAY<input type="date" id="wc-mv-d" value="'+ev.start.slice(0,10)+'" min="'+ops().date+'"'+bz+'></label><label>START<input type="time" id="wc-mv-s" value="'+ev.start.slice(11,16)+'"'+bz+'></label><button type="submit" class="btn sm" id="wc-mv-go"'+bz+'>'+(WC.mvBusy?'Moving…':'Move')+'</button></form>';
+    h+='<div class="ev-n" id="wc-mv-n" role="status"'+(WC.mvNote?'':' hidden')+'>'+esc(WC.mvNote||'')+'</div>';}
   return h+'</div>';
 }
 
@@ -2908,8 +2955,11 @@ function wc_close(){var op=WC.opener;WC.ev=null;WC.opener=null;render();if(op){v
 function wc_click(a,el,e){
   if(a==='wc-mode'){var v=el.dataset.v==='cal'?'cal':'list';ui.weekMode=v;LS.set('weekMode',v);if(v==='cal')wc_live();render();
     var t=[].filter.call(document.querySelectorAll('[data-act="wc-mode"][data-v="'+v+'"]'),function(x){return x.offsetParent;})[0];if(t)t.focus();return true;}
-  if(a==='wc-ev'){WC.ev={id:el.dataset.id};WC.opener=el.id||null;render();var c=document.getElementById('wc-evx');if(c)c.focus();return true;}
-  if(a==='wc-evx'){wc_close();return true;}
+  if(a==='wc-ev'){WC.ev={id:el.dataset.id};WC.opener=el.id||null;WC.mvNote='';WC.mvBusy=false;render();var c=document.getElementById('wc-evx');if(c)c.focus();return true;}
+  if(a==='wc-evx'){if(WC.mvBusy)return true;wc_close();return true;}
+  if(a==='evtick'){if(el.tagName!=='BUTTON')return true;if(parseErr){queueSave();return true;}var on=el.getAttribute('aria-pressed')!=='true';ev_setDone(el.dataset.ds,el.dataset.id,on);
+    el.setAttribute('aria-pressed',on);el.textContent=on?'Attended':'Not attended';el.classList.toggle('fill',on);queueSave();renderSoon(300);return true;}
+  if(a==='wc-mv-tmrw'){var ev8=wc_find(el.dataset.id);if(!ev8||ev8.allDay)return true;mv_sheetGo(ev8,wc_addD(ev8.start.slice(0,10),1),ev8.start.slice(11,16));return true;}
   if(a==='wc-sync'){wc_tap();return true;}
   if(a==='wc-pday'){if(parseErr){queueSave();return true;}var p=findItem('proposal',el.dataset.id),ds=wc_day(el.dataset.v);if(p&&ds)wc_pMove(p,ds);return true;}
   if(a==='wc-pw'){WC.pw=el.dataset.v==='1'?1:0;WC.pn='';WC.pday='';render();var w=document.getElementById('wc-pw');if(w)w.focus();return true;}
@@ -3214,6 +3264,161 @@ function ev_write(E,prId,moves,done){var fail=null,ids={},m=null;
     moves.forEach(function(mv){p=p.then(function(){return call('update_event',mv);});});
     return p;}).then(null,function(err){fail=err&&typeof err==='object'?err:{code:'tool_error'};}).then(function(){done(fail,ids);});}
 
+/* ---------- MOVE and DRAG (prefix mv_ for the shared move helpers, dg_ for pointer dragging) ----------
+   mv_: one place that moves a plan thing (today item, planned item, proposal) or a Google Calendar event to a day and start,
+   keeping its length. Items move inside act() (undo in the toast); a calendar event, or an item linked by calId, also goes
+   through update_event (mv_calWrite) and the page's copies of the event (the live read and the S.cal snapshot) take the new
+   times at once (mv_calApply). Calendar moves are not undoable. The detail sheets (rDetail time-f, wc_sheet wc-mv-f) and the
+   drag module below all end here.
+   dg_: pointer events, ES5. Sources: hour plan cards (.hcard.it timed today items, .hcard.evi event items, .hcard.pl planned
+   items, .hcard.ev calendar events that are not free or all-day), week grid blocks (.wc-b of kind task/today/proposal/event)
+   and week agenda rows (.wc-r, phone). Touch or pen: a 300 ms press-and-hold lifts the card (a move of more than 8 px before
+   that cancels the hold, so scrolling keeps working); mouse: 6 px of movement. While lifted the element follows the pointer
+   through an inline transform and whatever sits under the pointer is classed .dropok or .dropno: an hour row .hrw (data-h,
+   free runs data-h..data-h2; the thing lands at the first free 15-minute start inside that hour, duration kept, overlap soft),
+   a grid column .wc-col (y -> minutes through WC_PX, snapped to 15, 06:00-23:30; a dashed .dg-slot shows the landing slot and
+   its time), or an agenda day .wc-day (its .wc-dh lights; same start that day, or the first free start after it). Nothing
+   renders until the drop; a drop outside any target, or on the same slot, snaps back. The click that follows a real drag is
+   swallowed so the detail sheet does not open. No drag starts from a checkbox, a log chip or a button that is not the card. */
+function mv_stamp(ds,a){return (a>=1440?wc_addD(ds,1):ds)+'T'+m2h(a);}
+function mv_len(ev){return Math.max(5,Math.round((wc_dt(ev.end)-wc_dt(ev.start))/60000));}
+function mv_when(ds,a){return (ds===ops().date?'':dayLbl(ds)+' ')+m2h(a);}
+/* 'Overlaps X 15:30–16:45' when [a,e) on ds hits anything on the plan or the calendar other than id, else '' */
+function mv_overlap(ds,a,e,id){var hit=null;tc_blocks(ds).some(function(b){if(b[4]===id||!(a<b[1]&&e>b[0]))return false;hit=b;return true;});
+  return hit?'Overlaps '+tc_clip(hit[2],30)+' '+m2h(hit[0])+'–'+m2h(hit[1]):'';}
+/* a today item leaves the plan for S.planned on ds (id, title, notes, goal, task, kind, calId and loc kept) */
+function mv_out(it,ds,s,e,len){S.today.items=S.today.items.filter(function(x){return x!==it;});var p={id:it.id,t:it.t,d:it.d||'',g:it.g||'',date:ds,s:s,e:e,m:len};if(it.task)p.task=it.task;ev_keep(p,it);S.planned.push(p);return p;}
+/* a planned item becomes a today item */
+function mv_in(p,s,e,len){S.planned=S.planned.filter(function(x){return x!==p;});var it={id:p.id,t:p.t,d:p.d||'',g:p.g||'',s:s,e:e,lbl:'',m:len,done:false};if(p.task)it.task=p.task;ev_keep(it,p);S.today.items.push(it);return it;}
+/* move a plan thing to ds at start a (tS-frame minutes) keeping len, inside one act(); note (overlap) rides on the toast */
+function mv_local(k,id,ds,a,len,note){var o=ops(),it=findItem(k,id);if(!it)return false;
+  var s=m2h(a),e=m2h(a+len),today=ds===o.date&&fresh(),msg='Moved to '+mv_when(ds,a);
+  act(msg,function(){
+    if(k==='today'){if(today){it.s=s;it.e=e;}else mv_out(it,ds,s,e,len);}
+    else if(k==='planned'&&today)mv_in(it,s,e,len);
+    else{it.date=ds;it.s=s;it.e=e;it.m=len;}});
+  if(note&&ui.toast){ui.toast.note=note;render();}
+  return true;}
+/* update_event on Google Calendar; start and end are 'YYYY-MM-DDTHH:MM'; done(err|null) always runs */
+function mv_calWrite(id,start,end,done){var inp={eventId:id,startTime:start+':00',endTime:end+':00'};
+  wc_mcp().then(function(m){if(!m||typeof m.callTool!=='function')throw {code:'none'};return m.callTool(WC_SRV,'update_event',inp);})
+    .then(function(){done(null);},function(err){done(err&&typeof err==='object'?err:{code:'tool_error'});});}
+/* the page's copies of a calendar event (the live read and the snapshot) take the new times, so the page shows the move at once */
+function mv_calApply(id,start,end){var n=0;[WC.live&&WC.live.events,S.cal&&S.cal.events].forEach(function(L){if(!Array.isArray(L))return;
+  L.forEach(function(ev){if(ev&&ev.id===id&&!ev.allDay){ev.start=start;ev.end=end;n++;}});});if(n)markDirty();return n;}
+/* an item linked by calId was moved on the plan: the calendar follows; the toast (and its undo) stays and says how it went */
+function mv_itemCal(id,start,end){var u=ui.toast?ui.toast.undo:null,m=ui.toast?ui.toast.msg:'Moved',nt=ui.toast?ui.toast.note:'';
+  mv_calWrite(id,start,end,function(err){if(err)toast(m+' on your plan, not on Google Calendar: '+wc_why(err.code),u,nt);else{mv_calApply(id,start,end);toast(m+' · on Google Calendar',u,nt);}render();queueSave();});}
+/* a pure calendar event moves: the page shows it at once, then update_event; a refusal puts it back */
+function mv_cal(id,ds,a,len,note){var ev=wc_find(id);if(!ev)return;var s0=ev.start,e0=ev.end,st=mv_stamp(ds,a),en=wc_addM(st,len);
+  mv_calApply(id,st,en);toast('Moving on Google Calendar…');render();
+  mv_calWrite(id,st,en,function(err){if(err){mv_calApply(id,s0,e0);toast('Not moved: '+wc_why(err.code));}else toast('Moved to '+mv_when(ds,a)+' on Google Calendar',null,note);render();queueSave();});}
+/* the calendar event sheet: Move form (day + start, length kept) and Postpone to tomorrow; the button says Moving… meanwhile */
+function mv_sheetGo(ev,ds,t){if(WC.mvBusy||!ev||ev.allDay)return;var o=ops();
+  if(!okDate(ds)||pd(ds)<o.day){toast('Pick today or a later day');render();return;}
+  if(mins(t)===null){toast('Pick a start time first');render();return;}
+  var len=mv_len(ev),start=ds+'T'+t,end=wc_addM(start,len);
+  if(start===ev.start){toast('Already at that time');render();return;}
+  WC.mvBusy=true;render();
+  mv_calWrite(ev.id,start,end,function(err){WC.mvBusy=false;
+    if(err){toast('Not moved: '+wc_why(err.code));render();return;}
+    mv_calApply(ev.id,start,end);WC.ev=null;WC.mvNote='';toast('Moved on Google Calendar');render();queueSave();});}
+/* the overlap note under the sheet's Move form follows the inputs without a re-render */
+function mv_sheetNote(){var ev=WC.ev?wc_find(WC.ev.id):null,d=document.getElementById('wc-mv-d'),s=document.getElementById('wc-mv-s');if(!ev||ev.allDay||!d||!s)return '';
+  var ds=wc_day(d.value||''),t=normT(s.value||'');if(!ds||!t)return '';var w=wc_wd(ds+'T'+t,false);return mv_overlap(w.ds,w.m,w.m+mv_len(ev),ev.id);}
+function mv_onInput(e){var id=e.target&&e.target.id;if(id!=='wc-mv-d'&&id!=='wc-mv-s')return;WC.mvNote=mv_sheetNote();var n=document.getElementById('wc-mv-n');if(n){n.textContent=WC.mvNote;n.hidden=!WC.mvNote;}}
+app.addEventListener('input',mv_onInput);app.addEventListener('change',mv_onInput);
+
+var DG={on:false,el:null,src:null,t:null,id:null,x0:0,y0:0,x:0,y:0,over:null,land:null,slot:null,moved:false,swallow:false,touch:false,dirty:false};
+/* what the pointer went down on, or null; src = {k, id, mode hp|grid|ag, el, ds, s, e, len, t, calId} */
+function dg_src(el){var hc=el.closest('.hcard'),b=el.closest('.wc-b'),r=el.closest('.wc-r'),src=null;
+  if(hc){if(!hc.closest('.p.plan')||hc.classList.contains('free'))return null;var bt=hc.querySelector('.hct');if(!bt)return null;
+    if(bt.dataset.act==='wc-ev')src={k:'ev',id:bt.dataset.id,mode:'hp',el:hc};
+    else if(bt.dataset.act==='open')src={k:bt.dataset.k,id:bt.dataset.id,mode:'hp',el:hc};}
+  else if(b){if(b.classList.contains('free')||b.classList.contains('dl'))return null;src={k:b.dataset.act==='wc-ev'?'ev':b.dataset.k,id:b.dataset.id,mode:'grid',el:b};}
+  else if(r&&r.tagName==='BUTTON'){if(r.classList.contains('free')||r.classList.contains('dl'))return null;src={k:r.dataset.act==='wc-ev'?'ev':r.dataset.k,id:r.dataset.id,mode:'ag',el:r};}
+  if(!src||!src.id||['today','planned','proposal','ev'].indexOf(src.k)<0)return null;
+  return dg_fill(src)?src:null;}
+/* day, start, end (tS-frame minutes), length and calId from the state */
+function dg_fill(src){
+  if(src.k==='ev'){var ev=wc_find(src.id);if(!ev||ev.allDay||ev.free)return false;var w=wc_wd(ev.start,false);src.ds=w.ds;src.s=w.m;src.len=mv_len(ev);src.e=w.m+src.len;src.t=ev.t;src.calId='';return true;}
+  var it=findItem(src.k,src.id);if(!it)return false;var s=tS(it);if(s===null)return false;
+  src.ds=src.k==='today'?S.today.date:it.date;src.s=s;src.e=src.k==='today'?itemEnd(it):wc_iEnd(it,s);src.len=Math.max(5,src.e-src.s);src.t=it.t;src.calId=it.calId||'';return true;}
+function dg_down(e){
+  if(DG.on||DG.t||!e.isPrimary||(e.pointerType==='mouse'&&e.button!==0)||parseErr)return;
+  var t=e.target;if(!t||!t.closest||t.closest('.cb,.hlog,.hopen,.hstrip,input,select,textarea'))return;
+  var bb=t.closest('button');if(bb&&!bb.matches('.hct,.wc-b,.wc-r'))return;
+  var src=dg_src(t);if(!src)return;
+  DG.src=src;DG.el=src.el;DG.id=e.pointerId;DG.x0=DG.x=e.clientX;DG.y0=DG.y=e.clientY;DG.moved=false;DG.touch=e.pointerType!=='mouse';
+  document.addEventListener('pointermove',dg_move);document.addEventListener('pointerup',dg_up);document.addEventListener('pointercancel',dg_cancel);
+  if(DG.touch)DG.t=setTimeout(function(){DG.t=null;dg_lift();},300);}
+function dg_lift(){if(DG.on||!DG.el||!DG.el.isConnected){dg_end();return;}DG.on=true;
+  try{DG.el.setPointerCapture(DG.id);}catch(x){}
+  DG.el.classList.add('dragging');document.documentElement.classList.add('dg-on');
+  document.addEventListener('touchmove',dg_block,{passive:false});document.addEventListener('contextmenu',dg_block);
+  dg_target();}
+function dg_block(e){if(DG.on&&e.cancelable)e.preventDefault();}
+function dg_move(e){if(e.pointerId!==DG.id)return;DG.x=e.clientX;DG.y=e.clientY;var dx=DG.x-DG.x0,dy=DG.y-DG.y0,d=Math.sqrt(dx*dx+dy*dy);
+  if(!DG.on){if(DG.touch){if(DG.t&&d>8)dg_end();}else if(d>6)dg_lift();return;}
+  if(!DG.el.isConnected){dg_end();return;}
+  if(d>6)DG.moved=true;
+  DG.el.style.transform='translate('+Math.round(dx)+'px,'+Math.round(dy)+'px)';
+  dg_target();}
+/* the target under the pointer and where the thing would land there */
+function dg_target(){var el=document.elementFromPoint(DG.x,DG.y),src=DG.src,land=null,over=null;
+  if(el&&el.closest){
+    if(src.mode==='hp'){var row=el.closest('.hrw');if(row&&row.closest('.p.plan')){over=row;land=dg_hpLand(row);}}
+    else if(src.mode==='grid'){var col=el.closest('.wc-col');if(col){over=col;land=dg_gridLand(col);}}
+    else{var day=el.closest('.wc-day');if(day){over=day.querySelector('.wc-dh');land=dg_agLand(day);}}}
+  if(over!==DG.over){dg_clear();DG.over=over;}
+  if(over){over.classList.toggle('dropok',!!(land&&land.ok));over.classList.toggle('dropno',!(land&&land.ok));}
+  DG.land=land;if(src.mode==='grid')dg_slot(over,land);}
+function dg_clear(){if(DG.over){DG.over.classList.remove('dropok');DG.over.classList.remove('dropno');}if(DG.slot&&DG.slot.parentNode)DG.slot.parentNode.removeChild(DG.slot);DG.slot=null;DG.over=null;}
+/* hour row: the first free 15-minute start inside the hour under the pointer (a free run picks the hour by y), length kept */
+function dg_hpLand(row){var src=DG.src,a=+row.dataset.h,b=row.dataset.h2?+row.dataset.h2:a+60;if(!(a>=0))return null;
+  if(b-a>60){var r=row.getBoundingClientRect(),f=Math.max(0,Math.min(.999,(DG.y-r.top)/Math.max(1,r.height)));a=a+Math.floor(f*(b-a)/60)*60;}
+  var ds=ops().date,bl=hpBlocks(ds).filter(function(x){return !((x.k==='ev')===(src.k==='ev')&&(x.k==='ev'?x.ev.id:x.it.id)===src.id);});
+  for(var t=a;t<a+60;t+=15)if(!hpBusy(bl,t))return {ds:ds,s:t,hour:a,ok:true};
+  return {ds:ds,s:null,hour:a,ok:false};}
+/* grid column: the lifted block's top edge -> minutes, snapped to 15 and kept inside 06:00-23:30 */
+function dg_gridLand(col){var ds=wc_day(col.dataset.ds||''),gb=col.closest('.wc-gb');if(!ds||!gb)return null;var h0=+gb.dataset.h0||0;
+  var m=h0+(DG.el.getBoundingClientRect().top-gb.getBoundingClientRect().top)/WC_PX;m=Math.round(m/15)*15;m=Math.max(6*60,Math.min(23*60+30,m));
+  return {ds:ds,s:m,ok:true};}
+/* agenda day: the same start on that day, or the first free start after it; the day it is on already is not a target */
+function dg_agLand(day){var src=DG.src,ds=wc_day(day.dataset.ds||'');if(!ds||ds===src.ds)return null;
+  var bl=tc_blocks(ds).filter(function(b){return b[4]!==src.id;}),t=src.s,n=0,h;
+  function hit(t0){var x=null;bl.some(function(b){if(t0<b[1]&&t0+src.len>b[0]){x=b;return true;}return false;});return x;}
+  while((h=hit(t))&&n++<40)t=Math.ceil(h[1]/15)*15;
+  if(t+src.len>(24+DAYCUT)*60)t=src.s;
+  return {ds:ds,s:t,ok:true};}
+function dg_slot(col,land){if(!col||!land||!land.ok){if(DG.slot&&DG.slot.parentNode)DG.slot.parentNode.removeChild(DG.slot);DG.slot=null;return;}
+  var gb=col.closest('.wc-gb'),h0=+gb.dataset.h0||0,top=Math.round((land.s-h0)*WC_PX),ht=Math.max(WC_MINH,Math.round(DG.src.len*WC_PX)-2);
+  if(!DG.slot){DG.slot=document.createElement('div');DG.slot.className='dg-slot';DG.slot.appendChild(document.createElement('span'));}
+  if(DG.slot.parentNode!==col)col.appendChild(DG.slot);
+  DG.slot.style.top=top+'px';DG.slot.style.height=ht+'px';DG.slot.firstChild.textContent=tc_wd(land.ds)+' '+m2h(land.s)+'–'+m2h(land.s+DG.src.len);}
+function dg_cancel(e){if(e.pointerId!==DG.id)return;dg_end();}
+function dg_end(){clearTimeout(DG.t);DG.t=null;
+  document.removeEventListener('pointermove',dg_move);document.removeEventListener('pointerup',dg_up);document.removeEventListener('pointercancel',dg_cancel);
+  document.removeEventListener('touchmove',dg_block);document.removeEventListener('contextmenu',dg_block);
+  dg_clear();if(DG.el){DG.el.style.transform='';DG.el.classList.remove('dragging');if(DG.on)try{DG.el.releasePointerCapture(DG.id);}catch(x){}}
+  document.documentElement.classList.remove('dg-on');DG.on=false;DG.el=null;DG.src=null;DG.land=null;
+  if(DG.dirty){DG.dirty=false;render();}}
+function dg_up(e){if(e.pointerId!==DG.id)return;
+  if(!DG.on){dg_end();return;}
+  var land=DG.land,src=DG.src,moved=DG.moved;dg_end();
+  if(!moved)return;
+  DG.swallow=true;setTimeout(function(){DG.swallow=false;},400);
+  if(!land)return;
+  if(!land.ok){toast('No room at '+m2h(land.hour));render();return;}
+  if(land.ds===src.ds&&land.s===src.s)return;
+  dg_drop(src,land);}
+function dg_drop(src,land){var ds=land.ds,a=land.s,len=src.len,note=mv_overlap(ds,a,a+len,src.id).toLowerCase();
+  if(src.k==='ev'){mv_cal(src.id,ds,a,len,note);return;}
+  if(!mv_local(src.k,src.id,ds,a,len,note))return;
+  if(src.calId){var st=mv_stamp(ds,a);mv_itemCal(src.calId,st,wc_addM(st,len));}}
+app.addEventListener('pointerdown',dg_down);
+app.addEventListener('click',function(e){if(DG.swallow){e.stopPropagation();e.preventDefault();}},true);
+
 /* ---------- TELL CLAUDE (prefix tc_) ----------
    One box for everything Kevin tells Claude in plain words: log hours, add tasks (with a proposed slot
    around his calendar), replan today, capture a note, or just ask. Claude acts through page tools; every
@@ -3265,12 +3470,12 @@ function tc_code(v){if(typeof v!=='string')return '';var x0=v.trim();if(x0.lengt
   if(x.length===1&&catOf(x))return x;return mp[x]||'';}
 /* timed calendar events on a date as [startMin,endMin,title,'cal']; all-day and free events never block */
 function tc_pt(v){var m=/^(\d{4}-\d{2}-\d{2})(?:T(\d{2}):(\d{2}))?/.exec(typeof v==='string'?v:'');return m?{d:m[1],m:m[2]!=null?(+m[2])*60+(+m[3]):null}:null;}
-function tc_calOn(ds){var r=[];wc_eventsOn(ds).forEach(function(x){if(x.allDay||x.free||x.sm===null)return;r.push([x.sm,x.em,str(x.t,60)||'Busy','cal']);});return r;}
+function tc_calOn(ds){var r=[];wc_eventsOn(ds).forEach(function(x){if(x.allDay||x.free||x.sm===null)return;r.push([x.sm,x.em,str(x.t,60)||'Busy','cal',x.id]);});return r;}
 function tc_allDay(ds){return wc_eventsOn(ds).filter(function(x){return x.allDay;}).map(function(x){return str(x.t,60);});}
 function tc_blocks(ds){var b=tc_calOn(ds);
-  if(ds===S.today.date)S.today.items.forEach(function(it){var s=tS(it);if(s!==null&&!it.done)b.push([s,itemEnd(it),it.t,'today']);});
-  S.planned.forEach(function(p){var s=mins(p.s);if(p.date===ds&&s!==null)b.push([s,s+(p.m||itemMin(p)),p.t,'planned']);});
-  S.proposals.forEach(function(p){var s=mins(p.s);if(p.date===ds&&s!==null)b.push([s,s+(p.m||itemMin(p)),p.t,'proposed']);});
+  if(ds===S.today.date)S.today.items.forEach(function(it){var s=tS(it);if(s!==null&&!it.done)b.push([s,itemEnd(it),it.t,'today',it.id]);});
+  S.planned.forEach(function(p){var s=mins(p.s);if(p.date===ds&&s!==null)b.push([s,s+(p.m||itemMin(p)),p.t,'planned',p.id]);});
+  S.proposals.forEach(function(p){var s=mins(p.s);if(p.date===ds&&s!==null)b.push([s,s+(p.m||itemMin(p)),p.t,'proposed',p.id]);});
   return b.sort(function(x,y){return x[0]-y[0];});}
 function tc_bl(b){return m2h(b[0])+'-'+m2h(b[1])+' '+tc_clip(b[2],40)+(b[3]==='cal'?'':' ['+b[3]+']');}
 /* why a slot will not work, or '' */
@@ -3497,6 +3702,8 @@ function tc_prompt(tools){
   var its=f?S.today.items:[];
   L.push('TODAY\'S PLAN ('+(f?its.length+' items, '+loadTxt(o.date):'not loaded yet; the 07:15 run makes it')+'):'+(its.length?'':' none'));
   its.forEach(function(i){L.push(' '+i.id+' | '+(i.s?i.s+(i.e?'-'+i.e:''):(i.lbl||'anytime'))+' | '+i.t+(i.kind==='event'?' | event':'')+(i.g?' | '+i.g:'')+(i.done?' | DONE':'')+(i.task?' | task '+i.task:''));});
+  var cev=wc_eventsOn(o.date).filter(function(x){return !x.allDay&&!x.free&&x.sm!==null;});
+  L.push('CALENDAR TODAY: '+(cev.length?cev.map(function(x){return x.s+'-'+x.e+' '+tc_clip(x.t,40)+(ev_done(o.date,x.id)?' (attended)':'');}).join('; '):'none'));
   if(ui.ev)L.push('PENDING EVENT (on the page, waiting for his confirmation; not added yet): '+ui.ev.when+' '+ui.ev.t+(ui.ev.conflicts.length?' | conflicts: '+ui.ev.conflicts.map(function(c){return c.t+' '+c.s+'-'+c.e;}).join('; '):''));
   var Lg=logOf(o.date),parts=[];for(var j=0;j<LOGN;j++){if(slotWhen(o.date,j)==='future')break;parts.push(p2((LOG0+j)%24)+Lg.charAt(j));}
   L.push('TIME LOG TODAY (hour then code, . = blank): '+(parts.join(' ')||'(day not started)'));
