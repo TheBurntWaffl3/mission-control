@@ -26,9 +26,14 @@ live snapshot. Never commit a page with real state: this repository is public.
   colors used: white `--ink` values, green `--green` complete, magenta `--magenta` active,
   amber `--amber` caution, red `--red` warning, cyan `--cyan` pressable controls. Square corners,
   mono labels (`.lbl`), nothing under `.75rem`, hit areas at least 40px (44px on phone).
-  Explanations live behind the ⓘ button (`infoBtn(key)` + `rInfo`), never inline.
+  Explanations live behind the ⓘ button (`infoBtn(key)` + `rInfo`), never inline; only panels whose
+  behaviour is not obvious carry one (plan, proposed, stats, time log, tell, tasks, week).
 - Modules are prefixed: `tk_` tasks, `wc_` week calendar, `tc_` Tell Claude, `st_` stats,
   `hp_` hour plan, `wc_`/`rProps` proposals. Keep new CSS inside the matching CSS comment block.
+- TODAY holds the Flight plan, then Habits (`rHabits`, the 7-day trackers of goals with `g.habit`;
+  the Status board keeps only the lights). Past hours on the plan carry a log chip (`.hlog`,
+  `data-act="hlog"`) that opens an inline brush strip (`.hstrip`, `data-act="hbrush"`) writing into
+  `log[today]` through `logCommit`, the same path as the Time log on STATS.
 - Phone layout: tabs `today`, `week`, `stats`, `capcom`; the center tab opens Tell Claude.
   Desktop: three columns plus a `data-view` toggle (console, tasks, stats).
 - Test with Playwright with a fixed clock (`page.clock.install`). Chromium is preinstalled.

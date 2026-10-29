@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style id="css">
 /* Layout: flight-deck console. Computer: masthead (date + clocks), Tell Claude bar, three consoles
-   (flight plan | week + senior year | proposed, objectives, status board); STATS view = time log | stats.
+   (flight plan + habits | week + senior year | proposed, objectives, status board); STATS view = time log | stats.
    Sections are separated by one hairline each; only tappable things (cards, buttons, chips, inputs) carry a border.
    Phone: sticky clock bar, one console per tab, bottom tab bar with a center capture key.
    Color follows glass-cockpit convention: white = values, green = complete, magenta = active leg,
@@ -186,6 +186,14 @@ input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:soli
 .tel button:disabled{opacity:.3;cursor:default}
 .pace{font:500 .8rem/1.4 var(--mono);letter-spacing:0;color:var(--dim)}
 .pace.c{color:var(--amber)}.pace.w{color:var(--red)}.pace.g{color:var(--green)}
+/* habits: the 7-day trackers (PT, COMMS) on TODAY under the flight plan; .tel and .pace above are shared */
+.habs{display:flex;flex-direction:column}
+.hab{padding:8px 12px 14px;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);min-width:0}
+.hab:first-child{border-top:0}
+.habh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;min-width:0}
+.hab h3{margin:0;font:600 .8rem/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.habp .tel button{height:40px}
+@media (max-width:999px){.habp .tel button{height:44px}}
 
 /* CAPCOM, capture, shutdown */
 .xs{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;margin-bottom:10px}
@@ -390,7 +398,6 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .gp .fill{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
 .gp .tick{position:absolute;top:-4px;bottom:-4px;border-left:1.5px solid var(--dim)}
 .gp .v{white-space:nowrap}.gp .v.c{color:var(--amber)}.gp .v.g{color:var(--green)}
-.lognudge{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0;color:var(--amber);font:500 .8rem/1 var(--mono);letter-spacing:0}
 /* footer */
 .loop{border:1px solid var(--red);color:var(--red);padding:9px 12px;font:500 .8rem/1.4 var(--mono);letter-spacing:0}
 .loop[hidden]{display:none}
@@ -429,7 +436,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
   #app{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));gap:12px}
   .mast,.only-desk{display:none!important}
   .statw{display:contents}
-  .p.now{order:1}.p.plan{order:2}.p.prop{order:3}.p.objp{order:4}.p.upcp{order:5}.p.wcalp{order:5}.p.timep{order:6}.p.statp{order:7}.p.stat{order:8}.p.ccp{order:9}.p.capp{order:10}.p.shut{order:11}
+  .p.now{order:1}.p.plan{order:2}.p.habp{order:3}.p.prop{order:4}.p.objp{order:5}.p.upcp{order:6}.p.wcalp{order:6}.p.timep{order:7}.p.statp{order:8}.p.stat{order:9}.p.ccp{order:10}.p.capp{order:11}.p.shut{order:12}
   #app[data-tab="today"] .p:not([data-tab~="today"]),
   #app[data-tab="week"] .p:not([data-tab~="week"]),
   #app[data-tab="stats"] .p:not([data-tab~="stats"]),
@@ -446,7 +453,7 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
   #app[data-view="stats"] .col.a,#app[data-view="stats"] .col.b,#app[data-view="stats"] .col.c{display:none}
   #app[data-view="stats"] .statw{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 }
-.hc,.bc,.gp,.tleg,.lognudge,.timep .lbl,.timep .seg2 button,.timep .btn.sm{font-size:.8rem}.timep .seg2 button{min-height:40px}.rotl{font-size:.8rem}
+.hc,.bc,.gp,.tleg,.timep .lbl,.timep .seg2 button,.timep .btn.sm{font-size:.8rem}.timep .seg2 button{min-height:40px}.rotl{font-size:.8rem}
 @media (max-width:999px){.hgrid{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 4px}.hc{height:44px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* ---- modules: tell, tasks, weekcal ---- */
@@ -494,7 +501,8 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 @media (max-width:359px){.tc-sheet .tc-hd .btn.sm{padding:6px 8px}.tcbar .tc-f .btn,.tc-sheet .tc-f .btn{min-width:64px;padding:8px 10px}}
 @media (min-width:1000px){
   .tc-sheet{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(620px,92vw);max-height:80vh;border:1px solid var(--rule);border-top:2px solid var(--cyan);padding:16px 22px 20px}
-  .tcbar .tc-last{max-height:320px;overflow:auto}
+  .tcbar .tc-last{max-height:320px;overflow:auto;position:relative;padding-right:84px}
+  .tcbar .tc-hide{position:absolute;right:0;top:8px}
   .tcbar{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;column-gap:8px;border-top:0}
   .tcbar .ph{padding:14px 12px 12px;min-height:60px}
   .tcbar .body{padding:8px 12px 12px 0}
@@ -896,6 +904,30 @@ input[type=time]{font:16px/1 var(--mono);color:var(--ink);background:var(--bg);b
 .br-n{font:700 2.6rem/1 var(--mono);color:var(--cyan);min-height:2.6rem}
 .br-left{font:500 .8rem/1 var(--mono);letter-spacing:0;color:var(--dim)}
 @media (prefers-reduced-motion:reduce){.br-c{transform:scale(.8)}}
+/* log chips: one per past hour (and the current hour) in the hour column, colored like the time log cells; the button is the
+   40px (44px phone) hit area, the inner span the visible pill. .hstrip is the inline brush row under the hour being logged. */
+.hlogs{display:flex;flex-wrap:wrap;gap:2px 4px;align-items:center;min-width:0}
+.hlog{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;margin:-8px 0;padding:0;border:0;background:transparent;color:var(--dim);cursor:pointer}
+.hlog span{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:24px;padding:0 6px;border:1px solid var(--rule);border-radius:5px;font:600 .8rem/1 var(--sans);letter-spacing:.04em;color:var(--dim)}
+.hlog.goal span{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.hlog.life span{background:color-mix(in srgb,var(--dim) 32%,transparent);border-color:var(--dim);color:var(--ink)}
+.hlog.sleep span{background:var(--panel2);border-color:var(--faint);color:var(--dim)}
+.hlog.rot span{background:var(--red);border-color:var(--red);color:var(--bg)}
+.hlog.miss span{border-style:dashed;border-color:var(--amber);color:var(--amber)}
+.hlog.now span{border-style:dashed;border-color:var(--faint);color:var(--dim)}
+.hlog:hover span{border-color:var(--cyan)}
+.hlog.open span{outline:2px solid var(--cyan);outline-offset:1px}
+.hrw .hh .hlogs{margin-top:2px}
+.hrw .hh{padding-bottom:8px}
+.hfr{flex-wrap:wrap;row-gap:6px}
+.hfr .hfl{flex:none}
+.hfr .hlogs{flex:1}
+.hearly.c{color:var(--amber)}
+.hstrip{display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;border-top:1px dashed var(--rule);border-bottom:1px solid var(--rule);background:var(--panel)}
+.hstrip .hbr{display:flex;flex-wrap:wrap;gap:6px}
+.hstrip .bc:disabled{opacity:.4;cursor:default}
+@media (max-width:999px){.hlog{height:44px;margin:-10px 0}.hstrip .bc{min-height:44px}}
+@media (min-width:1000px){.hrw{grid-template-columns:100px minmax(0,1fr)}.hrw .hh{flex-direction:row;flex-wrap:wrap;align-items:center;gap:0 8px}.hrw .hh .hlogs{margin-top:0}}
 
 /* ---- variant A overrides ---- */
 /* A. Modern dark: Inter everywhere, near-black neutral, one accent (periwinkle) for actions, rounded 8px only on tappable things. */
@@ -964,6 +996,7 @@ input[type=checkbox]:checked::after{border-color:#0f0f11}
 .hearly:hover{color:var(--ink)}
 .hrw{min-height:48px}
 .hrw .hh{font:500 .8rem/1 var(--sans);color:var(--faint);padding-top:14px}
+@media (min-width:1000px){.hrw .hh{padding-top:8px;line-height:24px}}
 .hrw .hh b{font-size:.75rem;color:var(--magenta);letter-spacing:.04em}
 .hrw.now{background:transparent;box-shadow:none}
 .hrw.now .hh{color:var(--magenta)}
@@ -1135,7 +1168,7 @@ var LS={get:function(k,d){try{var v=localStorage.getItem('mc.'+k);return v==null
 (function(){if(parseErr)return;var d=null;try{d=JSON.parse(localStorage.getItem('mc.dirty')||'null');}catch(e){}if(!d||typeof d.state!=='string'||!Array.isArray(d.chain))return;
   var raw=JSON.stringify(S);if(d.state===raw||Date.now()-(+d.at||0)>3*3600e3){try{localStorage.removeItem('mc.dirty');}catch(e){}return;}
   if(d.chain.indexOf(bootHash)>=0){try{S=JSON.parse(d.state);restored=true;}catch(e){}}else{restoreLost=true;try{var mine=JSON.parse(d.state).log||{},base=JSON.parse(d.base||'{}');if(!S.log||typeof S.log!=='object'||Array.isArray(S.log))S.log={};Object.keys(mine).forEach(function(k){var a=String(mine[k]||''),b=String(base[k]||''),cur=String(S.log[k]||'').split('');for(var i=0;i<22;i++){var ch=a.charAt(i)||'.';if(ch!==(b.charAt(i)||'.')){while(cur.length<i)cur.push('.');cur[i]=ch;keptLog++;}}S.log[k]=cur.join('');});}catch(e){}try{localStorage.removeItem('mc.dirty');}catch(e){}}})();
-var ui={info:null,brush:LS.get('brush',''),logDay:(function(){var v=LS.get('logDay',null);return v&&v.v==='y'&&v.d===ops().date&&Date.now()-v.at<20*60e3?'y':'t';})(),noKeep:{},drafts:LS.get('drafts',{}),view:LS.get('view','console'),proposing:false,editProp:null,detail:null,confirm:false,toast:null,opener:null,tab:LS.get('tab','today'),sheet:false,turns:LS.get('turns',[]),draft:LS.get('draft',''),burnEnd:+LS.get('burnEnd',0)||0,energy:0};
+var ui={info:null,brush:LS.get('brush',''),logDay:(function(){var v=LS.get('logDay',null);return v&&v.v==='y'&&v.d===ops().date&&Date.now()-v.at<20*60e3?'y':'t';})(),noKeep:{},drafts:LS.get('drafts',{}),view:LS.get('view','console'),proposing:false,editProp:null,detail:null,confirm:false,toast:null,opener:null,tab:LS.get('tab','today'),sheet:false,hlog:null,tcHide:false,turns:LS.get('turns',[]),draft:LS.get('draft',''),burnEnd:+LS.get('burnEnd',0)||0,energy:0};
 if(ui.tab==='status')ui.tab='stats';if(['today','week','tasks','stats'].indexOf(ui.tab)<0)ui.tab='today';if(['stats','tasks'].indexOf(ui.view)<0)ui.view='console';
 if(!Array.isArray(ui.turns))ui.turns=[];
 ui.turns=ui.turns.filter(function(m){return m&&(m.role==='user'||m.role==='assistant')&&typeof m.content==='string'&&m.content.trim();}).slice(-8);
@@ -1188,6 +1221,12 @@ function logOf(ds){return S.log[ds]||emptyLog();}
 function slotWhen(ds,i){var o=ops();if(ds<o.date)return 'past';if(ds>o.date)return 'future';var st=(LOG0+i)*60;return o.min>=st+60?'past':o.min>=st?'now':'future';}
 function logSum(ds){var L=logOf(ds),r={goal:0,life:0,sleep:0,rot:0,un:0,past:0,by:{}};for(var i=0;i<LOGN;i++){var w=slotWhen(ds,i),c=catOf(L.charAt(i));if(c){r[c.grp]++;r.by[c.k]=(r.by[c.k]||0)+1;}else if(w==='past'){r.un++;}if(w==='past')r.past++;}return r;}
 function unloggedNow(){var o=ops();var L=logOf(o.date),n=0;for(var i=0;i<LOGN;i++){if(slotWhen(o.date,i)!=='past')break;if(L.charAt(i)==='.')n++;}return n;}
+/* past hours today still unlogged at or after hr:00 (hr in 24h clock hours) */
+function unloggedAfter(hr){var o=ops(),L=logOf(o.date),n=0;for(var i=Math.max(0,hr-LOG0);i<LOGN;i++){if(slotWhen(o.date,i)!=='past')break;if(L.charAt(i)==='.')n++;}return n;}
+/* first past hour today with no log and a chip on the flight plan (07:00 on), else null */
+function unloggedIdx(){var o=ops(),L=logOf(o.date);for(var i=1;i<LOGN;i++){if(slotWhen(o.date,i)!=='past')break;if(L.charAt(i)==='.')return i;}return null;}
+/* write a day's log string back: keep 42 days, refresh that day's history row, save. Shared by the Time log and the plan's log chips. */
+function logCommit(ds,str){S.log[ds]=str;var ks=Object.keys(S.log).sort();while(ks.length>42)delete S.log[ks.shift()];if(ds===ops().date&&S.debrief&&S.debrief.date===ds)upsertHistory();else S.history.forEach(function(r){if(r.date===ds)logInto(r,S.log[ds]);});queueSave(4000);}
 function weekGoalHours(){var o=ops(),m=monday(o.day),h={};GIDS.forEach(function(g){h[g]=0;});for(var d=0;d<7;d++){var dt=new Date(m.getFullYear(),m.getMonth(),m.getDate()+d);if(dt>o.day)break;var L=logOf(iso(dt));for(var i=0;i<LOGN;i++){var c=catOf(L.charAt(i));if(c&&c.g)h[c.g]++;}}return h;}
 function hrs(n){return (Math.round(n*10)/10)+'H';}
 function tminus(){var ms=LAUNCH-new Date();if(ms<=0)return 'T+ LIVE';var s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;return 'T−'+p2(d)+':'+p2(Math.floor(s/3600))+':'+p2(Math.floor(s%3600/60))+':'+p2(s%60);}
@@ -1284,7 +1323,7 @@ function rMast(){
   return h;
 }
 /* panel header: title, info button, optional status span (only for status that drives an action) */
-function phd(title,topic,right){return '<div class="ph"><div class="pht"><h2>'+title+'</h2>'+infoBtn(topic)+'</div>'+(right||'')+'</div>';}
+function phd(title,topic,right){return '<div class="ph"><div class="pht"><h2>'+title+'</h2>'+(topic?infoBtn(topic):'')+'</div>'+(right||'')+'</div>';}
 function rNow(){
   var f=fresh(),act=null,its=S.today.items;
   its.forEach(function(it){if(!act&&itemState(it)==='active')act=it;});
@@ -1300,7 +1339,7 @@ function rNow(){
   function evB(x){return '<button type="button" class="rt nxt" id="nx-ev" data-act="wc-ev" data-id="'+esc(x.id)+'">'+esc(x.t)+'</button>';}
   function evActive(x){var r='<div class="state"><span class="tag t-act">ACTIVE</span><span class="when">'+esc(x.s)+'–'+esc(x.e)+' · '+inM(x.em)+' LEFT</span></div>'+bigEv(x);
     if(nx)r+=then('NEXT',esc(nx.s)+' · IN '+inM(tS(nx)),itB(nx));else if(evNext)r+=then('NEXT',esc(evNext.s)+' · IN '+inM(evNext.sm),evB(evNext));return r;}
-  var h='<section class="p now'+(act||evNow?' is-act':'')+'" data-tab="today">'+phd('Now','now')+'<div class="body">';
+  var h='<section class="p now'+(act||evNow?' is-act':'')+'" data-tab="today">'+phd('Now')+'<div class="body">';
   var o=ops(),sdDone=S.debrief&&S.debrief.date===o.date,hr=o.n.getHours(),closing=hr>=22||hr<DAYCUT,quiet=f&&(sdDone||closing);
   if(f&&sdDone){h+='<div class="state"><span class="tag t-done">SHUTDOWN COMPLETE</span></div><div class="big">Phone on the charger.</div>';}
   else if(f&&closing){h+='<div class="state"><span class="tag t-late">SHUTDOWN DUE</span>'+(left?'<span class="when">'+left+' OPEN</span>':'')+'</div><div><button type="button" id="goshut" class="btn" data-act="goshut">RUN SHUTDOWN</button></div>';}
@@ -1315,7 +1354,6 @@ function rNow(){
   else{h+='<div class="state"><span class="tag t-done">ALL ITEMS COMPLETE</span></div>';}
   var shown=act||nx||open,dueI=f&&!quiet?its.filter(function(i){return !i.done&&i.lbl==='DUE'&&i!==shown;}):[];
   if(dueI.length)h+='<div class="duepin '+(hr>=21?'w':hr>=17?'c':'')+'"><b>DUE TODAY</b>'+dueI.map(function(i){return '<button type="button" class="rt" data-act="open" data-k="today" data-id="'+esc(i.id)+'">'+esc(i.t)+'</button>';}).join('')+'</div>';
-  var unl=!quiet?unloggedNow():0;if(unl>=2)h+='<div class="lognudge"><span>'+unl+'H NOT LOGGED</span><button type="button" id="golog" class="btn sm" data-act="golog">LOG</button></div>';
   var be=ui.burnEnd,nw=Date.now();
   if(quiet&&!(be&&be>nw)){}
   else if(be&&be>nw)h+='<div class="burn"><span class="clock" id="burn">'+mmss(be-nw)+'</span><button type="button" id="burn-x" class="btn sm" data-act="abort">STOP</button></div>';
@@ -1365,35 +1403,49 @@ function rPlan(){
     else{var carry=S.today.items.filter(function(i){return !i.done;}).length;h+='<div class="hpb"><span>NO PLAN TODAY</span><span class="hpa">'+(carry?'<button type="button" id="carry" class="btn sm" data-act="carry">CARRY OVER '+carry+'</button>':'')+'<button type="button" id="askplan" class="btn sm fill" data-act="askplan">ASK CLAUDE</button></span></div>';}}
   var aev=wc_eventsOn(ds).filter(function(x){return x.allDay;});
   if(aev.length)h+='<div class="tl-ad">'+aev.map(function(x){return '<button type="button" id="ad-ev-'+esc(x.id)+'" data-act="wc-ev" data-id="'+esc(x.id)+'">'+esc(x.t)+'</button>';}).join('')+'</div>';
-  var showPast=!!ui.planPast;
+  var showPast=hpShowPast();
   var anyt=its.filter(function(it){var st=itemState(it);return tS(it)===null||(st==='late'&&!showPast);});
   if(anyt.length)h+='<div class="hgrp"><div class="lbl">ANYTIME</div><ul class="rows">'+anyt.map(function(it){return rowHTML(it,'a',null);}).join('')+'</ul></div>';
   var H0=7*60,H1=24*60;bl.forEach(function(x){if(x.s<H0&&x.s>=5*60)H0=Math.floor(x.s/60)*60;if(x.e>H1)H1=Math.min(28*60,Math.ceil(x.e/60)*60);});
   if(n>=H1-30)H1=Math.min(28*60,(Math.floor(n/60)+2)*60);
   if(n<H0&&n>=5*60)H0=Math.floor(n/60)*60;
   var live=null,nxt=null;bl.forEach(function(x){if(!live&&!x.free&&x.s<=n&&x.e>n&&!(x.k==='today'&&x.it.done))live=x;if(!nxt&&x.s>n&&!(x.k==='today'&&x.it.done))nxt=x;});
-  var rows='',pastN=0,hasPast=false,done={},run=null;
+  var L=logOf(ds),rowsA=[],pastN=0,pastUn=0,missN=0,hasPast=false,done={},run=null;
+  /* log chips: slot index for an hour that is past or current (the Time log covers 06:00 to 03:00) */
+  function hIdx(a){var i=a/60-LOG0;return i>=0&&i<LOGN&&slotWhen(ds,i)!=='future'?i:-1;}
+  function unl(a){var i=hIdx(a);return i>=0&&slotWhen(ds,i)==='past'&&L.charAt(i)==='.';}
   /* consecutive hours with no cards (and not the current hour) collapse into one FREE row; + ADD keeps the first hour */
-  function flush(){if(!run)return;rows+='<li class="hrw free'+(run.past?' past':'')+'"><div class="hfr"><span class="hfl">'+m2h(run.a)+'–'+m2h(run.b)+' · FREE</span>'+run.add+'</div></li>';run=null;}
+  function flush(){if(!run)return;rowsA.push(run);run=null;}
   for(var a=H0;a<H1;a+=60){var b=a+60,past=b<=n,isNow=n>=a&&n<b;
     var st=bl.filter(function(x){var k=hpKey(x);if(done[k])return false;return x.s<b&&(x.s>=a||a===H0);});
     st.forEach(function(x){done[hpKey(x)]=1;});
     var free=hpFreeMin(bl,a,b);if(past&&st.some(function(x){return x.e>n;}))past=false;
-    if(!st.length&&free<30&&!(isNow&&!live)){flush();continue;}
-    if(past){hasPast=true;if(!showPast){pastN++;flush();continue;}}
+    if(!st.length&&free<30&&!(isNow&&!live)){/* an hour swallowed by a block from an earlier row: its log chip rides on that row */
+      if(past&&!showPast){if(unl(a))pastUn++;flush();continue;}
+      flush();var lastR=rowsA[rowsA.length-1];if(lastR&&hIdx(a)>=0)lastR.hrs.push(a);continue;}
+    if(past){hasPast=true;if(!showPast){pastN++;if(unl(a))pastUn++;flush();continue;}}
     var open='';if(b>n&&free>=30){var fs=hpFreeStart(bl,isNow?Math.max(a,hpNowStart()):a,b);if(fs!==null&&b-fs>=15)open='<button type="button" class="hopen" id="hadd-'+a+'" data-act="hadd" data-h="'+a+'">＋ ADD</button>';}
-    if(!st.length&&!isNow){if(run&&run.b===a&&run.past===past)run.b=b;else{flush();run={a:a,b:b,past:past,add:open};}continue;}
+    if(!st.length&&!isNow){if(run&&run.b===a&&run.past===past){run.b=b;run.hrs.push(a);}else{flush();run={free:true,a:a,b:b,past:past,add:open,hrs:[a]};}continue;}
     flush();
     var cards='';st.forEach(function(x){cards+=hpCard(x,n,x===nxt,x===live||(!live&&x===nxt));});
-    rows+='<li class="hrw'+(isNow?' now':'')+(past?' past':'')+'"><div class="hh">'+m2h(a)+(isNow?'<b>NOW</b>':'')+'</div><div class="hb">'+cards+open+'</div></li>';}
+    rowsA.push({a:a,isNow:isNow,past:past,cards:cards,add:open,hrs:[a]});}
   flush();
-  if(pastN)h+='<button type="button" class="hearly" id="hearly" data-act="hpast" aria-expanded="false">EARLIER · '+pastN+'H<span aria-hidden="true"> ›</span></button>';
-  else if(showPast&&hasPast)h+='<button type="button" class="hearly" id="hearly" data-act="hpast" aria-expanded="true">HIDE EARLIER</button>';
+  function chip(a){var i=hIdx(a);if(i<0)return '';var w=slotWhen(ds,i),c=catOf(L.charAt(i)),on=ui.hlog===i;if(!c&&w==='past')missN++;
+    return '<button type="button" class="hlog '+(c?c.grp:w==='past'?'miss':'now')+(on?' open':'')+'" id="hlog-'+i+'" data-act="hlog" data-i="'+i+'" aria-expanded="'+on+'" aria-label="'+m2h(a)+', '+(c?esc(c.n):'not logged')+'. Log this hour"><span>'+(c?esc(c.ab):'LOG')+'</span></button>';}
+  /* the brush strip sits under the row that holds the hour being logged */
+  function strip(hrsIn){var i=ui.hlog;if(i===null||i===undefined)return '';var a=(LOG0+i)*60;if(hrsIn.indexOf(a)<0)return '';var cur=L.charAt(i);
+    return '<li class="hstrip" id="hstrip"><div class="hsh"><span class="lbl">'+m2h(a)+'–'+m2h(a+60)+' · LOG AS</span></div><div class="hbr" role="group" aria-label="Category for '+m2h(a)+'">'+allCats().map(function(c){return '<button type="button" id="hb-'+(c.cust?'u':'')+c.k+'" class="bc'+(c.cust?' cu':'')+'" data-act="hbrush" data-i="'+i+'" data-v="'+c.k+'" aria-pressed="'+(cur===c.k)+'"><span class="sw '+c.grp+'"></span>'+esc(c.n)+'</button>';}).join('')+'<button type="button" id="hb-clear" class="bc" data-act="hbrush" data-i="'+i+'" data-v="."'+(cur==='.'?' disabled':'')+'>CLEAR</button></div></li>';}
+  var rows=rowsA.map(function(r){var ch=r.hrs.map(chip).join('');
+    if(r.free)return '<li class="hrw free'+(r.past?' past':'')+'"><div class="hfr"><span class="hfl">'+m2h(r.a)+'–'+m2h(r.b)+' · FREE</span>'+(ch?'<span class="hlogs">'+ch+'</span>':'')+r.add+'</div></li>'+strip(r.hrs);
+    return '<li class="hrw'+(r.isNow?' now':'')+(r.past?' past':'')+'"><div class="hh">'+m2h(r.a)+(r.isNow?'<b>NOW</b>':'')+(ch?'<span class="hlogs">'+ch+'</span>':'')+'</div><div class="hb">'+r.cards+r.add+'</div></li>'+strip(r.hrs);}).join('');
+  if(pastN)h+='<button type="button" class="hearly'+(pastUn?' c':'')+'" id="hearly" data-act="hpast" aria-expanded="false">EARLIER · '+pastN+'H'+(pastUn?' · '+pastUn+'H NOT LOGGED':'')+'<span aria-hidden="true"> ›</span></button>';
+  else if(showPast&&hasPast)h+='<button type="button" class="hearly'+(missN?' c':'')+'" id="hearly" data-act="hpast" aria-expanded="true">HIDE EARLIER'+(missN?' · '+missN+'H NOT LOGGED':'')+'</button>';
   h+='<ul class="hrs">'+rows+'</ul>';
-  var unl=unloggedNow();if(unl>=2)h+='<div class="hpb lg"><span>'+unl+'H NOT LOGGED</span><button type="button" id="golog" class="btn sm" data-act="golog">LOG</button></div>';
   if(f&&S.today.memo)h+='<div class="memo note">'+esc(S.today.memo)+'</div>';
   return h+'</div></section>';
 }
+/* EARLIER stays folded unless Kevin opened it, or 2+ hours since noon are still unlogged (then the chips are in reach) */
+function hpShowPast(){if(typeof ui.planPast==='boolean')return ui.planPast;return unloggedAfter(12)>=2;}
 /* + ADD on an open hour: pick a task from the backlog; it lands at the first free minute of that hour */
 function hpPickStart(hh){var o=ops(),bl=hpBlocks(o.date);return hpFreeStart(bl,Math.max(hh,hh<=o.min?hpNowStart():hh),hh+60);}
 function rPick(){if(!ui.pick)return '';var o=ops(),st=hpPickStart(ui.pick.h);if(st===null){ui.pick=null;return '';}
@@ -1413,15 +1465,15 @@ function brTick(){if(!ui.breathe){clearInterval(ui.brT);ui.brT=null;return;}
   if(el>=64){if(ph)ph.textContent='DONE';if(nn)nn.textContent='';if(lf)lf.textContent='BACK TO IT';if(cc)cc.classList.add('stop');clearInterval(ui.brT);ui.brT=null;return;}
   var cy=el%16,pi=Math.floor(cy/4);if(ph)ph.textContent=['IN','HOLD','OUT','HOLD'][pi];if(nn)nn.textContent=String(4-Math.floor(cy%4));if(lf)lf.textContent=Math.ceil(64-el)+'S';}
 function rObj(){
-  return '<section class="p objp" data-tab="week">'+phd('Objectives','objectives')+
+  return '<section class="p objp" data-tab="week">'+phd('Objectives')+
     (S.week.items.length?'<ul class="rows">'+S.week.items.map(function(it){
-    return '<li class="row obj'+(it.done?' done':'')+'"><button type="button" class="rt" data-act="open" data-k="week" data-id="'+esc(it.id)+'"><span class="tx">'+esc(it.t)+'</span></button>'+ck('week',it,'w')+'</li>';}).join('')+'</ul>':'<div class="body note">None set.</div>')+'</section>';
+    return '<li class="row obj'+(it.done?' done':'')+'"><button type="button" class="rt" data-act="open" data-k="week" data-id="'+esc(it.id)+'"><span class="tx">'+esc(it.t)+'</span></button>'+ck('week',it,'w')+'</li>';}).join('')+'</ul>':'<div class="body note">None set. They come from the Sunday plan.</div>')+'</section>';
 }
 /* hard deadlines read bright, soft ones dim; amber = hard and within 2 days */
 function rUpc(){
   var t0=ops().day,list=S.dates.filter(function(d){return pd(d.d)>=t0;}).concat(S.planned.filter(function(p){return pd(p.date)>=t0;}).map(function(p){return {d:p.date,t:p.t,task:p};})).concat(S.proposals.filter(function(p){return pd(p.date)>=t0;}).map(function(p){return {d:p.date,t:p.t,task:p,prop:true};})).sort(function(a,b){return (pd(a.d)-pd(b.d))||((a.task?mins(a.task.s)||0:-1)-(b.task?mins(b.task.s)||0:-1));}).slice(0,9);
   if(!list.length)return '';
-  return '<section class="p upcp" data-tab="week">'+phd('Upcoming','upcoming',wc_toggle('u'))+'<ul class="rows">'+list.map(function(d){var n=daysBetween(t0,pd(d.d)),dd='<span class="dd">'+(n===0?'TODAY':'T−'+n+'D')+'</span>';
+  return '<section class="p upcp" data-tab="week">'+phd('Upcoming',null,wc_toggle('u'))+'<ul class="rows">'+list.map(function(d){var n=daysBetween(t0,pd(d.d)),dd='<span class="dd">'+(n===0?'TODAY':'T−'+n+'D')+'</span>';
     if(d.task)return '<li class="upc '+(d.prop?'prop':'task')+'">'+dd+'<button type="button" class="rt ut" data-act="open" data-k="'+(d.prop?'proposal':'planned')+'" data-id="'+esc(d.task.id)+'">'+esc(d.t)+'</button><span class="dt">'+(d.task.s?esc(d.task.s):'')+(d.prop?'<b>PROPOSED</b>':'')+'</span></li>';
     return '<li class="upc '+(d.hard?'hard'+(n<=2?' near':''):'soft')+'">'+dd+'<span class="ut">'+esc(d.t)+'</span></li>';}).join('')+'</ul></section>';
 }
@@ -1437,7 +1489,7 @@ var YR0=new Date(2026,7,31),MS=[
 function rTrack(){
   var o=ops(),span=daysBetween(YR0,GRAD);
   function pc(d){return Math.min(100,Math.max(0,daysBetween(YR0,d)/span*100)).toFixed(2)+'%';}
-  var h='<section class="p trk" data-tab="week">'+phd('Senior year','track')+'<div class="body"><div class="track" aria-hidden="true"><div class="ln"></div><div class="el" style="width:'+pc(o.day)+'"></div>';
+  var h='<section class="p trk" data-tab="week">'+phd('Senior year')+'<div class="body"><div class="track" aria-hidden="true"><div class="ln"></div><div class="el" style="width:'+pc(o.day)+'"></div>';
   MS.forEach(function(m){if(m.band)h+='<div class="band" style="left:'+pc(m.d)+';width:calc('+pc(m.e)+' - '+pc(m.d)+')"></div>';});
   MS.forEach(function(m){if(m.t)h+='<div class="ms '+m.pos+'" style="left:'+pc(m.d)+'"><span>'+m.t+'</span></div>';});
   return h+'<div class="td" style="left:'+pc(o.day)+'"></div></div></div></section>';
@@ -1686,20 +1738,24 @@ function habitInfo(g,arr,ti){
   return {lvl:'',txt:''};
 }
 function weekIdx(){return Math.min(6,Math.max(0,daysBetween(pd(S.habits.weekStart),ops().day)));}
+/* ---------- TODAY: habits. The 7-day trackers (goals with g.habit), under the flight plan; the pace line explains itself. ---------- */
+function telRow(g,arr,ti,ws){return '<div class="tel">'+arr.map(function(on,i){var dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+i);return '<button type="button" id="h-'+g.habit+'-'+i+'" class="'+(on?'on ':'')+(i===ti?'today':'')+'" data-act="hab" data-h="'+g.habit+'" data-i="'+i+'" aria-pressed="'+on+'" aria-label="'+esc(g.call)+' '+DN[i]+' '+dt.getDate()+'"'+(i>ti?' disabled':'')+'>'+DL[i]+'</button>';}).join('')+'</div>';}
+function rHabits(){
+  var H=S.goals.filter(function(g){return g.habit;});if(!H.length)return '';
+  var ti=weekIdx(),ws=pd(S.habits.weekStart);
+  return '<section class="p habp" data-tab="today">'+phd('Habits')+'<div class="habs">'+H.map(function(g){var arr=S.habits[g.habit],inf=habitInfo(g,arr,ti);
+    return '<div class="hab"><div class="habh"><h3>'+esc(g.call)+'</h3><span class="pace '+inf.lvl+'">'+arr.filter(Boolean).length+'/'+g.goal+(inf.txt?' · '+inf.txt:'')+'</span></div>'+telRow(g,arr,ti,ws)+'</div>';}).join('')+'</div></section>';
+}
 function rStatus(){
-  var ti=weekIdx();
-  var h='<section class="p stat" data-tab="stats">'+phd('Status board','status');
+  var h='<section class="p stat" data-tab="stats">'+phd('Status board');
   if(!S.goals.length)return h+'<div class="body note">No goals loaded.</div></section>';
   return h+'<div class="poll">'+S.goals.map(function(g){
     var x='<div class="stn"><button type="button" class="stn-h" data-act="open" data-k="goal" data-id="'+esc(g.id)+'" aria-label="'+esc(g.call)+', '+LBL[g.st]+'. Open details."><h3>'+esc(g.call)+'</h3><span class="light '+g.st+'">'+LBL[g.st]+'</span></button>';
-    if(g.habit){var arr=S.habits[g.habit],inf=habitInfo(g,arr,ti),ws=pd(S.habits.weekStart);
-      x+='<div class="tel">'+arr.map(function(on,i){var dt=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+i);return '<button type="button" id="h-'+g.habit+'-'+i+'" class="'+(on?'on ':'')+(i===ti?'today':'')+'" data-act="hab" data-h="'+g.habit+'" data-i="'+i+'" aria-pressed="'+on+'" aria-label="'+esc(g.call)+' '+DN[i]+' '+dt.getDate()+'"'+(i>ti?' disabled':'')+'>'+DL[i]+'</button>';}).join('')+'</div>';
-      x+='<div class="pace '+inf.lvl+'">'+arr.filter(Boolean).length+'/'+g.goal+(inf.txt?' · '+inf.txt:'')+'</div>';}
     return x+(g.next?'<div class="nx">'+esc(g.next)+'</div>':'')+'</div>';
   }).join('')+'</div></section>';
 }
 function rCapcom(){
-  var h='<section class="p ccp" data-tab="capcom">'+phd('CAPCOM','capcom')+'<div class="body">';
+  var h='<section class="p ccp" data-tab="capcom">'+phd('CAPCOM')+'<div class="body">';
   if(!sample){return h+'<div class="note">'+esc(ccOff||'Offline. Open this page in Claude.')+'</div></div></section>';}
   var t=ui.turns.slice(-6);
   if(t.length||busy)h+='<div class="xs" id="xs" aria-live="polite">'+t.map(function(m){return '<div class="msg'+(m.role==='assistant'?' cc':'')+'"><span class="sr">'+(m.role==='assistant'?'CAPCOM: ':'You: ')+'</span>'+esc(m.content)+'</div>';}).join('')+(busy?'<div class="msg cc"><span class="sr">CAPCOM: </span><span id="live">Thinking…</span></div>':'')+'</div>';
@@ -1708,15 +1764,16 @@ function rCapcom(){
   return h+'</div></section>';
 }
 function rCapture(){
-  var h='<section class="p capp" data-tab="capcom">'+phd('Add','add')+'<div class="body">';
+  var h='<section class="p capp" data-tab="capcom">'+phd('Add')+'<div class="body">';
   h+='<form id="cap-f" class="capf"><input type="text" id="cap" maxlength="300" placeholder="Task or thought" autocomplete="off" aria-label="Task or thought"><div class="acts"><button class="btn fill" type="submit" data-mode="sched">SCHEDULE</button><button class="btn" type="submit" data-mode="cap">CAPTURE</button></div></form>';
+  h+='<div class="note capn">Schedule proposes a slot for you to confirm; capture waits in the inbox for the 07:15 brief.</div>';
   if(S.inbox.length)h+='<ul class="inb">'+S.inbox.map(function(c){return '<li><span>'+esc(c.t)+'</span><button class="x" type="button" data-act="capdel" data-id="'+esc(c.id)+'" aria-label="Remove: '+esc(c.t.slice(0,40))+'">✕</button></li>';}).join('')+'</ul>';
   return h+'</div></section>';
 }
 function rShutdown(){
   var o=ops(),d=S.debrief&&S.debrief.date===o.date?S.debrief:null,ln=lateNight();
   if(!d&&!ln)return '';
-  var h='<section class="p shut" data-tab="today">'+phd('Shutdown','shutdown',d?'':'<span class="c">DUE TONIGHT</span>')+'<div class="body">';
+  var h='<section class="p shut" data-tab="today">'+phd('Shutdown',null,d?'':'<span class="c">DUE TONIGHT</span>')+'<div class="body">';
   if(d){var meta=(d.energy?'ENERGY '+d.energy+'/5':'')+(d.note?(d.energy?' · ':'')+esc(d.note):'');
     h+='<div class="sdone">SHUTDOWN COMPLETE</div>'+(meta?'<div class="note" style="margin-top:6px">'+meta+'</div>':'')+'<button type="button" id="reopen" class="btn sm" data-act="reopen" style="margin-top:10px">REOPEN</button>';return h+'</div></section>';}
   var open=fresh()?S.today.items.filter(function(i){return !i.done;}).length:0,ul=logSum(o.date).un;
@@ -1728,25 +1785,18 @@ function rShutdown(){
 /* ---------- info: one map, one sheet ----------
    INFO[topic] = {title, text}. text is a string or a function returning one. Each line is a paragraph;
    {green:word} colours a word (green, amber, red, cyan, magenta, ink). To add a topic: add an entry here
-   and put infoBtn('topic') in the panel header (phd(title, 'topic') does that). */
+   and put infoBtn('topic') in the panel header (phd(title, 'topic') does that). Only panels whose behaviour is not obvious
+   get one (plan, proposed, stats, time log, tell, tasks, week); the rest explain themselves in place. */
 var INFO={
- now:{title:'Now',text:'What to work on this minute. A class or meeting from your calendar shows here while it is on, with what comes next under it. Tap the title for details, to move it or to drop it.\nDUE TODAY lists untimed items due today. The {amber:amber} bar counts past hours you haven’t logged.\nFOCUS 25 and FOCUS 50 start a timer that chimes when it ends.'},
  plan:{title:'Flight plan',text:'Your day by the hour: calendar events in grey, your items in white, dashed = scheduled for today. The hour you are in, or what is happening now, is {magenta:magenta}.\n＋ ADD on an open hour opens your task list; pick one and it lands in that hour. Tick an item when it is done.\nEARLIER folds the hours already gone. BREATHE runs one guided minute of box breathing.'},
  proposed:{title:'Proposed',text:'Slots Claude picked for tasks you added. ACCEPT puts it on that day, CHANGE lets you set the day, start and minutes, LATER keeps the task in Tasks with no time. DECLINE (on one-offs) drops it.\nTap the title to see why that slot, and the week strip under it: one chip per day with its load in hours; {amber:amber} when the day is at its capacity. Tap a day to move the proposal there, same start if it is free, else the nearest free slot; the list under the strip shows what sits around it.'},
- objectives:{title:'Objectives',text:'This week’s outcomes, set in the Sunday plan. Tick one when it’s done; tap it for details.'},
- upcoming:{title:'Upcoming',text:'Deadlines, scheduled tasks and proposals waiting for your OK, soonest first. T−3D = in 3 days.\nBright = hard deadline, dim = soft. {amber:Amber} = hard deadline within 2 days. PROPOSED in {cyan:cyan} = a slot Claude suggested; tap it to accept or move it.\nTap a scheduled task to move it, drop it or do it today.'},
- track:{title:'Senior year',text:function(){return 'Aug 31 to commencement, May 24. The {magenta:magenta} marker is today; grey bands are Thanksgiving, finals and spring break.\n'+trackLine()+'\nSpotter launch, Nov 22: '+tminus()+' (days:hours:minutes:seconds).';}},
- status:{title:'Status board',text:'One light per goal: {green:GO} on track, {amber:HOLD} needs attention, {red:NO-GO} off track. Tap a goal to change its light or see its next step.\nHabits: tap a day when you hit it. {amber:DON’T MISS TWICE} = you missed last night. {amber:NO SLACK} = every day left counts. {red:BEHIND} = the weekly target is out of reach.\nColors everywhere: {magenta:magenta} now, {green:green} done or good, {amber:amber} caution, {red:red} warning, {cyan:cyan} tappable.'},
  stats:{title:'Stats',text:'LOAD: hours committed per day for the next 7 days. The white tick is your focus capacity; OVER = past it.\nBALANCE: the last 7 days, work (career, launch, academics) vs life (gym, phone, family).\nFOLLOW-THROUGH: share of planned items done over the last 14 days, from your shutdowns. Energy appears after 3 ratings. BUMPED = moved to tomorrow in the last 7 days.\nQUEUE: what’s waiting in the inbox, proposals, planned and bumped.'},
  timelog:{title:'Time log',text:function(){return 'Pick a category, then tap hours to paint them; tap a painted hour again to clear it. Later hours today can be logged ahead. Dashed {amber:amber} = a past hour not logged.\n＋ NEW adds your own category, like HYPERSONICS, and picks what it counts as, so its hours still feed that goal. Tap your category to see or remove it; removing turns its hours into the category it counted as.\nREST is downtime you chose. ROT is time that vanished: scrolling, unplanned couch. More than '+hrs(S.settings.rotBudget/60)+' of rot a day turns {red:red}.\nWEEK: hours per goal vs your weekly target. The tick marks where you should be after the days already finished; {amber:BEHIND} = under 80% of that.\nFILL FROM PLAN logs finished timed items. NIGHT = SLEEP marks unlogged hours before 08:00; after 20:00 it also logs tonight, 23:00 to 03:00, ahead.';}},
- capcom:{title:'CAPCOM',text:'Claude, live on this page. Tell it what changed and it re-plans today within its capacity; you get a few seconds to undo.\nIt can also propose task slots and add notes to your inbox. Ctrl+Enter sends.'},
- add:{title:'Add',text:'SCHEDULE: Claude estimates the time and proposes a slot for you to confirm.\nCAPTURE: it waits in the inbox for the next morning brief.\nPress / to jump to this box.'},
- shutdown:{title:'Shutdown',text:'Close the day: log your hours, tick what got done, capture loose ends, rate your energy 1–5 with one line on the day, phone on the charger by 23:00.\nIt saves the day’s record that Stats uses. SD on the TODAY tab = shutdown due.'},
  tell:{"title": "Tell Claude", "text": "Type anything in plain words: hours you spent (“2-4 studied, 4-5 tiktok”), a new task, a change to today, or a question.\nClaude logs the hours, files tasks under the right project with a time estimate, proposes a slot around your calendar, or replans today. Each change shows as a chip; one UNDO reverts the whole reply.\nWithout Claude, your text waits in the inbox for the 07:15 run. Press / to jump here."},
  tasks:{"title": "Tasks", "text": "Your whole backlog, grouped by project, due date or goal, with subtasks under their parent.\nTap a task to schedule it, pull it into today or break it into steps. Ticking a linked item on today’s plan checks the task off here.\nTo add a lot at once, tell Claude."},
  weekcal:{"title": "Week", "text": "Your next 7 days in one place: Google Calendar events in grey, scheduled tasks in white, proposals waiting for your OK with a dashed {cyan:cyan} edge, deadlines on top.\n{amber:CLASH} means a task overlaps a busy event.\nSYNCED is the morning snapshot; {green:LIVE} means the page just read Google Calendar itself. Tap it to refresh."}
 };
-function infoBtn(k,sfx){var I=INFO[k];if(!I)return '';return '<button type="button" class="info" data-act="info" data-v="'+esc(k)+'" id="info-'+esc(k)+(sfx?'-'+esc(sfx):'')+'" aria-label="About '+esc(I.title)+'">i</button>';}
+function infoBtn(k,sfx){var I=k&&INFO[k];if(!I)return '';return '<button type="button" class="info" data-act="info" data-v="'+esc(k)+'" id="info-'+esc(k)+(sfx?'-'+esc(sfx):'')+'" aria-label="About '+esc(I.title)+'">i</button>';}
 function rInfo(){
   var I=ui.info&&INFO[ui.info.k];if(!I){ui.info=null;return '';}
   var tx=typeof I.text==='function'?I.text():I.text;
@@ -1817,7 +1867,7 @@ function render(){
   var h=rMast();
   h+='<div class="loop" id="loop" role="status"'+(loopWarn?'':' hidden')+'>'+esc(loopT)+'</div>';
   h+=tc_bar();
-  h+='<div class="grid"><div class="col a">'+rPlan()+'</div><div class="col b">'+(wc_on()?wc_render():rUpc())+rTrack()+'</div><div class="col c">'+rProps()+rShutdown()+rObj()+rStatus()+'</div><div class="statw">'+rTime()+rStats()+'</div></div>';
+  h+='<div class="grid"><div class="col a">'+rPlan()+rHabits()+'</div><div class="col b">'+(wc_on()?wc_render():rUpc())+rTrack()+'</div><div class="col c">'+rProps()+rShutdown()+rObj()+rStatus()+'</div><div class="statw">'+rTime()+rStats()+'</div></div>';
   h+=tk_render();
   h+=rTabs()+rToast()+rDetail()+wc_sheet()+rPick()+rBreathe()+rInfo();
   app.dataset.tab=ui.tab;app.dataset.view=ui.view;app.innerHTML=h;
@@ -1950,9 +2000,13 @@ app.addEventListener('click',function(e){
   if(a==='carry'){var od=S.today.date;act('Carried over open items',function(){var keep=S.today.items.filter(function(i){return !i.done;});S.today={date:ops().date,items:keep,memo:'Carried over from '+(okDate(od)?dayLbl(od):'the last plan')+'.'};});return;}
   if(a==='tellgo'){var tb=document.getElementById('tc-bin');if(tb&&tb.offsetParent){tb.focus();if(tb.scrollIntoView)tb.scrollIntoView({block:'center'});}else{ui.sheet=true;render();}return;}
   if(a==='askplan'){tc_st.draft='The morning brief didn\'t arrive. Plan my day within its capacity.';LS.set('tcdraft',tc_st.draft);var bar=document.getElementById('tc-bin');if(bar&&bar.offsetParent){render();bar=document.getElementById('tc-bin');if(bar)bar.focus();}else{ui.sheet=true;render();}return;}
-  if(a==='golog'){ui.logDay='t';LS.set('logDay',null);if(window.innerWidth<1000){ui.tab='stats';LS.set('tab','stats');}render();var tp=document.querySelector('.p.timep');if(tp&&tp.scrollIntoView)tp.scrollIntoView({block:'start'});var f0=document.querySelector('.hgrid .hc.miss')||document.getElementById('ld-t');if(f0)f0.focus({preventScroll:true});return;}
+  if(a==='golog'){var ug=parseErr?null:unloggedIdx();if(ug!==null){ui.hlog=ug;ui.planPast=true;if(window.innerWidth<1000){ui.tab='today';LS.set('tab','today');}render();var hg=document.getElementById('hlog-'+ug);if(hg){if(hg.scrollIntoView)hg.scrollIntoView({block:'center'});hg.focus({preventScroll:true});}return;}
+    ui.logDay='t';LS.set('logDay',null);if(window.innerWidth<1000){ui.tab='stats';LS.set('tab','stats');}render();var tp=document.querySelector('.p.timep');if(tp&&tp.scrollIntoView)tp.scrollIntoView({block:'start'});var f0=document.querySelector('.hgrid .hc.miss')||document.getElementById('ld-t');if(f0)f0.focus({preventScroll:true});return;}
   if(a==='logday'){ui.logDay=b.dataset.v==='y'?'y':'t';LS.set('logDay',{v:ui.logDay,d:ops().date,at:Date.now()});render();return;}
-  if(a==='hpast'){ui.planPast=!ui.planPast;render();var he=document.getElementById('hearly');if(he)he.focus();return;}
+  if(a==='hpast'){ui.planPast=!hpShowPast();render();var he=document.getElementById('hearly');if(he)he.focus();return;}
+  if(a==='hlog'){var hi=+b.dataset.i;ui.hlog=ui.hlog===hi?null:hi;render();var hs=document.querySelector('#hstrip .bc');if(hs&&ui.hlog!==null&&window.innerWidth>=1000)hs.focus({preventScroll:true});return;}
+  if(a==='hbrush'){if(parseErr){queueSave();return;}var bi=+b.dataset.i,bv=b.dataset.v,bd=ops().date;if(!(bi>=0&&bi<LOGN)||(bv!=='.'&&!catOf(bv)))return;var BL=logOf(bd).split('');BL[bi]=bv;logCommit(bd,BL.join(''));
+    var bn=bi+1;ui.hlog=bn<LOGN&&slotWhen(bd,bn)==='past'&&BL[bn]==='.'?bn:null;render();if(ui.hlog===null){var hc=document.getElementById('hlog-'+bi);if(hc)hc.focus({preventScroll:true});}return;}
   if(a==='hadd'){if(parseErr)return;ui.pick={h:+b.dataset.h};render();var px=document.getElementById('hpk-x');if(px)px.focus();return;}
   if(a==='hpickx'){var ph=ui.pick&&ui.pick.h;ui.pick=null;render();var hb=document.getElementById('hadd-'+ph);if(hb)hb.focus();return;}
   if(a==='hpick'){var pk=ui.pick,t9=tk_find(b.dataset.id);if(!pk||!t9)return;var st9=hpPickStart(pk.h);ui.pick=null;if(st9===null){toast('That hour is full now');render();return;}
@@ -1976,7 +2030,7 @@ app.addEventListener('click',function(e){
     else{for(var j2=0;j2<2&&L[j2]==='.'&&slotWhen(ds,j2)==='past';j2++){L[j2]='z';n++;}
       if(ds===o2.date){if(o2.min>=20*60)for(var j4=17;j4<LOGN;j4++){if(slotWhen(ds,j4)==='future'&&L[j4]==='.'){L[j4]='z';n++;}}}
       else for(var j3=LOGN-1;j3>=17;j3--){var w3=slotWhen(ds,j3);if(w3==='future')continue;if(w3!=='past'||L[j3]!=='.')break;L[j3]='z';n++;}toast(n?'Marked '+n+'H as sleep':'No unlogged night hours yet');}
-    if(n){S.log[ds]=L.join('');var ks=Object.keys(S.log).sort();while(ks.length>42)delete S.log[ks.shift()];if(ds===ops().date&&S.debrief&&S.debrief.date===ds)upsertHistory();else S.history.forEach(function(r){if(r.date===ds)logInto(r,S.log[ds]);});queueSave(4000);}render();return;}
+    if(n)logCommit(ds,L.join(''));render();return;}
   if(a==='view'){ui.view=['stats','tasks'].indexOf(b.dataset.v)>=0?b.dataset.v:'console';LS.set('view',ui.view);render();return;}
   if(a==='pacc'||a==='pdec'||a==='pchg'){var p=findItem('proposal',b.dataset.id||(ui.detail&&ui.detail.id));if(!p)return;
     if(a==='pchg'){ui.editProp=p.id;ui.detail=null;render();var pe=document.getElementById('pe-d');if(pe)pe.focus();return;}
@@ -2864,7 +2918,7 @@ function wc_pPanel(p){if(WC.pid!==p.id){WC.pid=p.id;WC.pw=0;WC.pn='';WC.pday='';
    The phone overlay reuses ui.sheet (opened by the center + tab) and its textarea id "sheet-in", so the
    app's existing focus, Escape and minute-tick guards keep working unchanged. */
 var tc_info={tell:'Type anything in plain words: hours you spent (“2-4 studied, 4-5 tiktok”), a new task, a change to today, or a question. Claude logs the hours, files tasks under the right project with a time estimate and proposes a slot around your calendar, or replans today, and each change shows as a chip. One UNDO reverts the whole reply; without Claude your text waits in the inbox for the 07:15 run.'};
-var tc_st={ex:[],draft:'',busy:false,ctl:null,live:'',cur:null,led:null,undo:null};
+var tc_st={ex:[],draft:'',busy:false,ctl:null,live:'',cur:null,led:null,undo:null,sess:0};
 var TC_HIDE=['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'];
 (function(){
   var ex=LS.get('tcex',[]),d=LS.get('tcdraft','');
@@ -3174,7 +3228,7 @@ function tc_chips(L){var c=[],o=ops();if(!L)return c;
   L.today.forEach(function(x){c.push(x);});
   if(L.inbox)c.push({t:'Inbox +'+L.inbox,k:'d'});
   return c;}
-function tc_push(x){x.id='x'+Date.now().toString(36)+Math.floor(Math.random()*1e3);x.a=x.a||'';x.note=x.note||'';x.chips=x.chips||[];x.undone=false;tc_st.ex.push(x);tc_st.ex=tc_st.ex.slice(-3);tc_save();return x;}
+function tc_push(x){x.id='x'+Date.now().toString(36)+Math.floor(Math.random()*1e3);x.a=x.a||'';x.note=x.note||'';x.chips=x.chips||[];x.undone=false;tc_st.ex.push(x);tc_st.ex=tc_st.ex.slice(-3);tc_st.sess++;tc_save();return x;}
 function tc_undoFn(u){return function(){if(!u)return;S=JSON.parse(u.before);normalize();tc_normalize();tc_st.ex.forEach(function(x){if(x.id===u.id)x.undone=true;});tc_save();if(tc_st.undo===u)tc_st.undo=null;};}
 function tc_canUndo(){return !!(tc_st.undo&&!tc_st.busy&&snapshot()===tc_st.undo.after);}
 function tc_inbox(text,note,before){
@@ -3223,7 +3277,7 @@ function tc_end(text,before,x){
 }
 function tc_send(v){
   v=String(v||'').trim();if(!v||tc_st.busy)return;
-  tc_st.draft='';LS.set('tcdraft','');if(typeof clearDraft==='function')clearDraft('sheet-in');
+  tc_st.draft='';LS.set('tcdraft','');ui.tcHide=false;if(typeof clearDraft==='function')clearDraft('sheet-in');
   ['sheet-in','tc-bin'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   tc_ask(v);}
 
@@ -3249,10 +3303,12 @@ function tc_form(fid,tid,pre){
   return '<form id="'+fid+'" class="tc-f"><textarea id="'+tid+'" rows="'+(pre==='s'?2:1)+'" maxlength="1000" enterkeyhint="send" autocomplete="off" placeholder="Log hours, add a task…" aria-label="Tell Claude">'+esc(tc_st.draft)+'</textarea>'+
     (tc_st.busy?'<button type="button" class="btn" id="'+pre+'-stop" data-act="tcstop">STOP</button>':'<button type="submit" class="btn fill" id="'+pre+'-send">SEND</button>')+'</form>';}
 function tc_infoB(id){return infoBtn('tell',id==='info-tell'?'':id.replace('info-tell-',''));}
-/* desktop: persistent full-width bar under the masthead, TODAY view only (phone: the center + tab opens the sheet) */
+/* desktop: one input row under the masthead, TODAY view only (phone: the center + tab opens the sheet). The last exchange
+   shows only once a message has gone out from this page visit (tc_st.sess), and HIDE folds it until the next send. */
 function tc_bar(){
   var h='<section class="p tcbar" data-tab="capcom">'+phd('Tell Claude','tell','<span class="tc-r">'+tc_stat()+'</span>')+'<div class="body">'+tc_form('tc-bf','tc-bin','b');
-  var xs=tc_xs('b',1);if(xs)h+='<div class="tc-last" aria-live="polite">'+xs+'</div>';
+  var xs=(tc_st.sess||tc_st.busy)&&!ui.tcHide?tc_xs('b',1):'';
+  if(xs)h+='<div class="tc-last" aria-live="polite">'+xs+'<button type="button" class="btn sm ghost tc-hide" id="tc-hide" data-act="tchide">HIDE</button></div>';
   return h+'</div></section>';}
 /* phone overlay, opened by the center + tab (ui.sheet); a centered dialog if opened on a computer */
 function tc_sheet(){
@@ -3268,6 +3324,7 @@ function tc_click(a,el,e){
   if(a==='tcstop'){if(tc_st.ctl)tc_st.ctl.abort();return true;}
   if(a==='tcundo'){if(!tc_canUndo()){tc_st.undo=null;toast('Can’t undo: the plan changed since');render();return true;}
     tc_undoFn(tc_st.undo)();toast('Undid Claude’s changes');render();queueSave();return true;}
+  if(a==='tchide'){ui.tcHide=true;render();var tb=document.getElementById('tc-bin');if(tb)tb.focus({preventScroll:true});return true;}
   if(a==='tcclear'){tc_st.ex=[];tc_st.undo=null;tc_save();render();var si=document.getElementById('sheet-in');if(si)si.focus();return true;}
   return false;}
 function tc_submit(form,e){
