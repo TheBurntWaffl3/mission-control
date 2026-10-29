@@ -1149,7 +1149,7 @@ function rPlan(){
     if(!st.length&&free<30&&!(isNow&&!live))continue;
     if(past){hasPast=true;if(!showPast){pastN++;continue;}}
     var cards='';st.forEach(function(x){cards+=hpCard(x,n,x===nxt);});
-    var open='';if(b>n&&free>=30){var fs=hpFreeStart(bl,isNow?Math.max(a,hpNowStart()):a,b);if(fs!==null&&b-fs>=15)open='<button type="button" class="hopen" id="hadd-'+a+'" data-act="hadd" data-h="'+a+'">＋ ADD<span>'+hpFreeMin(bl,fs,b)+'M FREE</span></button>';}
+    var open='';if(b>n&&free>=30){var fs=hpFreeStart(bl,isNow?Math.max(a,hpNowStart()):a,b);if(fs!==null&&b-fs>=15)open='<button type="button" class="hopen" id="hadd-'+a+'" data-act="hadd" data-h="'+a+'">＋ ADD</button>';}
     rows+='<li class="hrw'+(isNow?' now':'')+(past?' past':'')+'"><div class="hh">'+m2h(a)+(isNow?'<b>NOW</b>':'')+'</div><div class="hb">'+cards+open+'</div></li>';}
   if(pastN)h+='<button type="button" class="hearly" id="hearly" data-act="hpast" aria-expanded="false">EARLIER · '+pastN+'H<span aria-hidden="true"> ›</span></button>';
   else if(showPast&&hasPast)h+='<button type="button" class="hearly" id="hearly" data-act="hpast" aria-expanded="true">HIDE EARLIER</button>';
@@ -2145,8 +2145,8 @@ function tk_applyUrg(t,v){
     return lbl+(tk_pushToday(t)==='Added to today'?' · on today’s plan':' · will be in today’s plan');}
   if(v==='week'){if(t.status==='done'||L.today||L.planned||L.prop)return lbl;
     var o=ops(),m0=monday(o.day),end=iso(new Date(m0.getFullYear(),m0.getMonth(),m0.getDate()+6)),p=tk_local(t);
-    if(!p.s||p.date>end||!tk_fits(p))return lbl+' · no free slot left this week';
-    tk_fill(t,p);addProposal(p);return lbl+' · proposed '+dayLbl(p.date)+' '+p.s;}
+    if(!p.s||!tk_fits(p))return lbl+' · no free slot in the next 7 days';
+    tk_fill(t,p);addProposal(p);return lbl+' · proposed '+dayLbl(p.date)+' '+p.s+(p.date>end?' (this week is full)':'');}
   var n=S.proposals.length;S.proposals=S.proposals.filter(function(p){return p.task!==t.id;});
   return lbl+(S.proposals.length<n?' · proposal removed':'');
 }
